@@ -9,11 +9,11 @@ export default defineConfig({
     emptyOutDir: true,
     rollupOptions: {
       input: {
-        main:    resolve(__dirname, 'public/index.html'),
-        login:   resolve(__dirname, 'public/login.html'),
-        admin:   resolve(__dirname, 'public/admin/dashboard.html'),
-        siswa:   resolve(__dirname, 'public/siswa/dashboard.html'),
-        petugas: resolve(__dirname, 'public/petugas/dashboard.html'),
+        main:         resolve(__dirname, 'public/index.html'),
+        login:        resolve(__dirname, 'public/login.html'),
+        admin:        resolve(__dirname, 'public/admin/dashboard.html'),
+        'siswa-guru': resolve(__dirname, 'public/siswa-guru/dashboard.html'),
+        petugas:      resolve(__dirname, 'public/petugas/dashboard.html'),
       },
     },
   },

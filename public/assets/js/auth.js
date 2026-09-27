@@ -4,7 +4,8 @@ import { db } from './supabaseClient.js';
 var defaultUsers = {
   'admin:password123': { role: 'Admin', label: 'Admin' },
   'petugas:password123': { role: 'Petugas', label: 'Petugas' },
-  'siswa:password123': { role: 'Siswa', label: 'Siswa' }
+  'siswa:password123': { role: 'Siswa', label: 'Siswa' },
+  'guru:password123': { role: 'Guru', label: 'Guru' }
 };
 
 (function () {
@@ -35,19 +36,20 @@ var defaultUsers = {
   }
 
   function redirectByRole(role) {
+    var r = (role || '').trim().toLowerCase();
     var bukuId = resolveBukuId();
-    if (role === 'Siswa') {
+    if (r === 'siswa' || r === 'guru') {
       if (bukuId) {
-        window.location.href = 'siswa/dashboard.html?action=pinjam&buku_id=' + encodeURIComponent(bukuId);
+        window.location.href = 'siswa-guru/dashboard.html?action=pinjam&buku_id=' + encodeURIComponent(bukuId);
       } else {
-        window.location.href = 'siswa/dashboard.html';
+        window.location.href = 'siswa-guru/dashboard.html';
       }
-    } else if (role === 'Petugas') {
+    } else if (r === 'petugas') {
       window.location.href = 'petugas/dashboard.html';
-    } else if (role === 'Admin') {
+    } else if (r === 'admin') {
       window.location.href = 'admin/dashboard.html';
     } else {
-      window.location.href = 'index.html';
+      window.location.href = 'siswa-guru/dashboard.html';
     }
   }
 
@@ -111,18 +113,60 @@ var defaultUsers = {
     try {
       // 1. Cek langsung ke database Supabase
       if (db) {
-        var { data, error } = await db
+        // Coba cari akun di data_user via username (case-insensitive)
+        var { data: userMatch } = await db
           .from('data_user')
-          .select('id_user, username, role')
-          .eq('username', identifier)
-          .eq('password', passwordValue)
+          .select('id_user, username, password, role')
+          .ilike('username', identifier)
           .maybeSingle();
 
-        if (!error && data && data.role) {
+        // Jika tidak ditemukan via username, cari via NIP / Email Guru
+        if (!userMatch) {
+          var { data: guruMatch } = await db
+            .from('data_guru')
+            .select('id_user')
+            .or('nip_guru.eq.' + identifier + ',email_guru.ilike.' + identifier)
+            .maybeSingle();
+
+          if (guruMatch && guruMatch.id_user) {
+            var { data: userFromGuru } = await db
+              .from('data_user')
+              .select('id_user, username, password, role')
+              .eq('id_user', guruMatch.id_user)
+              .maybeSingle();
+            if (userFromGuru) userMatch = userFromGuru;
+          }
+        }
+
+        // Jika belum ditemukan, cari via NISN / Email Siswa
+        if (!userMatch) {
+          var { data: siswaMatch } = await db
+            .from('data_siswa')
+            .select('id_user')
+            .or('nisn_siswa.eq.' + identifier + ',email_siswa.ilike.' + identifier)
+            .maybeSingle();
+
+          if (siswaMatch && siswaMatch.id_user) {
+            var { data: userFromSiswa } = await db
+              .from('data_user')
+              .select('id_user, username, password, role')
+              .eq('id_user', siswaMatch.id_user)
+              .maybeSingle();
+            if (userFromSiswa) userMatch = userFromSiswa;
+          }
+        }
+
+        // Jika user ditemukan dan password cocok
+        if (userMatch && userMatch.password === passwordValue) {
+          var roleClean = (userMatch.role || 'Siswa').trim();
           sessionStorage.setItem('cakrawala_logged_in', 'true');
-          sessionStorage.setItem('cakrawala_role', data.role);
-          sessionStorage.setItem('cakrawala_user', JSON.stringify({ id_user: data.id_user, username: data.username, role: data.role }));
-          redirectByRole(data.role);
+          sessionStorage.setItem('cakrawala_role', roleClean);
+          sessionStorage.setItem('cakrawala_user', JSON.stringify({ 
+            id_user: userMatch.id_user, 
+            username: userMatch.username, 
+            role: roleClean 
+          }));
+          redirectByRole(roleClean);
           return;
         }
       }
