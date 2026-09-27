@@ -111,51 +111,9 @@
   transform: translateY(-50%) scale(0.9);
 }
 
-/* ==========================================================================
-   4. FLOATING BACK-TO-TOP BUTTON
-   Catatan: Tombol melayang di pojok kanan bawah yang muncul otomatis saat scroll
-   melebihi 350px, memudahkan kembali ke atas di ponsel, tablet, maupun desktop.
-   ========================================================================== */
-.btn-scroll-top {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  z-index: 40;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 9999px;
-  background-color: #000c4f;
-  color: #ffffff;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 10px 25px -5px rgba(0, 12, 79, 0.35);
-  cursor: pointer;
-  transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.2s ease, box-shadow 0.2s ease;
-  opacity: 0;
-  transform: translateY(1.5rem);
-  pointer-events: none;
-}
-
-.btn-scroll-top.visible {
-  opacity: 1;
-  transform: translateY(0);
-  pointer-events: auto;
-}
-
-.btn-scroll-top:hover {
-  background-color: #0a1a7a;
-  box-shadow: 0 15px 30px -5px rgba(0, 12, 79, 0.5);
-  transform: translateY(-2px);
-}
-
-.btn-scroll-top:active {
-  transform: translateY(0) scale(0.92);
-}
 
 /* ==========================================================================
-   5. KARTU BUKU & ROW HORIZONTAL KATALOG
+   4. KARTU BUKU & ROW HORIZONTAL KATALOG
    Catatan: Desain baris kategori horizontal dan kartu buku kompak.
    Mendukung hover di desktop dan touch-drag di layar sentuh mobile.
    ========================================================================== */
@@ -227,7 +185,7 @@
 }
 
 /* ==========================================================================
-   6. UTILITAS SCROLLBAR & TOUCH GESTURES
+   5. UTILITAS SCROLLBAR & TOUCH GESTURES
    Catatan: Menyembunyikan scrollbar visual bawaan peramban agar tampilan
    katalog swipe terlihat rapi dan elegan seperti aplikasi native mobile.
    ========================================================================== */
