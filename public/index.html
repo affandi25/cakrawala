@@ -1,0 +1,296 @@
+<!doctype html>
+<html lang="id">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>CAKRAWALA | Perpustakaan Digital</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: { navy: "#000C4F" },
+            fontFamily: { sans: ["Inter", "sans-serif"] },
+          },
+        },
+      };
+    </script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css" />
+    <link rel="stylesheet" href="assets/css/style.css" />
+    
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+  </head>
+  <body class="bg-slate-50 font-sans text-slate-900">
+    <!-- Navbar Dinamis -->
+    <header id="mainNavbar" class="fixed inset-x-0 top-0 z-50">
+      <nav class="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6">
+        <a href="#hero" class="flex items-center gap-2 font-bold tracking-wide text-white">
+          <i class="ph-fill ph-books text-2xl" aria-hidden="true"></i>
+          <span>CAKRAWALA</span>
+        </a>
+
+        <div class="flex items-center gap-3 sm:gap-8">
+          <div class="hidden items-center gap-6 text-sm font-medium text-blue-100 sm:flex">
+            <a href="#pengumuman" class="transition hover:text-white">Pengumuman</a>
+            <a href="#katalog" class="transition hover:text-white">Katalog</a>
+          </div>
+          <a
+            href="login.html"
+            class="rounded-lg bg-white px-4 py-2 text-sm font-bold text-navy shadow-sm transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-white"
+          >
+            Login
+          </a>
+          <!-- Mobile Hamburger Toggle (styled in style.css: .btn-nav-toggle) -->
+          <button
+            id="btnToggleNavMenu"
+            type="button"
+            aria-label="Buka menu navigasi"
+            class="sm:hidden btn-nav-toggle"
+          >
+            <i class="ph ph-list text-xl" id="iconNavMenu"></i>
+          </button>
+        </div>
+      </nav>
+
+      <!-- Mobile Navigation Drawer (styled in style.css: .mobile-nav-drawer) -->
+      <div id="mobileNavMenu" class="hidden sm:hidden mobile-nav-drawer">
+        <a href="#pengumuman" class="mobile-nav-link">
+          <i class="ph ph-megaphone text-lg"></i>
+          <span>Pengumuman & Event</span>
+        </a>
+        <a href="#katalog" class="mobile-nav-link">
+          <i class="ph ph-book-open text-lg"></i>
+          <span>Katalog Koleksi</span>
+        </a>
+      </div>
+    </header>
+    
+    <main>
+      <!-- Hero Section GSAP Scroll -->
+      <section id="hero" class="relative h-[300vh] bg-navy text-white">
+        <div class="sticky top-0 flex h-screen items-center justify-center overflow-hidden px-4">
+          <div id="hero-books" class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
+            <article class="hero-card absolute flex h-56 w-40 flex-col justify-between overflow-hidden rounded-xl border border-white/20 bg-cover bg-center p-4 shadow-2xl sm:h-72 sm:w-48" style="background-image: linear-gradient(to top, rgba(0, 12, 79, 0.95), rgba(0, 12, 79, 0.1)), url('https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=500&q=80');"></article>
+            <article class="hero-card absolute flex h-56 w-40 flex-col justify-between overflow-hidden rounded-xl border border-white/20 bg-cover bg-center p-4 shadow-2xl sm:h-72 sm:w-48" style="background-image: linear-gradient(to top, rgba(0, 12, 79, 0.95), rgba(0, 12, 79, 0.1)), url('https://images.unsplash.com/photo-1532012197267-da84d127e765?auto=format&fit=crop&w=500&q=80');"></article>
+            <article class="hero-card absolute flex h-56 w-40 flex-col justify-between overflow-hidden rounded-xl border border-white/20 bg-cover bg-center p-4 shadow-2xl sm:h-72 sm:w-48" style="background-image: linear-gradient(to top, rgba(0, 12, 79, 0.95), rgba(0, 12, 79, 0.1)), url('https://images.unsplash.com/photo-1512820790803-83ca734da794?auto=format&fit=crop&w=500&q=80');"></article>
+            <article class="hero-card absolute flex h-56 w-40 flex-col justify-between overflow-hidden rounded-xl border border-white/20 bg-cover bg-center p-4 shadow-2xl sm:h-72 sm:w-48" style="background-image: linear-gradient(to top, rgba(0, 12, 79, 0.95), rgba(0, 12, 79, 0.1)), url('https://images.unsplash.com/photo-1589829085413-56de8ae18c73?auto=format&fit=crop&w=500&q=80');"></article>
+          </div>
+
+          <div id="hero-content" class="pointer-events-none z-20 flex max-w-4xl scale-75 flex-col items-center gap-5 text-center opacity-0">
+            <p class="text-sm font-bold uppercase tracking-[.25em] text-blue-200">Perpustakaan Digital</p>
+            <h1 class="text-5xl font-extrabold tracking-tight sm:text-7xl">CAKRAWALA</h1>
+            <p class="max-w-2xl text-base leading-relaxed text-blue-100 sm:text-xl">Cerdas Akses Koleksi Referensi, Wujudkan Aspirasi Literasi Aksara.</p>
+            
+            <div class="pointer-events-auto relative mt-3 w-full max-w-2xl">
+              <i class="ph ph-magnifying-glass absolute left-5 top-1/2 z-10 -translate-y-1/2 text-2xl text-slate-400" aria-hidden="true"></i>
+              <input 
+                id="searchInput" 
+                type="search" 
+                aria-label="Cari buku" 
+                placeholder="Cari judul buku atau penulis..." 
+                class="w-full rounded-full bg-white py-5 pl-14 pr-5 text-lg font-medium text-slate-900 outline-none shadow-xl focus:ring-4 focus:ring-blue-300" 
+              />
+            </div>
+          </div>
+
+          <div class="absolute bottom-8 z-20 text-center text-xs text-blue-100">
+            <p>Scroll untuk membuka koleksi</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Section Pengumuman -->
+      <section id="pengumuman" class="bg-white py-20">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6">
+          <div class="mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4" data-aos="fade-up">
+            <div>
+              <p class="text-sm font-bold uppercase tracking-widest text-navy">Informasi Terkini</p>
+              <h2 class="mt-2 text-3xl font-bold">Pengumuman & Event Kampus</h2>
+            </div>
+            <div class="flex items-center gap-2">
+              <button 
+                type="button" 
+                onclick="scrollAnnouncement('left')" 
+                class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-navy active:scale-95" 
+                aria-label="Geser ke kiri"
+              >
+                <i class="ph ph-caret-left text-lg"></i>
+              </button>
+              <button 
+                type="button" 
+                onclick="scrollAnnouncement('right')" 
+                class="flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 shadow-sm transition hover:bg-slate-50 hover:text-navy active:scale-95" 
+                aria-label="Geser ke kanan"
+              >
+                <i class="ph ph-caret-right text-lg"></i>
+              </button>
+            </div>
+          </div>
+          <div id="announcementGrid" class="flex gap-6 overflow-x-auto pb-6 pt-2 scroll-smooth snap-x snap-mandatory no-scrollbar"></div>
+        </div>
+      </section>
+
+      <!-- Section Katalog Koleksi Publik Modern -->
+      <section id="katalog" class="bg-slate-50 py-16">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6">
+          <!-- Header Katalog & Banner Statistik -->
+          <div class="mb-10 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center" data-aos="fade-up">
+            <!-- Kolom Kiri: Judul & Input Pencarian -->
+            <div class="lg:col-span-7">
+              <p class="text-xs font-bold uppercase tracking-widest text-navy">Katalog Publik</p>
+              <h2 class="mt-1 text-3xl font-extrabold text-slate-900 sm:text-4xl">Koleksi Rak Buku Digital</h2>
+              <p class="mt-1.5 text-sm text-slate-500">Klik cover buku untuk melihat lokasi rak fisik atau melakukan pra-pinjam.</p>
+
+              <div class="mt-5 max-w-lg">
+                <div class="relative">
+                  <i class="ph ph-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-lg text-slate-400"></i>
+                  <input
+                    id="catalogSearch"
+                    type="text"
+                    placeholder="Cari judul buku, penulis, atau kategori..."
+                    class="w-full rounded-xl border border-slate-200 bg-white py-3 pl-11 pr-10 text-sm shadow-sm outline-none transition focus:border-navy focus:ring-2 focus:ring-blue-100"
+                  />
+                  <button 
+                    type="button" 
+                    id="btnClearCatalogSearch" 
+                    aria-label="Bersihkan pencarian"
+                    class="hidden btn-clear-search"
+                  >
+                    <i class="ph ph-x text-sm"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Kolom Kanan: Banner Info Statistik -->
+            <div class="lg:col-span-5">
+              <div class="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-2xl bg-[#091d42] p-5 text-white shadow-xl">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-white/10 text-2xl text-blue-200">
+                    <i class="ph-fill ph-book-open"></i>
+                  </div>
+                  <div>
+                    <h3 class="text-sm font-bold leading-tight">Jelajahi Koleksi Cakrawala</h3>
+                    <p class="text-[11px] text-blue-200/80 leading-snug mt-0.5">Temukan buku yang kamu butuhkan dari berbagai kategori koleksi perpustakaan.</p>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-4 border-t border-white/10 pt-3 sm:border-t-0 sm:border-l sm:pl-4 sm:pt-0 flex-shrink-0">
+                  <div class="text-center">
+                    <i class="ph ph-book-bookmark text-base text-blue-200"></i>
+                    <p id="statTotalKoleksi" class="text-sm font-extrabold leading-tight mt-0.5">0</p>
+                    <p class="text-[10px] text-blue-200/70">Koleksi</p>
+                  </div>
+                  <div class="text-center">
+                    <i class="ph ph-check-circle text-base text-emerald-400"></i>
+                    <p id="statTersedia" class="text-sm font-extrabold leading-tight mt-0.5">0</p>
+                    <p class="text-[10px] text-blue-200/70">Tersedia</p>
+                  </div>
+                  <div class="text-center">
+                    <i class="ph ph-squares-four text-base text-blue-200"></i>
+                    <p id="statKategori" class="text-sm font-extrabold leading-tight mt-0.5">0</p>
+                    <p class="text-[10px] text-blue-200/70">Kategori</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Status Hasil Pencarian -->
+          <div id="search-status" class="mb-6 hidden items-center justify-between gap-4 rounded-xl border border-blue-100 bg-blue-50 px-4 py-3 text-sm text-navy" aria-live="polite">
+            <span id="search-status-text"></span>
+            <button id="reset-search" type="button" class="whitespace-nowrap font-bold underline hover:text-blue-900">Reset / Tampilkan Semua Kategori</button>
+          </div>
+
+          <!-- 1. Wadah Baris Kategori Modern -->
+          <div id="shelfContainer" class="space-y-6"></div>
+
+          <!-- 2. Wadah Grid Hasil Pencarian -->
+          <div id="searchResultsGrid" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-6 bg-white rounded-2xl border border-slate-200 shadow-sm"></div>
+
+          <p id="emptyState" class="hidden py-16 text-center text-slate-500">Buku tidak ditemukan.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Modal Detail Buku & Pra-Pinjam -->
+    <div id="modal-buku" class="fixed inset-0 z-[60] hidden items-center justify-center bg-navy/80 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="grid max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-2xl bg-white shadow-2xl md:grid-cols-2">
+        <section class="flex flex-col bg-navy p-6 text-white">
+          <button id="closeModal" class="mb-6 flex w-max items-center gap-2 text-sm font-semibold text-blue-100 transition hover:text-white">
+            <i class="ph ph-arrow-left"></i>Kembali
+          </button>
+          <div class="flex flex-1 flex-col items-center justify-center">
+            <img id="modalCover" src="" alt="Cover buku" class="h-64 w-44 rounded-lg object-cover shadow-2xl sm:h-72 sm:w-52" />
+            <h2 id="modalTitle" class="mt-6 text-center text-2xl font-bold"></h2>
+          </div>
+        </section>
+
+        <section class="overflow-y-auto bg-white p-6 text-slate-900 sm:p-8">
+          <div id="detailView">
+            <div class="flex flex-wrap gap-2 text-xs font-semibold">
+              <span id="modalPublisher" class="rounded-full bg-slate-100 px-3 py-1"></span>
+              <span id="modalYear" class="rounded-full bg-slate-100 px-3 py-1"></span>
+              <span id="modalCategory" class="rounded-full bg-slate-100 px-3 py-1"></span>
+            </div>
+            <div class="mt-5 rounded-lg bg-blue-50 p-4">
+              <p class="text-xs font-bold uppercase tracking-wide text-navy">Lokasi Rak Fisik</p>
+              <p id="modalLocation" class="mt-1 font-semibold text-navy"></p>
+            </div>
+            <p id="modalDescription" class="mt-6 leading-relaxed text-slate-500 text-sm"></p>
+            <div class="mt-5">
+              <span id="modalStatus" class="inline-flex rounded-full bg-emerald-100 px-3 py-1 text-sm font-bold text-emerald-700"></span>
+            </div>
+            <button id="modalBorrowButton" class="mt-8 w-full rounded-lg bg-navy px-5 py-3 font-bold text-white transition hover:bg-blue-900 shadow">Ajukan Peminjaman</button>
+          </div>
+
+          <form id="loanForm" class="hidden" novalidate>
+            <h3 class="text-2xl font-bold text-navy">Informasi Prapinjam</h3>
+            <p id="loanBookTitle" class="mt-1 text-sm text-slate-500"></p>
+            <label class="mt-6 block text-sm font-semibold">
+              Tanggal Pinjam
+              <input id="loanStart" type="date" required class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-navy" />
+            </label>
+            <label class="mt-4 block text-sm font-semibold">
+              Tanggal Jatuh Tempo / Batas Kembali
+              <input id="loanDue" type="date" required class="mt-2 w-full rounded-lg border border-slate-300 px-4 py-3 outline-none focus:border-navy" />
+            </label>
+            <div class="mt-8 flex gap-3">
+              <button type="button" id="cancelLoan" class="flex-1 rounded-lg border border-navy px-4 py-3 font-bold text-navy hover:bg-slate-50">Batal</button>
+              <button type="submit" class="flex-1 rounded-lg bg-emerald-600 px-4 py-3 font-bold text-white hover:bg-emerald-700 shadow">Ajukan Peminjaman</button>
+            </div>
+          </form>
+        </section>
+      </div>
+    </div>
+
+    <!-- Floating Back to Top Button (styled in style.css: .btn-scroll-top) -->
+    <button 
+      id="btnScrollToTop" 
+      type="button" 
+      aria-label="Kembali ke atas"
+      class="btn-scroll-top"
+    >
+      <i class="ph ph-arrow-up text-xl font-bold"></i>
+    </button>
+
+    <!-- Footer -->
+    <footer class="bg-navy py-8 text-center text-sm text-blue-100">
+      © 2026 CAKRAWALA. Semua hak dilindungi.
+    </footer>
+
+    <!-- Skrip Inisialisasi Vite MPA Modules -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script type="module" src="assets/js/supabaseClient.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script type="module" src="assets/js/hero.js"></script>
+    <script type="module" src="assets/js/main.js"></script>
+  </body>
+</html>

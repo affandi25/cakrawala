@@ -1,0 +1,593 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Admin | CAKRAWALA Digital Library</title>
+
+  <!-- Tailwind CSS CDN & Custom Configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#000C4F',
+            'navy-light': '#0a1a7a',
+            'navy-dark': '#000836'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+</head>
+
+<body
+  class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col md:flex-row selection:bg-navy selection:text-white">
+
+  <!-- Mobile Top Bar with Menu Toggle -->
+  <header
+    class="md:hidden flex items-center justify-between bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-30">
+    <div class="flex items-center gap-2.5">
+      <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-navy text-white shadow-sm">
+        <i class="ph ph-shield-star text-xl" aria-hidden="true"></i>
+      </div>
+      <div>
+        <span class="text-base font-extrabold tracking-tight text-navy">CAKRAWALA</span>
+        <span class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Admin Panel</span>
+      </div>
+    </div>
+    <button id="btnToggleMobileSidebar" type="button" aria-label="Buka menu navigasi"
+      class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy">
+      <i class="ph ph-list text-2xl" id="iconMobileSidebar"></i>
+    </button>
+  </header>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="sidebarBackdrop"
+    class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs hidden md:hidden transition-opacity duration-300"></div>
+
+  <!-- Left Sidebar Minimalis Kapsul -->
+  <aside id="adminSidebar"
+    class="fixed inset-y-0 left-0 z-50 flex w-64 md:w-68 flex-col justify-between border-r border-slate-200 bg-white p-4 shadow-sm transition-transform duration-300 -translate-x-full md:translate-x-0 md:static md:z-auto">
+    <!-- Sidebar Top: Brand & Navigation -->
+    <div>
+      <!-- Brand Logo Badge -->
+      <div class="flex items-center justify-between px-2 pb-6 pt-2 border-b border-slate-100">
+        <div class="flex items-center gap-3">
+          <div
+            class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy text-white shadow-md shadow-navy/20">
+            <i class="ph ph-shield-star text-2xl" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h1 class="text-lg font-extrabold tracking-tight text-navy">CAKRAWALA</h1>
+            <p class="text-xs font-semibold text-slate-500">Pusat Kendali Admin</p>
+          </div>
+        </div>
+        <button id="btnCloseMobileSidebar" type="button" aria-label="Tutup menu navigasi"
+          class="md:hidden flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+          <i class="ph ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Navigation Section Label -->
+      <div class="mt-6 px-2">
+        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Manajemen Pengguna</p>
+      </div>
+
+      <!-- Navigation Menu Tabs -->
+      <nav class="mt-3 space-y-1.5" aria-label="Navigasi Manajemen Pengguna">
+        <!-- Tab Siswa -->
+        <button type="button" id="tabBtnSiswa" data-tab="siswa"
+          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 bg-navy text-white shadow-sm shadow-navy/20">
+          <i class="ph ph-student text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
+          <span class="flex-1 text-left">Data Siswa</span>
+          <span id="badgeCountSiswa"
+            class="rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold text-white">...</span>
+        </button>
+
+        <!-- Tab Guru -->
+        <button type="button" id="tabBtnGuru" data-tab="guru"
+          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+          <i class="ph ph-chalkboard-teacher text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
+          <span class="flex-1 text-left">Data Guru</span>
+          <span id="badgeCountGuru"
+            class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">...</span>
+        </button>
+
+        <!-- Tab Petugas -->
+        <button type="button" id="tabBtnPetugas" data-tab="petugas"
+          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+          <i class="ph ph-user-gear text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
+          <span class="flex-1 text-left">Data Petugas</span>
+          <span id="badgeCountPetugas"
+            class="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">...</span>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Sidebar Bottom: Super User Profile & Logout -->
+    <div class="border-t border-slate-100 pt-4 space-y-2">
+      <!-- Admin User Capsule (Clickable for Profile Settings) -->
+      <button 
+        type="button" 
+        id="btnAdminProfile" 
+        aria-label="Pengaturan Profil Admin"
+        title="Klik untuk membuka Pengaturan Profil Admin"
+        class="group flex w-full items-center gap-3 rounded-xl bg-slate-50 hover:bg-slate-100/90 p-2.5 border border-slate-200/70 hover:border-navy/30 transition-all duration-200 text-left focus:outline-none focus:ring-2 focus:ring-navy/20 cursor-pointer shadow-2xs"
+      >
+        <div id="adminAvatarInitials" class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-navy text-white text-xs font-bold shadow-sm transition-transform group-hover:scale-105">
+          AD
+        </div>
+        <div class="min-w-0 flex-1">
+          <div class="flex items-center justify-between gap-1">
+            <p id="adminUserName" class="truncate text-xs font-bold text-slate-800 group-hover:text-navy transition-colors">Super Administrator</p>
+            <i class="ph ph-gear text-slate-400 group-hover:text-navy group-hover:rotate-45 transition-all text-sm flex-shrink-0" title="Pengaturan Profil"></i>
+          </div>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <span class="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+            <span class="text-[11px] font-medium text-slate-500 group-hover:text-slate-700 transition-colors">Admin &bull; Online</span>
+          </div>
+        </div>
+      </button>
+
+      <!-- Logout Button -->
+      <button type="button" id="btnLogout"
+        class="group flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400">
+        <i class="ph ph-sign-out text-xl transition-transform group-hover:-translate-x-0.5" aria-hidden="true"></i>
+        <span>Keluar Sistem</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- Main Content Area -->
+  <div class="flex-1 flex flex-col min-w-0">
+
+    <!-- Top-Bar Header Dinamis -->
+    <header class="bg-white border-b border-slate-200 px-6 py-5 sticky top-0 z-20 shadow-xs">
+      <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-bold uppercase tracking-wider text-slate-400" id="headerBreadcrumb">Dashboard
+              Admin</span>
+            <span class="text-slate-300">/</span>
+            <span class="text-xs font-bold text-navy" id="headerSubBreadcrumb">Manajemen Siswa</span>
+          </div>
+          <h2 id="headerPageTitle" class="mt-1 text-2xl font-extrabold tracking-tight text-slate-900">
+            Manajemen Data Siswa
+          </h2>
+          <p id="headerPageDesc" class="mt-0.5 text-xs text-slate-500">
+            Kelola data pokok siswa dan autentikasi akun perpustakaan secara terintegrasi.
+          </p>
+        </div>
+
+        <!-- Super User Role Badge -->
+        <div class="flex items-center gap-3">
+          <div
+            class="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-bold text-emerald-700">
+            <span class="h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span>Role: Super User</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Content Body -->
+    <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
+
+      <!-- Control Bar: Quick Search & Tambah Baru Button -->
+      <section
+        class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+        <!-- Quick Search Bar -->
+        <div class="relative flex-1 max-w-md">
+          <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-slate-400"
+            aria-hidden="true"></i>
+          <input type="search" id="searchInput" placeholder="Cari berdasarkan nama, nomor induk, atau username..."
+            class="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:border-navy focus:bg-white focus:ring-3 focus:ring-navy/10" />
+          <button type="button" id="btnClearSearch" aria-label="Bersihkan pencarian"
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden text-base">
+            <i class="ph ph-x-circle-fill"></i>
+          </button>
+        </div>
+
+        <!-- Action Button: Tambah Baru -->
+        <div class="flex items-center gap-3">
+          <button type="button" id="btnRefreshData" title="Muat ulang data dari database" aria-label="Muat ulang data"
+            class="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy transition-colors">
+            <i class="ph ph-arrows-clockwise text-lg" id="iconRefresh"></i>
+          </button>
+          <button type="button" id="btnOpenAddModal"
+            class="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-navy/25 transition-all duration-200 hover:bg-navy-light focus:outline-none focus:ring-3 focus:ring-navy/30">
+            <i class="ph ph-plus-circle text-lg" aria-hidden="true"></i>
+            <span id="btnAddText">Tambah Siswa Baru</span>
+          </button>
+        </div>
+      </section>
+
+      <!-- Panel Konten Tabel Data -->
+      <section class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+
+        <!-- Table Header Info Bar -->
+        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div class="flex items-center gap-2">
+            <h3 class="text-sm font-bold text-slate-800" id="tableTitle">Daftar Siswa Terdaftar</h3>
+            <span id="tableRecordCount"
+              class="rounded-md bg-slate-200/80 px-2 py-0.5 text-xs font-bold text-slate-700">0 Data</span>
+          </div>
+          <span class="text-xs text-slate-400">Sinkronisasi Realtime dengan Supabase</span>
+        </div>
+
+        <!-- Table Responsive Container -->
+        <div class="overflow-x-auto min-h-[320px]">
+          <table class="w-full text-left text-sm border-collapse" id="dataTable">
+            <thead
+              class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+              <tr id="tableHeadRow">
+                <!-- Injected dynamically based on active tab -->
+              </tr>
+            </thead>
+            <tbody id="tableBody" class="divide-y divide-slate-100">
+              <!-- Content rendered via admin.js (Loading, Empty, Error, or Data Rows) -->
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Table Footer / Information Note -->
+        <div
+          class="px-6 py-3 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between text-xs text-slate-500">
+          <div class="flex items-center gap-1.5">
+            <i class="ph ph-info text-sm text-navy" aria-hidden="true"></i>
+            <span>Penghapusan akun pengguna akan otomatis menghapus profil terkait melalui sistem cascade
+              database.</span>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL FORM: TAMBAH PENGGUNA BARU (SPLIT BACKDROP BLUR)    -->
+  <!-- ======================================================== -->
+  <div id="modalAddUser"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+    role="dialog" aria-modal="true" aria-labelledby="modalAddTitle">
+    <div id="modalAddContent"
+      class="w-full max-w-xl rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-200">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between px-6 py-4.5 border-b border-slate-100 bg-slate-50/50">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy/10 text-navy font-bold text-lg">
+            <i class="ph ph-user-plus" id="modalAddIcon" aria-hidden="true"></i>
+          </div>
+          <div>
+            <h3 id="modalAddTitle" class="text-lg font-extrabold tracking-tight text-slate-900">
+              Tambah Siswa Baru
+            </h3>
+            <p id="modalAddSubtitle" class="text-xs text-slate-500">
+              Lengkapi data profil dan akun login sistem perpustakaan.
+            </p>
+          </div>
+        </div>
+        <button type="button" id="btnCancelAddModal" aria-label="Tutup form modal"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+          <i class="ph ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body / Form Fields -->
+      <form id="formAddUser" class="p-6 space-y-4" novalidate>
+
+        <!-- Entity-Specific Dynamic Profile Fields -->
+        <div id="dynamicFormFields" class="space-y-4">
+          <!-- Injected dynamically based on active tab -->
+        </div>
+
+        <!-- Section Divider: Kredensial Akun -->
+        <div class="pt-2 border-t border-slate-100">
+          <p class="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3 flex items-center gap-1.5">
+            <i class="ph ph-lock-key text-sm text-navy"></i>
+            <span>Kredensial Akun Login (data_user)</span>
+          </p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Username Input -->
+            <div>
+              <label for="inputUsername" class="block text-xs font-bold text-slate-700 mb-1">
+                Username <span class="text-rose-500">*</span>
+              </label>
+              <input type="text" id="inputUsername" name="username" required maxlength="20"
+                placeholder="Contoh: siswa01"
+                class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+              <span class="text-[10px] text-slate-400 mt-1 block">Maksimal 20 karakter unik.</span>
+            </div>
+
+            <!-- Password Input with Toggle -->
+            <div>
+              <label for="inputPassword" class="block text-xs font-bold text-slate-700 mb-1">
+                Password <span id="passwordRequiredStar" class="text-rose-500">*</span>
+              </label>
+              <div class="relative">
+                <input type="password" id="inputPassword" name="password" required placeholder="Minimal 6 karakter"
+                  class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+                <button type="button" id="btnToggleModalPassword" aria-label="Tampilkan atau sembunyikan password"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy text-lg">
+                  <i class="ph ph-eye" id="iconToggleModalPassword"></i>
+                </button>
+              </div>
+              <span id="passwordHelpText" class="text-[10px] text-slate-400 mt-1 block">Password autentikasi
+                pengguna.</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Form Error Alert Banner -->
+        <div id="modalFormError"
+          class="hidden rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 flex items-start gap-2">
+          <i class="ph ph-warning-circle text-base flex-shrink-0 mt-0.5" aria-hidden="true"></i>
+          <span id="modalFormErrorText">Terjadi kesalahan pada input data.</span>
+        </div>
+
+        <!-- Modal Footer: Batal & Simpan Buttons -->
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button type="button" id="btnCloseAddModal"
+            class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300">
+            Batal
+          </button>
+          <button type="submit" id="btnSubmitAddUser"
+            class="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-navy/20 hover:bg-navy-light transition-all focus:outline-none focus:ring-3 focus:ring-navy/30 disabled:opacity-60 disabled:cursor-not-allowed">
+            <i class="ph ph-check-circle text-lg" id="iconSubmitSpinner"></i>
+            <span id="textBtnSubmit">Simpan Pengguna</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL KONFIRMASI HAPUS PENGGUNA (CUSTOM ACCESSIBLE)      -->
+  <!-- ======================================================== -->
+  <div id="modalDeleteConfirm"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+    role="alertdialog" aria-modal="true" aria-labelledby="modalDeleteTitle" aria-describedby="modalDeleteDesc">
+    <div id="modalDeleteContent"
+      class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-100 p-6 transform scale-95 transition-transform duration-200">
+      <div class="flex items-start gap-4">
+        <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
+          <i class="ph ph-trash text-2xl" aria-hidden="true"></i>
+        </div>
+        <div class="flex-1">
+          <h3 id="modalDeleteTitle" class="text-lg font-extrabold tracking-tight text-slate-900">
+            Hapus Pengguna?
+          </h3>
+          <p id="modalDeleteDesc" class="mt-1.5 text-xs leading-relaxed text-slate-600">
+            Apakah Anda yakin ingin menghapus akun pengguna <strong id="deleteTargetName"
+              class="text-slate-900 font-bold">...</strong>? Tindakan ini akan menghapus akun login dan seluruh profil
+            terkait secara permanen melalui cascade database.
+          </p>
+        </div>
+      </div>
+
+      <div class="mt-6 flex items-center justify-end gap-3">
+        <button type="button" id="btnCancelDelete"
+          class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300">
+          Batal
+        </button>
+        <button type="button" id="btnConfirmDelete"
+          class="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-rose-600/25 hover:bg-rose-700 transition-all focus:outline-none focus:ring-3 focus:ring-rose-400 disabled:opacity-60">
+          <i class="ph ph-trash-simple text-base" id="iconDeleteSpinner"></i>
+          <span id="textBtnDelete">Ya, Hapus Pengguna</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- MODAL PENGATURAN PROFIL ADMIN (CUSTOM ACCESSIBLE)        -->
+  <!-- ======================================================== -->
+  <div 
+    id="modalAdminProfile" 
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200" 
+    role="dialog" 
+    aria-modal="true" 
+    aria-labelledby="modalAdminProfileTitle"
+  >
+    <div 
+      id="modalAdminProfileContent" 
+      class="w-full max-w-lg max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-200"
+    >
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 sticky top-0 bg-white/95 backdrop-blur-xs z-10">
+        <div class="flex items-center gap-3">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy text-white shadow-sm shadow-navy/20">
+            <i class="ph ph-user-gear text-xl"></i>
+          </div>
+          <div>
+            <h3 id="modalAdminProfileTitle" class="text-base font-extrabold tracking-tight text-slate-900">
+              Pengaturan Profil Admin
+            </h3>
+            <p class="text-xs text-slate-500">
+              Kelola informasi akun dan kata sandi administrator Anda.
+            </p>
+          </div>
+        </div>
+        <button 
+          type="button" 
+          id="btnCancelAdminProfileModal" 
+          aria-label="Tutup pengaturan profil" 
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors"
+        >
+          <i class="ph ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Modal Body -->
+      <form id="formAdminProfile" class="p-6 space-y-5" novalidate>
+        
+        <!-- Status Card Info -->
+        <div class="rounded-2xl border border-slate-200/80 bg-gradient-to-br from-slate-50 to-blue-50/30 p-4 flex items-center gap-4">
+          <div id="modalAdminAvatarPreview" class="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl bg-navy text-white text-lg font-black shadow-md shadow-navy/20">
+            AD
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="inline-flex items-center gap-1 rounded-full bg-navy/10 px-2.5 py-0.5 text-[11px] font-bold text-navy">
+                <i class="ph ph-shield-check text-xs"></i>
+                Super Administrator
+              </span>
+              <span class="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[10px] font-bold text-emerald-700">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+                Aktif
+              </span>
+            </div>
+            <p id="modalAdminDisplayId" class="mt-1 text-xs font-mono text-slate-500">
+              ID Akun: <span class="font-bold text-slate-700">...</span>
+            </p>
+          </div>
+        </div>
+
+        <!-- Section: Identitas Akun -->
+        <div class="space-y-2">
+          <label for="inputAdminUsername" class="block text-xs font-bold text-slate-700">
+            Username Admin <span class="text-rose-500">*</span>
+          </label>
+          <div class="relative">
+            <i class="ph ph-user absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+            <input 
+              type="text" 
+              id="inputAdminUsername" 
+              name="adminUsername" 
+              required 
+              minlength="3"
+              maxlength="20" 
+              placeholder="Masukkan username admin" 
+              class="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+            />
+          </div>
+          <p class="text-[11px] text-slate-400 leading-relaxed">
+            Digunakan sebagai ID autentikasi login ke panel administrator. Minimal 3 karakter.
+          </p>
+        </div>
+
+        <!-- Section Divider: Ubah Password -->
+        <div class="pt-3 border-t border-slate-100 space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
+              <i class="ph ph-lock-key text-navy text-sm"></i>
+              <span>Keamanan & Kata Sandi</span>
+            </label>
+            <span class="text-[11px] text-slate-400 italic">Opsional</span>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            <!-- Password Baru -->
+            <div>
+              <label for="inputAdminNewPassword" class="block text-xs font-semibold text-slate-700 mb-1">
+                Password Baru
+              </label>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="inputAdminNewPassword" 
+                  name="adminNewPassword" 
+                  placeholder="Minimal 6 karakter" 
+                  minlength="6"
+                  class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+                />
+                <button 
+                  type="button" 
+                  id="btnToggleAdminNewPassword" 
+                  aria-label="Tampilkan atau sembunyikan password baru" 
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy text-lg"
+                >
+                  <i class="ph ph-eye" id="iconToggleAdminNewPassword"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Konfirmasi Password Baru -->
+            <div>
+              <label for="inputAdminConfirmPassword" class="block text-xs font-semibold text-slate-700 mb-1">
+                Konfirmasi Password
+              </label>
+              <div class="relative">
+                <input 
+                  type="password" 
+                  id="inputAdminConfirmPassword" 
+                  name="adminConfirmPassword" 
+                  placeholder="Ketik ulang password" 
+                  class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+                />
+                <button 
+                  type="button" 
+                  id="btnToggleAdminConfirmPassword" 
+                  aria-label="Tampilkan atau sembunyikan konfirmasi password" 
+                  class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-navy text-lg"
+                >
+                  <i class="ph ph-eye" id="iconToggleAdminConfirmPassword"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+          <p class="text-[11px] text-slate-400">
+            Biarkan kosong jika Anda tidak bermaksud memperbarui kata sandi login saat ini.
+          </p>
+        </div>
+
+        <!-- Alert Error Banner -->
+        <div id="modalAdminProfileError" class="hidden rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700 flex items-start gap-2">
+          <i class="ph ph-warning-circle text-base flex-shrink-0 mt-0.5" aria-hidden="true"></i>
+          <span id="modalAdminProfileErrorText">Terjadi kesalahan pada data profil.</span>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button 
+            type="button" 
+            id="btnCloseAdminProfileModal" 
+            class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300"
+          >
+            Batal
+          </button>
+          <button 
+            type="submit" 
+            id="btnSubmitAdminProfile" 
+            class="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-navy/20 hover:bg-navy-light transition-all focus:outline-none focus:ring-3 focus:ring-navy/30 disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            <i class="ph ph-check-circle text-lg" id="iconSubmitAdminProfileSpinner"></i>
+            <span id="textBtnSubmitAdminProfile">Simpan Profil Admin</span>
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+  <!-- ======================================================== -->
+  <!-- TOAST NOTIFICATION CONTAINER                             -->
+  <!-- ======================================================== -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full"
+    aria-live="polite">
+    <!-- Dynamic Toasts injected via JavaScript -->
+  </div>
+
+  <!-- Dependencies: Supabase JS Library, Client Config, & Admin Controller -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="../assets/js/supabaseClient.js"></script>
+  <script type="module" src="admin.js"></script>
+</body>
+
+</html>
