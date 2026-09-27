@@ -10,21 +10,10 @@ var rawCategories = [];
 var activeBookId = null;
 
 var modal = document.querySelector('#modal-buku');
-var detailView = document.querySelector('#detailView');
-var loanForm = document.querySelector('#loanForm');
 
 // ========================================================
 // 1. MANAJEMEN MODAL & PRA-PINJAM
 // ========================================================
-function setDateDefaults() {
-  var today = new Date();
-  var due = new Date(today);
-  due.setDate(due.getDate() + 7);
-  var format = function (date) { return date.toISOString().split('T')[0]; };
-  document.querySelector('#loanStart').value = format(today);
-  document.querySelector('#loanDue').value = format(due);
-}
-
 function showModal() {
   modal.classList.remove('hidden');
   modal.classList.add('flex');
@@ -35,8 +24,6 @@ function closeBookModal() {
   modal.classList.add('hidden');
   modal.classList.remove('flex');
   document.body.classList.remove('overflow-hidden');
-  detailView.classList.remove('hidden');
-  loanForm.classList.add('hidden');
 }
 
 function openDetailModal(bukuId) {
@@ -62,8 +49,6 @@ function openDetailModal(bukuId) {
   borrowBtn.classList.toggle('opacity-50', !book.available);
   borrowBtn.classList.toggle('cursor-not-allowed', !book.available);
 
-  detailView.classList.remove('hidden');
-  loanForm.classList.add('hidden');
   showModal();
 }
 
@@ -72,17 +57,28 @@ function openPinjamModal(bukuId) {
   if (!book || !book.available) return;
   activeBookId = bukuId;
 
-  var userSession = sessionStorage.getItem('cakrawala_user') || sessionStorage.getItem('cakrawala_logged_in');
-  if (!userSession) {
+  var userSessionRaw = sessionStorage.getItem('cakrawala_user') || sessionStorage.getItem('cakrawala_logged_in');
+  if (!userSessionRaw) {
     window.location.href = 'login.html?buku_id=' + encodeURIComponent(bukuId);
     return;
   }
 
-  document.querySelector('#loanBookTitle').textContent = book.title;
-  detailView.classList.add('hidden');
-  loanForm.classList.remove('hidden');
-  setDateDefaults();
-  showModal();
+  // Jika sudah login, tentukan redirect berdasarkan role
+  var userRole = 'siswa';
+  try {
+    var parsed = JSON.parse(userSessionRaw);
+    if (parsed && parsed.role) userRole = parsed.role.toLowerCase();
+  } catch (e) {
+    userRole = String(userSessionRaw).toLowerCase();
+  }
+
+  if (userRole === 'petugas') {
+    window.location.href = 'petugas/dashboard.html';
+  } else if (userRole === 'admin') {
+    window.location.href = 'admin/dashboard.html';
+  } else {
+    window.location.href = 'siswa-guru/dashboard.html?action=pinjam&buku_id=' + encodeURIComponent(bukuId);
+  }
 }
 
 function praPinjam(bukuId) {
@@ -476,15 +472,8 @@ document.addEventListener('DOMContentLoaded', function () {
   loadKatalog();
 
   document.querySelector('#closeModal')?.addEventListener('click', closeBookModal);
-  document.querySelector('#cancelLoan')?.addEventListener('click', closeBookModal);
   document.querySelector('#modalBorrowButton')?.addEventListener('click', function () {
     openPinjamModal(activeBookId);
-  });
-
-  document.querySelector('#loanForm')?.addEventListener('submit', function (event) {
-    event.preventDefault();
-    alert('Pengajuan prapinjam berhasil disiapkan.');
-    closeBookModal();
   });
 
   modal?.addEventListener('click', function (event) {
