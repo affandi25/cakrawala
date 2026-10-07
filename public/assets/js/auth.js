@@ -478,7 +478,52 @@ export function updateOfficerProfileDisplay(name) {
 }
 
 /* ==========================================================================
-   5. KONTROLER MODAL LOGOUT UNIVERSAL (Siswa-Guru & Petugas)
+   5. KONTROLER SESI & PROFIL ADMIN (admin/dashboard.html)
+   ========================================================================== */
+
+/**
+ * Memeriksa sesi login admin dan menginisialisasi tampilan profil
+ * @param {Object} targetState Objek state dashboard admin
+ */
+export async function initSessionAndAdmin(targetState = {}) {
+  const user = getCurrentUser();
+  if (!user) {
+    redirectToLogin();
+    return false;
+  }
+
+  const role = (user.role || '').trim().toLowerCase();
+  if (role !== 'admin') {
+    redirectToLogin();
+    return false;
+  }
+
+  targetState.currentUser = user;
+  const username = user.username || user.identifier || 'Administrator';
+  updateAdminProfileDisplay(username);
+  return true;
+}
+
+/**
+ * Menampilkan nama dan inisial avatar admin pada sidebar
+ * @param {string} name Nama pengguna admin
+ */
+export function updateAdminProfileDisplay(name) {
+  const nameEl = document.getElementById('adminUserName');
+  const avatarEl = document.getElementById('adminAvatarInitials');
+
+  if (nameEl) nameEl.textContent = name;
+  if (avatarEl) {
+    const parts = (name || '').trim().split(/\s+/);
+    const initials = parts.length > 1
+      ? (parts[0][0] + parts[1][0]).toUpperCase()
+      : (name || 'AD').substring(0, 2).toUpperCase();
+    avatarEl.textContent = initials;
+  }
+}
+
+/* ==========================================================================
+   6. KONTROLER MODAL LOGOUT UNIVERSAL (Siswa-Guru, Petugas, & Admin)
    ========================================================================== */
 
 /**

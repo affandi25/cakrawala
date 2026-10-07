@@ -21,7 +21,7 @@ import {
   hideModal,
   showToast,
   getBorrowerInfo
-} from './utils.js';
+} from './petugasHelper.js';
 
 /**
  * Memasang pendengar peristiwa (event listener) pada modul pengembalian

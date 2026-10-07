@@ -4,7 +4,7 @@
  */
 
 import { state } from './state.js';
-import { formatRupiah, formatTanggalIndo, getBorrowerInfo } from './utils.js';
+import { formatRupiah, formatTanggalIndo, getBorrowerInfo } from './petugasHelper.js';
 import { handleApprovePrapinjam, handleRejectPrapinjam } from './sirkulasi.js';
 
 /**

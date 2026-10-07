@@ -1,13 +1,15 @@
 /**
- * CAKRAWALA Digital Library - Utility & Helper Functions
- * File: public/petugas/modules/utils.js
+ * CAKRAWALA Digital Library - Centralized Shared Utilities
+ * File: public/assets/js/sharedUtils.js
+ * 
+ * Sentral utility helper untuk format mata uang, tanggal, modal, sanitasi HTML,
+ * dan sistem notifikasi toast mengambang di seluruh dashboard.
  */
 
-import { state } from './state.js';
-
 /**
- * Mengubah angka menjadi format Rupiah resmi Indonesia.
- * Contoh: 50000 -> "Rp 50.000"
+ * Format angka ke mata uang Rupiah resmi Indonesia (contoh: 50000 -> "Rp 50.000")
+ * @param {number|string} amount
+ * @returns {string}
  */
 export function formatRupiah(amount) {
   const val = Number(amount) || 0;
@@ -15,8 +17,9 @@ export function formatRupiah(amount) {
 }
 
 /**
- * Mengubah format tanggal standar (YYYY-MM-DD) menjadi teks Indonesia ramah.
- * Contoh: "2026-09-27" -> "27 Sep 2026"
+ * Format tanggal YYYY-MM-DD ke teks bahasa Indonesia (contoh: "2026-09-27" -> "27 Sep 2026")
+ * @param {string} dateStr
+ * @returns {string}
  */
 export function formatTanggalIndo(dateStr) {
   if (!dateStr) return '-';
@@ -35,6 +38,7 @@ export function formatTanggalIndo(dateStr) {
 
 /**
  * Menghasilkan string tanggal hari ini dalam format 'YYYY-MM-DD'
+ * @returns {string}
  */
 export function getTodayDateString() {
   const now = new Date();
@@ -45,7 +49,10 @@ export function getTodayDateString() {
 }
 
 /**
- * Menambahkan sejumlah hari ke sebuah tanggal
+ * Menambahkan sejumlah hari ke sebuah tanggal string 'YYYY-MM-DD'
+ * @param {string} dateStr
+ * @param {number} days
+ * @returns {string}
  */
 export function addDaysToDate(dateStr, days) {
   try {
@@ -62,6 +69,9 @@ export function addDaysToDate(dateStr, days) {
 
 /**
  * Menghitung selisih hari antara dua tanggal
+ * @param {string} startStr
+ * @param {string} endStr
+ * @returns {number}
  */
 export function calculateDateDiffInDays(startStr, endStr) {
   try {
@@ -77,31 +87,24 @@ export function calculateDateDiffInDays(startStr, endStr) {
 }
 
 /**
- * Menghasilkan kode unik acak
+ * Sanitasi string untuk mencegah injeksi XSS pada innerHTML
+ * @param {string} str
+ * @returns {string}
  */
-export function generateRandomId(prefix = 'TRX', length = 6) {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  let result = '';
-  for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return `${prefix}-${result}`;
-}
-
-/**
- * Mengubah file berkas menjadi Base64 DataURL
- */
-export function fileToDataUrl(file) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = e => resolve(e.target.result);
-    reader.onerror = e => reject(e);
-    reader.readAsDataURL(file);
-  });
+export function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
 }
 
 /**
  * Membuka jendela pop-up modal dengan transisi lembut
+ * @param {HTMLElement} modalEl
+ * @param {HTMLElement} contentEl
  */
 export function showModal(modalEl, contentEl) {
   if (!modalEl) return;
@@ -116,7 +119,9 @@ export function showModal(modalEl, contentEl) {
 }
 
 /**
- * Menutup jendela pop-up modal
+ * Menutup jendela pop-up modal dengan transisi lembut
+ * @param {HTMLElement} modalEl
+ * @param {HTMLElement} contentEl
  */
 export function hideModal(modalEl, contentEl) {
   if (!modalEl) return;
@@ -131,41 +136,47 @@ export function hideModal(modalEl, contentEl) {
 }
 
 /**
- * Menampilkan pesan toast mengambang di pojok kanan bawah
+ * Menampilkan pesan notifikasi toast mengambang di kontainer #toastContainer
+ * @param {string} message Pesan yang ingin ditampilkan
+ * @param {'success'|'error'|'warning'|'info'} type Jenis notifikasi
+ * @param {number} duration Durasi tayang dalam milidetik (default: 3500)
  */
 export function showToast(message, type = 'info', duration = 3500) {
   const container = document.getElementById('toastContainer');
   if (!container) return;
 
   const toast = document.createElement('div');
-  toast.className = 'pointer-events-auto flex items-center gap-3 rounded-2xl bg-white p-4 shadow-xl border animate-toast';
+  toast.className = 'pointer-events-auto flex items-center gap-3 rounded-2xl bg-white p-4 shadow-xl border animate-toast transition-all duration-300';
 
   let iconHtml = '<i class="ph-fill ph-info text-2xl text-navy"></i>';
   let borderColor = 'border-slate-200';
 
   if (type === 'success') {
     iconHtml = '<i class="ph-fill ph-check-circle text-2xl text-emerald-600"></i>';
-    borderColor = 'border-emerald-200 bg-emerald-50/50';
+    borderColor = 'border-emerald-200 bg-emerald-50/50 text-emerald-900';
   } else if (type === 'error') {
     iconHtml = '<i class="ph-fill ph-warning-circle text-2xl text-rose-600"></i>';
-    borderColor = 'border-rose-200 bg-rose-50/50';
+    borderColor = 'border-rose-200 bg-rose-50/50 text-rose-900';
   } else if (type === 'warning') {
     iconHtml = '<i class="ph-fill ph-warning text-2xl text-amber-600"></i>';
-    borderColor = 'border-amber-200 bg-amber-50/50';
+    borderColor = 'border-amber-200 bg-amber-50/50 text-amber-900';
   }
 
   toast.className += ` ${borderColor}`;
   toast.innerHTML = `
     <div class="shrink-0">${iconHtml}</div>
-    <div class="flex-1 text-xs font-semibold text-slate-800 leading-snug">${message}</div>
-    <button type="button" class="shrink-0 text-slate-400 hover:text-slate-600">
+    <div class="flex-1 text-xs font-semibold leading-snug">${escapeHtml(message)}</div>
+    <button type="button" aria-label="Tutup pesan" class="shrink-0 text-slate-400 hover:text-slate-600 p-0.5">
       <i class="ph ph-x text-base"></i>
     </button>
   `;
 
-  toast.querySelector('button').addEventListener('click', () => {
-    toast.remove();
-  });
+  const btnClose = toast.querySelector('button');
+  if (btnClose) {
+    btnClose.addEventListener('click', () => {
+      toast.remove();
+    });
+  }
 
   container.appendChild(toast);
 
@@ -173,53 +184,7 @@ export function showToast(message, type = 'info', duration = 3500) {
     if (toast.parentElement) {
       toast.style.opacity = '0';
       toast.style.transform = 'translateY(10px)';
-      toast.style.transition = 'all 0.3s ease';
       setTimeout(() => toast.remove(), 300);
     }
   }, duration);
-}
-
-/**
- * Mencari identitas peminjam dari memori cache (baik Siswa maupun Guru)
- */
-export function getBorrowerInfo(id) {
-  if (!id) {
-    return { type: 'unknown', nama: '-', id: '-', sub: '-', badge: 'Anggota', kelas: '-', kontak: '-' };
-  }
-
-  const siswa = (state.cache.siswa || []).find(s => s.nisn_siswa === id);
-  if (siswa) {
-    return {
-      type: 'siswa',
-      nama: siswa.nama_siswa,
-      id: siswa.nisn_siswa,
-      sub: `Siswa &bull; Kelas ${siswa.kelas || '-'}`,
-      badge: 'Siswa',
-      kelas: siswa.kelas || '-',
-      kontak: siswa.kontak_siswa || '-'
-    };
-  }
-
-  const guru = (state.cache.guru || []).find(g => g.nip_guru === id);
-  if (guru) {
-    return {
-      type: 'guru',
-      nama: guru.nama_guru,
-      id: guru.nip_guru,
-      sub: `Guru &bull; ${guru.mata_pelajaran || 'Pengajar'}`,
-      badge: 'Guru',
-      kelas: guru.mata_pelajaran || 'Guru Pengajar',
-      kontak: guru.kontak_guru || '-'
-    };
-  }
-
-  return {
-    type: 'unknown',
-    nama: id,
-    id: id,
-    sub: 'Anggota Perpustakaan',
-    badge: 'Anggota',
-    kelas: '-',
-    kontak: '-'
-  };
 }

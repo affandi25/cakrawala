@@ -5,7 +5,7 @@
  * FUNGSI UTAMA:
  * Sebagai entry point utama yang mengorkestrasi modul-modul terpisah:
  * 1. modules/state.js        - Sentral penyimpanan ingatan/cache data
- * 2. modules/utils.js        - Helper tanggal, rupiah, modal, toast, dan borrower resolver
+ * 2. modules/petugasHelper.js - Helper tanggal, rupiah, modal, toast, dan borrower resolver
  * 3. ../assets/js/auth.js    - Verifikasi sesi login & profil petugas terpusat
  * 4. modules/overview.js     - Meja 1: Statistik operasional & quick prapinjam
  * 5. modules/sirkulasi.js    - Meja 2: Verifikasi prapinjam, antrean dipinjam, & walk-in desk

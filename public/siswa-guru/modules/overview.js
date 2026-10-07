@@ -4,7 +4,7 @@
  */
 
 import { state } from './state.js';
-import { formatRupiah, formatTanggalIndo, getRemainingDays } from './utils.js';
+import { formatRupiah, formatTanggalIndo, getRemainingDays } from './siswaHelper.js';
 
 /**
  * Merender seluruh data di halaman Beranda pribadi siswa/guru

@@ -19,7 +19,7 @@ import {
   hideModal,
   showToast,
   getBorrowerInfo
-} from './utils.js';
+} from './petugasHelper.js';
 
 /**
  * Menampilkan pratinjau buku yang dipilih ke dalam kartu hijau di Meja Walk-In
