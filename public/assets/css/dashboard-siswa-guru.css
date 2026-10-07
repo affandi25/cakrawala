@@ -1,0 +1,25 @@
+/* ==========================================================================
+   CAKRAWALA DIGITAL LIBRARY - DASHBOARD SISWA & GURU
+   File: public/assets/css/dashboard-siswa-guru.css
+   Fungsi: Gaya tampilan khusus portal anggota siswa dan guru.
+   ========================================================================== */
+
+/* Mengimpor gaya umum bersama (scrollbar & animasi) */
+@import './dashboard-shared.css';
+
+/* --------------------------------------------------------------------------
+   1. GAYA KARTU ANGGOTA DIGITAL & TIKET
+   -------------------------------------------------------------------------- */
+.member-card-gradient {
+  background: linear-gradient(135deg, #000c4f 0%, #1e293b 100%);
+}
+
+.ticket-dash-border {
+  border-style: dashed;
+  border-color: #cbd5e1;
+}
+
+/* Transisi halus saat beralih subtab pinjaman */
+.tab-fade-enter {
+  animation: fadeInScale 0.15s ease forwards;
+}

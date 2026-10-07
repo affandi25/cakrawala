@@ -16,6 +16,7 @@ dist/
 # AI Agent Local Tools & Cache
 .agents/
 AGENTS.md
+skills-lock.json
 
 # Legacy local PHP backend (not in PRD client-side architecture)
 api/

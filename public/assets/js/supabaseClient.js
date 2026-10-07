@@ -6,19 +6,31 @@
  * Setup Vercel : Tambahkan VITE_SUPABASE_URL & VITE_SUPABASE_ANON_KEY di Settings → Environment Variables
  */
 
-const SUPABASE_URL     = import.meta.env.VITE_SUPABASE_URL;
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY;
+const DEFAULT_URL = 'https://agmeuhytgkcbiovgzhwd.supabase.co';
+const DEFAULT_ANON_KEY = 'sb_publishable_iTgU8oOpLPSKf7AYhOSL4A_Y1TZu8mg';
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error(
-    '[CAKRAWALA] Supabase credentials tidak ditemukan.\n' +
-    'Salin .env.example → .env dan isi VITE_SUPABASE_URL & VITE_SUPABASE_ANON_KEY.'
-  );
+const env = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : {};
+
+const SUPABASE_URL = env.VITE_SUPABASE_URL || DEFAULT_URL;
+const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY || DEFAULT_ANON_KEY;
+
+let client = null;
+if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
+  client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+} else {
+  // Fallback jika dipanggil di luar browser atau script CDN belum selesai
+  client = {
+    from: () => ({
+      select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }), order: () => Promise.resolve({ data: [], error: null }) }),
+      insert: () => Promise.resolve({ error: null }),
+      update: () => Promise.resolve({ error: null }),
+      delete: () => Promise.resolve({ error: null })
+    })
+  };
 }
-
-// Inisialisasi Supabase client dari CDN (window.supabase)
-const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // Pasang ke window.db agar kompatibel dengan seluruh script yang sudah ada
 export const db = client;
-window.db = client;
+if (typeof window !== 'undefined') {
+  window.db = client;
+}

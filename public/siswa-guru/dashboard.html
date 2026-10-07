@@ -1,0 +1,995 @@
+<!doctype html>
+<html lang="id">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard Anggota | CAKRAWALA Digital Library</title>
+
+  <!-- Tailwind CSS CDN & Custom Configuration -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            navy: '#000C4F',
+            'navy-light': '#0a1a7a',
+            'navy-dark': '#000836'
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif']
+          },
+          boxShadow: {
+            '2xs': '0 1px 2px 0 rgba(0, 0, 0, 0.04)',
+            'xs': '0 1px 3px 0 rgba(0, 0, 0, 0.07), 0 1px 2px 0 rgba(0, 0, 0, 0.04)'
+          }
+        }
+      }
+    };
+  </script>
+
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+
+  <!-- Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+  <!-- QRCode.js Library -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+  <!-- JsBarcode Library (Code 128 / 1D Barcode) -->
+  <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
+
+  <!-- Stylesheet Khusus Dashboard Siswa & Guru -->
+  <link rel="stylesheet" href="../assets/css/dashboard-siswa-guru.css" />
+</head>
+
+<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col md:flex-row selection:bg-navy selection:text-white">
+
+  <!-- ==================== HEADER MOBILE ==================== -->
+  <header class="md:hidden flex items-center justify-between bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-30 shadow-2xs">
+    <div class="flex items-center gap-2.5">
+      <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-navy text-white shadow-xs">
+        <i class="ph ph-books text-xl"></i>
+      </div>
+      <div>
+        <span class="text-base font-extrabold tracking-tight text-navy">CAKRAWALA</span>
+        <span class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Portal Anggota</span>
+      </div>
+    </div>
+    <button id="btnToggleMobileSidebar" type="button" aria-label="Buka menu navigasi"
+      class="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-navy focus:outline-none">
+      <i class="ph ph-list text-2xl"></i>
+    </button>
+  </header>
+
+  <!-- Mobile Sidebar Backdrop Overlay -->
+  <div id="sidebarBackdrop" class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs hidden md:hidden transition-opacity duration-300"></div>
+
+  <!-- ==================== SIDEBAR NAVIGASI ==================== -->
+  <aside id="memberSidebar"
+    class="fixed inset-y-0 left-0 z-50 w-72 bg-white border-r border-slate-200 flex flex-col justify-between transform -translate-x-full md:translate-x-0 md:static transition-transform duration-300 ease-in-out shrink-0">
+    
+    <!-- Bagian Atas: Logo & Menu -->
+    <div class="flex flex-col h-full overflow-y-auto">
+      <!-- Profil Pengguna (Siswa / Guru) di Bagian Atas Sidebar -->
+      <div class="p-4 border-b border-slate-100 flex items-center justify-between gap-2.5 bg-slate-50/50">
+        <button type="button" id="btnSidebarUserProfile" onclick="if(window.switchTab) window.switchTab('profil')"
+          class="flex items-center gap-3 min-w-0 flex-1 text-left rounded-xl p-1 -m-1 hover:bg-white hover:shadow-2xs transition-all duration-200 group"
+          title="Klik untuk membuka Pengaturan Profil">
+          <div class="relative shrink-0">
+            <div id="memberAvatarInitials" class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-300 text-white shadow-xs overflow-hidden">
+              <i class="ph-fill ph-user text-2xl text-white"></i>
+            </div>
+            <span class="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full bg-emerald-500 border-2 border-white" title="Status: Online"></span>
+          </div>
+          <div class="min-w-0 flex-1">
+            <p id="memberUserName" class="text-xs font-bold text-slate-800 truncate group-hover:text-navy transition">Memuat...</p>
+            <p id="memberUserSub" class="text-[10px] font-medium text-slate-500 truncate mt-0.5">-</p>
+          </div>
+        </button>
+        <button id="btnCloseMobileSidebar" type="button" aria-label="Tutup menu navigasi"
+          class="md:hidden flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+          <i class="ph ph-x text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Menu Navigasi Tab -->
+      <nav class="p-3.5 space-y-1.5 flex-1" aria-label="Navigasi Utama">
+        <!-- 1. Beranda -->
+        <button id="tabBtnBeranda" type="button"
+          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 bg-navy text-white shadow-sm shadow-navy/20">
+          <i class="ph ph-house text-xl shrink-0"></i>
+          <span class="flex-1 text-left">Beranda</span>
+        </button>
+
+        <!-- 2. Katalog Koleksi -->
+        <button id="tabBtnKatalog" type="button"
+          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-100 hover:text-navy">
+          <i class="ph ph-books text-xl shrink-0"></i>
+          <span class="flex-1 text-left">Katalog Koleksi</span>
+        </button>
+
+        <!-- 3. Peminjaman Saya -->
+        <button id="tabBtnPinjaman" type="button"
+          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-100 hover:text-navy">
+          <i class="ph ph-bookmark-simple text-xl shrink-0"></i>
+          <span class="flex-1 text-left">Peminjaman Saya</span>
+          <span id="badgeSidebarActiveCount" class="hidden rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600">0</span>
+        </button>
+
+        <!-- 4. Riwayat & Denda -->
+        <button id="tabBtnRiwayat" type="button"
+          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-100 hover:text-navy">
+          <i class="ph ph-clock-counter-clockwise text-xl shrink-0"></i>
+          <span class="flex-1 text-left">Riwayat & Denda</span>
+        </button>
+
+        <!-- 5. Kartu Anggota Digital -->
+        <button id="tabBtnProfil" type="button"
+          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 text-slate-600 hover:bg-slate-100 hover:text-navy">
+          <i class="ph ph-identification-card text-xl shrink-0"></i>
+          <span class="flex-1 text-left">Kartu Anggota & Profil</span>
+        </button>
+
+        <!-- Pintasan Katalog Publik Luar -->
+        <div class="pt-4 mt-4 border-t border-slate-100">
+          <a href="../index.html"
+            class="flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold text-slate-500 hover:bg-slate-100 hover:text-navy transition">
+            <i class="ph ph-arrow-square-out text-lg"></i>
+            <span>Katalog Publik Perpustakaan</span>
+          </a>
+        </div>
+      </nav>
+    </div>
+
+    <!-- Bagian Bawah Sidebar: Tombol Log Out -->
+    <div class="p-3.5 border-t border-slate-200 bg-slate-50/70">
+      <button id="btnLogout" type="button"
+        class="group flex w-full items-center justify-center gap-2.5 rounded-xl px-4 py-2.5 text-xs font-bold text-rose-600 bg-white border border-rose-200/80 shadow-2xs hover:bg-rose-50 hover:border-rose-300 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-rose-400">
+        <i class="ph ph-sign-out text-lg transition-transform group-hover:-translate-x-0.5" aria-hidden="true"></i>
+        <span>Keluar dari Akun</span>
+      </button>
+    </div>
+  </aside>
+
+  <!-- ==================== AREA UTAMA (MAIN VIEWPORT) ==================== -->
+  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+
+    <!-- Header Atas: Breadcrumb & Judul Halaman -->
+    <header class="bg-white border-b border-slate-200 px-6 py-5 sticky top-0 z-20 shadow-2xs">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        <div>
+          <nav class="flex items-center gap-1.5 text-xs text-slate-400 font-medium mb-1">
+            <span>Anggota</span>
+            <i class="ph ph-caret-right text-[10px]"></i>
+            <span id="headerSubBreadcrumb" class="text-navy font-bold">Beranda</span>
+          </nav>
+          <h2 id="headerPageTitle" class="text-xl sm:text-2xl font-black text-navy tracking-tight">Portal Literasi & Aktivitas Peminjaman</h2>
+          <p id="headerPageDesc" class="text-xs text-slate-500 mt-0.5">Pantau buku yang sedang kamu baca, batas tempo pengembalian, dan informasi perpustakaan.</p>
+        </div>
+
+        <!-- <div class="flex items-center gap-2 self-start sm:self-auto">
+          <span id="memberRoleBadge" class="rounded-full bg-blue-100 text-navy px-3 py-1 text-xs font-bold border border-blue-200">
+            Siswa
+          </span>
+        </div> -->
+      </div>
+    </header>
+
+    <!-- Konten Isi Dashboard -->
+    <main class="flex-1 p-5 sm:p-7 max-w-7xl w-full mx-auto space-y-6">
+
+      <!-- ========================================================================= -->
+      <!-- RED ALERT BANNER: PERINGATAN DENDA BELUM LUNAS (PRD SECTION 4.C)          -->
+      <!-- ========================================================================= -->
+      <section id="bannerPeringatanDenda" class="hidden rounded-2xl bg-rose-50 border-2 border-rose-300 p-4 sm:p-5 shadow-sm">
+        <div class="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
+          <div class="flex items-start gap-3.5">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs">
+              <i class="ph-fill ph-warning-circle text-2xl"></i>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h3 class="text-sm sm:text-base font-extrabold text-rose-900">Perhatian: Kamu Memiliki Tagihan Denda Perpustakaan!</h3>
+                <span class="rounded-full bg-rose-200 text-rose-900 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">Belum Lunas</span>
+              </div>
+              <p class="text-xs text-rose-700 mt-1 leading-relaxed">
+                Total denda tertunda sebesar <strong id="bannerNominalDenda" class="text-rose-950 font-black text-sm">Rp 0</strong> (<span id="bannerJumlahKasusDenda">0 transaksi</span>). 
+                Harap segera lakukan penyelesaian pembayaran secara tunai ke <strong>Meja Petugas Sirkulasi</strong> di perpustakaan fisik.
+              </p>
+            </div>
+          </div>
+          <button type="button" onclick="window.switchTab('riwayat')"
+            class="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition shadow-xs self-stretch sm:self-auto justify-center">
+            <span>Lihat Rincian Denda</span>
+            <i class="ph ph-arrow-right"></i>
+          </button>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 1: BERANDA / OVERVIEW AKTIVITAS                                        -->
+      <!-- ========================================================================= -->
+      <section id="tabContentBeranda" class="space-y-6">
+        <!-- Hero Sambutan Siswa / Guru -->
+        <div class="relative overflow-hidden rounded-3xl bg-gradient-to-r from-navy via-navy-light to-navy p-6 sm:p-8 text-white shadow-md">
+          <div class="relative z-10 max-w-2xl">
+            <h3 class="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
+              Selamat Datang, <span id="welcomeMemberName">Sahabat Literasi</span>!
+            </h3>
+            <p class="mt-2 text-xs sm:text-sm text-blue-100 leading-relaxed">
+              Jelajahi ribuan koleksi buku referensi dan fiksi berkualitas di CAKRAWALA. Booking buku fisik secara daring sebelum berkunjung ke perpustakaan.
+            </p>
+
+            <div class="mt-5 flex flex-wrap items-center gap-2.5">
+              <button id="btnQuickToKatalog" type="button"
+                class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-navy hover:bg-blue-50 transition shadow-sm">
+                <i class="ph ph-magnifying-glass text-base"></i>
+                <span>Cari Koleksi Buku</span>
+              </button>
+              <button id="btnQuickToPinjaman" type="button"
+                class="inline-flex items-center gap-2 rounded-xl bg-white/15 border border-white/20 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/25 transition">
+                <i class="ph ph-bookmark-simple text-base"></i>
+                <span>Buku Dipinjam Saya</span>
+              </button>
+              <button id="btnQuickToCard" type="button"
+                class="inline-flex items-center gap-2 rounded-xl bg-white/15 border border-white/20 px-4 py-2.5 text-xs font-bold text-white hover:bg-white/25 transition">
+                <i class="ph ph-qr-code text-base"></i>
+                <span>Kartu Anggota</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Aksen Visual Icon di Belakang -->
+          <div class="absolute -right-8 -bottom-10 opacity-10 text-white pointer-events-none hidden sm:block">
+            <i class="ph ph-books text-[220px]"></i>
+          </div>
+        </div>
+
+        <!-- 4 Kotak KPI Statistik Pribadi -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- KPI 1: Buku Sedang Dipinjam -->
+          <div class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs hover:shadow-xs transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500">Sedang Dipinjam</span>
+              <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-navy">
+                <i class="ph ph-book-open text-xl"></i>
+              </div>
+            </div>
+            <div id="statActiveLoanCount" class="text-2xl font-black text-slate-800 mt-2">0</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Buku fisik yang kamu bawa</p>
+          </div>
+
+          <!-- KPI 2: Antrean Prapinjam -->
+          <div class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs hover:shadow-xs transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500">Antrean Pra-Pinjam</span>
+              <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-amber-50 text-amber-700">
+                <i class="ph ph-ticket text-xl"></i>
+              </div>
+            </div>
+            <div id="statPendingReservationCount" class="text-2xl font-black text-slate-800 mt-2">0</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Menunggu diambil di perpustakaan</p>
+          </div>
+
+          <!-- KPI 3: Riwayat Selesai -->
+          <div class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs hover:shadow-xs transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500">Selesai Dibaca</span>
+              <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-700">
+                <i class="ph ph-check-circle text-xl"></i>
+              </div>
+            </div>
+            <div id="statFinishedLoanCount" class="text-2xl font-black text-slate-800 mt-2">0</div>
+            <p class="text-[11px] text-slate-400 mt-0.5">Total buku pernah dikembalikan</p>
+          </div>
+
+          <!-- KPI 4: Status Denda -->
+          <div class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs hover:shadow-xs transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-semibold text-slate-500">Status Denda</span>
+              <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-rose-50 text-rose-700">
+                <i class="ph ph-receipt text-xl"></i>
+              </div>
+            </div>
+            <div id="statFineAmountDisplay" class="text-2xl font-black text-emerald-600 mt-2">Rp 0</div>
+            <p id="statFineStatusSub" class="text-[11px] text-slate-400 mt-0.5">Bebas denda perpustakaan</p>
+          </div>
+        </div>
+
+        <!-- Kolom Dua Blok: Buku Aktif & Rekomendasi -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Kiri: Buku Sedang Aktif Dipinjam -->
+          <div class="lg:col-span-2 rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-2xs">
+            <div class="flex items-center justify-between mb-4 pb-3 border-b border-slate-100">
+              <div class="flex items-center gap-2.5">
+                <i class="ph ph-bookmark-simple text-xl text-navy"></i>
+                <h4 class="font-bold text-slate-800 text-sm sm:text-base">Koleksi yang Sedang Kamu Bawa</h4>
+              </div>
+              <button type="button" onclick="window.switchTab('pinjaman')" class="text-xs font-bold text-navy hover:underline">
+                Lihat Semua &rarr;
+              </button>
+            </div>
+
+            <!-- List Card Buku Aktif -->
+            <div id="containerActiveLoansQuick" class="space-y-3">
+              <!-- Item diinjeksi via overview.js -->
+            </div>
+
+            <!-- Placeholder Jika Kosong -->
+            <div id="placeholderNoActiveLoans" class="py-10 text-center text-slate-400">
+              <i class="ph ph-books text-4xl inline-block mb-2 text-slate-300"></i>
+              <p class="text-xs font-semibold text-slate-600">Saat ini tidak ada buku yang sedang kamu bawa.</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">Kamu bisa meminjam hingga 2 buku sekaligus di perpustakaan.</p>
+            </div>
+          </div>
+
+          <!-- Kanan: Info Layanan & Jam Operasional -->
+          <div class="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-2xs flex flex-col justify-between">
+            <div>
+              <div class="flex items-center gap-2 text-navy mb-4">
+                <i class="ph ph-clock text-xl"></i>
+                <h4 class="font-bold text-sm">Jam Operasional Layanan</h4>
+              </div>
+
+              <div class="space-y-3 text-xs">
+                <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span class="font-semibold text-slate-700">Senin - Kamis</span>
+                  <span class="font-bold text-navy">07.30 - 15.30 WIB</span>
+                </div>
+                <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span class="font-semibold text-slate-700">Jumat</span>
+                  <span class="font-bold text-navy">07.30 - 11.30 WIB</span>
+                </div>
+                <div class="flex justify-between items-center p-2.5 rounded-xl bg-slate-50 border border-slate-100">
+                  <span class="font-semibold text-slate-700">Sabtu - Minggu</span>
+                  <span class="font-bold text-rose-600">Tutup / Libur</span>
+                </div>
+              </div>
+
+              <div class="mt-5 p-3 rounded-xl bg-blue-50/70 border border-blue-100 text-navy text-[11px] leading-relaxed">
+                <strong class="font-bold flex items-center gap-1 mb-1">
+                  <i class="ph ph-lightbulb"></i> Ketentuan Pra-Pinjam:
+                </strong>
+                Buku yang diajukan pra-pinjam daring akan disimpan di meja sirkulasi selama <strong>maksimal 2x24 jam</strong> sebelum otomatis dibatalkan.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 2: KATALOG BUKU & PRA-PINJAM                                          -->
+      <!-- ========================================================================= -->
+      <section id="tabContentKatalog" class="hidden space-y-6">
+        <!-- Bilah Filter & Pencarian -->
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs">
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-3.5">
+            <!-- Input Pencarian -->
+            <div class="sm:col-span-6 relative">
+              <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+              <input id="inputSearchKatalog" type="text" placeholder="Cari judul buku, penulis, penerbit, nomor rak..."
+                class="w-full pl-10 pr-9 py-2.5 rounded-xl border border-slate-200 text-xs sm:text-sm focus:outline-none focus:border-navy focus:ring-4 focus:ring-blue-100 transition" />
+              <button id="btnClearSearchKatalog" type="button" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                <i class="ph ph-x text-sm"></i>
+              </button>
+            </div>
+
+            <!-- Filter Kategori -->
+            <div class="sm:col-span-3">
+              <select id="selectFilterKategoriKatalog"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-navy focus:ring-4 focus:ring-blue-100 bg-white font-medium text-slate-700">
+                <option value="">Semua Kategori</option>
+              </select>
+            </div>
+
+            <!-- Filter Ketersediaan Stok -->
+            <div class="sm:col-span-3">
+              <select id="selectFilterStokKatalog"
+                class="w-full px-3 py-2.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-navy focus:ring-4 focus:ring-blue-100 bg-white font-medium text-slate-700">
+                <option value="">Semua Status Stok</option>
+                <option value="tersedia">Hanya Tersedia (Bisa Dipinjam)</option>
+                <option value="dipinjam">Sedang Dipinjam Habis</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Keterangan Jumlah Data -->
+          <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+            <span id="katalogTableInfo">Menampilkan koleksi buku perpustakaan.</span>
+            <span id="katalogRecordCount" class="font-bold text-navy">0 Koleksi</span>
+          </div>
+        </div>
+
+        <!-- Grid Kartu Buku Katalog -->
+        <div id="gridKatalogBuku" class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-5">
+          <!-- Kartu buku diinjeksi via katalog.js -->
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 3: PEMINJAMAN SAYA                                                    -->
+      <!-- ========================================================================= -->
+      <section id="tabContentPinjaman" class="hidden space-y-6">
+        <!-- Sub-Tabs Switcher (Sedang Dipinjam vs Antrean Prapinjam) -->
+        <div class="flex items-center justify-between flex-wrap gap-3">
+          <div class="inline-flex rounded-xl bg-slate-200/80 p-1 text-xs">
+            <button id="subTabBtnPinjamanAktif" type="button"
+              class="subtab-pinjaman-btn flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition bg-white text-navy shadow-xs">
+              <i class="ph ph-book-open"></i>
+              <span>Sedang Dipinjam</span>
+              <span id="badgeCountPinjamanAktif" class="rounded-full bg-slate-100 px-2 py-0.2 text-[10px] font-bold text-slate-600">0</span>
+            </button>
+
+            <button id="subTabBtnPinjamanPrapinjam" type="button"
+              class="subtab-pinjaman-btn flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition text-slate-600 hover:text-navy">
+              <i class="ph ph-ticket"></i>
+              <span>Antrean Pra-Pinjam</span>
+              <span id="badgeCountPinjamanPrapinjam" class="rounded-full bg-slate-100 px-2 py-0.2 text-[10px] font-bold text-slate-600">0</span>
+            </button>
+          </div>
+
+          <p class="text-xs text-slate-400">Status diperbarui secara real-time dari meja petugas.</p>
+        </div>
+
+        <!-- Sub-Panel 1: Buku Sedang Dipinjam -->
+        <div id="subPanelPinjamanAktif" class="space-y-4">
+          <div id="containerListPinjamanAktif" class="space-y-3.5">
+            <!-- Kartu diinjeksi via pinjaman.js -->
+          </div>
+        </div>
+
+        <!-- Sub-Panel 2: Antrean Pra-Pinjam -->
+        <div id="subPanelPinjamanPrapinjam" class="hidden space-y-4">
+          <div id="containerListPinjamanPrapinjam" class="space-y-3.5">
+            <!-- Kartu antrean diinjeksi via pinjaman.js -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 4: RIWAYAT & CATATAN DENDA                                            -->
+      <!-- ========================================================================= -->
+      <section id="tabContentRiwayat" class="hidden space-y-6">
+        <!-- Bilah Filter Riwayat -->
+        <div class="rounded-2xl border border-slate-200/80 bg-white p-4 sm:p-5 shadow-2xs">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800">Catatan Pengembalian Buku</h3>
+              <p class="text-xs text-slate-500">Histori seluruh koleksi yang telah selesai kamu baca dan kembalikan.</p>
+            </div>
+
+            <div class="flex items-center gap-2.5">
+              <span class="text-xs font-semibold text-slate-500">Filter Denda:</span>
+              <select id="selectFilterStatusDenda"
+                class="px-3 py-1.5 rounded-xl border border-slate-200 text-xs focus:outline-none focus:border-navy bg-white font-medium text-slate-700">
+                <option value="">Semua Status</option>
+                <option value="Tidak Ada">Bebas Denda</option>
+                <option value="Belum Lunas">Belum Lunas (Tertunda)</option>
+                <option value="Lunas">Lunas</option>
+              </select>
+              <span id="riwayatRecordCount" class="rounded-full bg-slate-100 px-2.5 py-1 text-xs font-bold text-slate-600">0 Riwayat</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Container Daftar Riwayat -->
+        <div id="containerListRiwayat" class="space-y-3.5">
+          <!-- Diinjeksi via riwayat.js -->
+        </div>
+      </section>
+
+      <!-- ========================================================================= -->
+      <!-- TAB 5: KARTU ANGGOTA DIGITAL & PROFIL                                     -->
+      <!-- ========================================================================= -->
+      <section id="tabContentProfil" class="hidden space-y-6">
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          
+          <!-- Kiri: Kartu Identitas Digital Perpustakaan (Luxury Card Style) -->
+          <div class="lg:col-span-5 space-y-4">
+            <h3 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+              <i class="ph ph-credit-card text-navy text-base"></i>
+              <span>Kartu Anggota Digital</span>
+            </h3>
+
+            <!-- Desain Kartu Perpustakaan CAKRAWALA -->
+            <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy via-navy-light to-navy-dark p-6 sm:p-7 text-white shadow-xl border border-white/10 flex flex-col justify-between min-h-[260px]">
+              <!-- Header Kartu -->
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2.5">
+                  <div class="flex h-8 w-8 items-center justify-center rounded-lg bg-white/15 text-white">
+                    <i class="ph ph-books text-lg"></i>
+                  </div>
+                  <div>
+                    <h4 class="text-xs font-black tracking-wider text-white">CAKRAWALA</h4>
+                    <p class="text-[9px] font-semibold text-blue-200 uppercase tracking-widest">Digital Library</p>
+                  </div>
+                </div>
+                <span id="cardMemberRole" class="rounded-full bg-amber-400 text-navy font-black text-[9px] px-2.5 py-0.5 tracking-wider uppercase shadow-xs">
+                  SISWA PERPUSTAKAAN
+                </span>
+              </div>
+
+              <!-- Tengah: Avatar & Nama -->
+              <div class="my-5 flex items-center gap-4">
+                <div id="cardMemberAvatar" class="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white shadow-md border-2 border-white/40 overflow-hidden">
+                  <i class="ph-fill ph-user text-3xl text-white"></i>
+                </div>
+                <div class="min-w-0">
+                  <h3 id="cardMemberNama" class="text-base sm:text-lg font-black text-white truncate leading-tight">Nama Anggota</h3>
+                  <p id="cardMemberDetail" class="text-xs text-blue-200 font-medium truncate mt-0.5">Kelas -</p>
+                  <p class="text-[10px] text-blue-300 font-mono mt-1">Status: <strong class="text-emerald-400 font-bold">AKTIF</strong></p>
+                </div>
+              </div>
+
+              <!-- Bawah: Nomor ID & QR Code Kecil -->
+              <div class="pt-4 border-t border-white/15 flex items-center justify-between">
+                <div>
+                  <span id="cardMemberIdLabel" class="block text-[9px] font-semibold text-blue-200 uppercase tracking-wider">NISN</span>
+                  <span id="cardMemberId" class="text-sm font-mono font-extrabold text-white tracking-wider">00000000</span>
+                </div>
+
+                <div class="p-1 rounded-xl bg-white shadow-xs">
+                  <div id="cardMemberQrContainer" class="flex items-center justify-center"></div>
+                </div>
+              </div>
+
+              <!-- Watermark Latar -->
+              <div class="absolute -right-6 -bottom-6 opacity-5 pointer-events-none text-white">
+                <i class="ph ph-book-open text-9xl"></i>
+              </div>
+            </div>
+
+            <p class="text-center text-xs text-slate-400">
+              *Tunjukkan kartu digital ini kepada petugas saat meminjam buku di tempat.
+            </p>
+          </div>
+
+          <!-- Kanan: Pengaturan Profil Mandiri & Ketentuan Perpustakaan -->
+          <div class="lg:col-span-7 space-y-5">
+            <!-- Form Pengaturan Profil Mandiri -->
+            <div class="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-2xs">
+              <div class="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+                <div class="flex items-center gap-2.5">
+                  <div class="flex h-9 w-9 items-center justify-center rounded-xl bg-navy/10 text-navy font-bold text-lg">
+                    <i class="ph ph-user-gear"></i>
+                  </div>
+                  <div>
+                    <h4 class="font-bold text-slate-800 text-sm">Pengaturan Profil & Data Anggota</h4>
+                    <p class="text-[11px] text-slate-500">Kelola foto kartu perpustakaan dan informasi kontak pribadimu.</p>
+                  </div>
+                </div>
+                <span class="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-bold text-emerald-600 border border-emerald-200/60 flex items-center gap-1">
+                  <span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                  <span>Aktif</span>
+                </span>
+              </div>
+
+              <!-- Upload Foto Profil -->
+              <div class="p-4 rounded-xl bg-slate-50/70 border border-slate-200/70 mb-5">
+                <label class="block text-xs font-bold text-slate-700 mb-2.5">Foto Profil Kartu Anggota</label>
+                <div class="flex flex-col sm:flex-row items-start sm:items-center gap-4">
+                  <!-- Avatar Preview -->
+                  <div class="relative shrink-0">
+                    <div id="profileAvatarPreview" class="flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-300 text-white shadow-md overflow-hidden border-2 border-white">
+                      <i class="ph-fill ph-user text-4xl text-white"></i>
+                    </div>
+                  </div>
+
+                  <div class="flex-1 space-y-2">
+                    <div class="flex flex-wrap items-center gap-2">
+                      <label for="inputProfilePhoto" class="cursor-pointer inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-navy transition shadow-2xs">
+                        <i class="ph ph-camera text-base"></i>
+                        <span>Pilih Foto Baru</span>
+                      </label>
+                      <input type="file" id="inputProfilePhoto" accept="image/png,image/jpeg,image/webp" class="hidden" />
+
+                      <button type="button" id="btnRemoveProfilePhoto" class="hidden inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition shadow-2xs">
+                        <i class="ph ph-trash text-base"></i>
+                        <span>Hapus Foto</span>
+                      </button>
+                    </div>
+                    <p class="text-[11px] text-slate-400 leading-tight">
+                      Mendukung format JPG, PNG, atau WebP (Maks. 2MB). Foto akan tampil di kartu digital & sidebar.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Form Input Profil -->
+              <form id="formMemberProfile" class="space-y-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Nama Lengkap (Read-Only) -->
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                      <span>Nama Lengkap</span>
+                      <span class="text-[10px] text-slate-400 font-normal flex items-center gap-1">
+                        <i class="ph ph-lock text-xs"></i> Terkunci
+                      </span>
+                    </label>
+                    <input type="text" id="inputProfileNama" disabled
+                      class="w-full rounded-xl bg-slate-100 border border-slate-200/80 px-3.5 py-2 text-xs font-semibold text-slate-600 cursor-not-allowed focus:outline-none" />
+                  </div>
+
+                  <!-- Nomor ID NISN / NIP (Read-Only) -->
+                  <div>
+                    <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                      <span id="labelProfileId">Nomor Identitas (NISN)</span>
+                      <span class="text-[10px] text-slate-400 font-normal flex items-center gap-1">
+                        <i class="ph ph-lock text-xs"></i> Terkunci
+                      </span>
+                    </label>
+                    <input type="text" id="inputProfileId" disabled
+                      class="w-full rounded-xl bg-slate-100 border border-slate-200/80 px-3.5 py-2 text-xs font-mono font-semibold text-slate-600 cursor-not-allowed focus:outline-none" />
+                  </div>
+
+                  <!-- Kelas / Mata Pelajaran (Read-Only) -->
+                  <div class="sm:col-span-2">
+                    <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                      <span id="labelProfileDetail">Kelas Terdaftar</span>
+                      <span class="text-[10px] text-slate-400 font-normal flex items-center gap-1">
+                        <i class="ph ph-lock text-xs"></i> Terkunci
+                      </span>
+                    </label>
+                    <input type="text" id="inputProfileDetail" disabled
+                      class="w-full rounded-xl bg-slate-100 border border-slate-200/80 px-3.5 py-2 text-xs font-semibold text-slate-600 cursor-not-allowed focus:outline-none" />
+                    <p class="text-[10px] text-slate-400 mt-1 flex items-center gap-1">
+                      <i class="ph ph-info text-xs text-blue-500"></i>
+                      <span>Data nama, nomor pokok, dan kelas dikelola oleh pihak administrator perpustakaan sekolah.</span>
+                    </p>
+                  </div>
+
+                  <!-- Email (Editable) -->
+                  <div>
+                    <label for="inputProfileEmail" class="block text-xs font-bold text-slate-700 mb-1">
+                      Email Aktif <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                      <i class="ph ph-envelope absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                      <input type="email" id="inputProfileEmail" required placeholder="nama@email.com"
+                        class="w-full rounded-xl bg-white border border-slate-200 pl-9 pr-3.5 py-2 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:border-navy focus:ring-2 focus:ring-navy/15 focus:outline-none transition" />
+                    </div>
+                  </div>
+
+                  <!-- Kontak / WhatsApp (Editable) -->
+                  <div>
+                    <label for="inputProfileKontak" class="block text-xs font-bold text-slate-700 mb-1">
+                      Nomor WhatsApp / Kontak <span class="text-rose-500">*</span>
+                    </label>
+                    <div class="relative">
+                      <i class="ph ph-whatsapp-logo absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                      <input type="tel" id="inputProfileKontak" required placeholder="08xxxxxxxxxx"
+                        class="w-full rounded-xl bg-white border border-slate-200 pl-9 pr-3.5 py-2 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:border-navy focus:ring-2 focus:ring-navy/15 focus:outline-none transition" />
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Alert Feedback -->
+                <div id="alertProfileMessage" class="hidden p-3 rounded-xl text-xs flex items-center gap-2"></div>
+
+                <!-- Tombol Simpan -->
+                <div class="pt-3 border-t border-slate-100 flex items-center justify-end gap-3">
+                  <button type="submit" id="btnSaveProfile"
+                    class="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-xs font-bold text-white shadow-sm hover:bg-navy-light focus:outline-none focus:ring-2 focus:ring-navy/30 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed">
+                    <i id="iconSaveProfile" class="ph ph-floppy-disk text-base"></i>
+                    <span id="textSaveProfile">Simpan Perubahan Profil</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Tata Tertib & Ketentuan Perpustakaan -->
+            <div class="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-2xs">
+              <h4 class="font-bold text-slate-800 text-sm mb-3 text-navy flex items-center gap-2">
+                <i class="ph ph-article text-lg"></i>
+                <span>Tata Tertib & Ketentuan Peminjaman</span>
+              </h4>
+
+              <ol class="list-decimal list-inside space-y-2 text-xs text-slate-600 leading-relaxed">
+                <li>Batas maksimal peminjaman aktif adalah <strong>2 buku sekaligus</strong> per anggota.</li>
+                <li>Durasi peminjaman fisik adalah <strong>7 hari kalender</strong> sejak buku diserahkan petugas.</li>
+                <li>Keterlambatan pengembalian dikenakan denda flat <strong>Rp 1.000 / hari keterlambatan</strong>.</li>
+                <li>Buku yang rusak atau hilang wajib diganti sesuai tarif harga penggantian yang ditentukan sistem.</li>
+                <li>Booking pra-pinjam daring wajib diambil di meja sirkulasi maksimal dalam waktu <strong>2 hari kerja</strong>.</li>
+              </ol>
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==================== MODALS & POP-UPS ==================== -->
+
+  <!-- 1. MODAL DETAIL LENGKAP BUKU -->
+  <div id="modalBookDetail" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true">
+    <div id="modalBookDetailContent" class="w-full max-w-lg rounded-3xl bg-white shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200">
+      <div class="p-6">
+        <div class="flex items-start justify-between border-b border-slate-100 pb-4 mb-4">
+          <div class="flex items-center gap-2.5">
+            <span class="rounded-full bg-blue-100 text-navy px-2.5 py-0.5 text-xs font-bold font-mono" id="detailBookId">BK-000</span>
+            <span class="rounded-full bg-slate-100 text-slate-600 px-2.5 py-0.5 text-xs font-semibold" id="detailBookCategory">Kategori</span>
+          </div>
+          <button id="btnCloseDetailModal" type="button" class="text-slate-400 hover:text-slate-700">
+            <i class="ph ph-x text-xl"></i>
+          </button>
+        </div>
+
+        <div class="flex gap-4 items-start">
+          <div class="h-36 w-24 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shadow-2xs">
+            <img id="detailCoverImg" src="" alt="Cover" class="h-full w-full object-cover hidden" />
+            <i id="detailCoverDefault" class="ph ph-book text-3xl"></i>
+          </div>
+
+          <div class="min-w-0 flex-1">
+            <h3 id="detailBookTitle" class="text-base font-extrabold text-slate-900 line-clamp-2 leading-snug">Judul Buku</h3>
+            <p id="detailBookAuthor" class="text-xs text-slate-500 mt-1 font-medium">-</p>
+
+            <div class="mt-3 space-y-1 text-xs">
+              <p class="text-slate-500">Penerbit: <strong id="detailBookPublisher" class="text-slate-700 font-semibold">-</strong></p>
+              <p class="text-slate-500">Tahun Terbit: <strong id="detailBookYear" class="text-slate-700 font-semibold">-</strong></p>
+              <p class="text-slate-500">Lokasi Rak Fisik: <strong id="detailBookShelf" class="text-navy font-bold">-</strong></p>
+              <p class="text-slate-500">Estimasi Nilai Buku: <strong id="detailBookPrice" class="text-slate-700 font-semibold">Rp 50.000</strong></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <span class="text-slate-500">Status Stok:</span>
+          <span id="detailBookStock" class="font-bold text-emerald-600">Tersedia</span>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+        <button id="btnDetailToBooking" type="button"
+          class="w-full py-2.5 rounded-xl bg-navy text-white font-bold text-xs hover:bg-navy-light transition shadow-sm flex items-center justify-center gap-1.5">
+          <i class="ph ph-bookmark-simple"></i>
+          <span>Ajukan Pra-Pinjam Buku Ini</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 2. MODAL FORM PENGAJUAN PRA-PINJAM -->
+  <div id="modalBooking" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true">
+    <div id="modalBookingContent" class="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200">
+      <form id="formBooking" novalidate>
+        <div class="p-6">
+          <div class="flex items-center justify-between border-b border-slate-100 pb-3 mb-4">
+            <div class="flex items-center gap-2 text-navy">
+              <i class="ph ph-bookmark-simple text-xl"></i>
+              <h3 class="font-bold text-base">Konfirmasi Pra-Pinjam Buku</h3>
+            </div>
+            <button id="btnCloseBookingModal" type="button" class="text-slate-400 hover:text-slate-700">
+              <i class="ph ph-x text-xl"></i>
+            </button>
+          </div>
+
+          <!-- Pratinjau Buku yang Dipilih -->
+          <div class="flex items-center gap-3.5 p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 mb-4">
+            <div class="h-16 w-11 shrink-0 rounded-lg overflow-hidden bg-slate-200 flex items-center justify-center text-slate-400">
+              <img id="bookingCoverImg" src="" alt="Cover" class="h-full w-full object-cover hidden" />
+              <i id="bookingCoverDefault" class="ph ph-book text-2xl"></i>
+            </div>
+            <div class="min-w-0">
+              <span id="bookingBookId" class="font-mono text-[10px] font-bold text-navy">BK-000</span>
+              <h4 id="bookingBookTitle" class="font-bold text-slate-800 text-xs line-clamp-1">Judul Buku</h4>
+              <p id="bookingBookAuthor" class="text-[11px] text-slate-500 truncate">-</p>
+              <p class="text-[10px] text-navy font-semibold mt-0.5">Lokasi: <span id="bookingBookRak">Rak Umum</span> &bull; <span id="bookingBookStok" class="text-emerald-700 font-bold">1 Tersedia</span></p>
+            </div>
+          </div>
+
+          <!-- Form Tanggal -->
+          <div class="space-y-3.5">
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Tanggal Pengajuan (Hari Ini)</label>
+              <input id="inputBookingTglPinjam" type="date" readonly
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-200 bg-slate-100 text-xs font-semibold text-slate-600 outline-none" />
+            </div>
+
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-1">Estimasi Batas Pengembalian (+7 Hari)</label>
+              <input id="inputBookingBatasKembali" type="date" required
+                class="w-full px-3.5 py-2 rounded-xl border border-slate-300 text-xs font-semibold text-slate-800 focus:border-navy focus:ring-4 focus:ring-blue-100 outline-none" />
+              <p class="text-[10px] text-slate-400 mt-1">*Durasi maksimal peminjaman fisik adalah 7 hari kalender.</p>
+            </div>
+          </div>
+
+          <div class="mt-4 p-3 rounded-xl bg-blue-50/80 border border-blue-100 text-[11px] text-navy leading-relaxed">
+            <strong class="font-bold">Informasi:</strong> Setelah menekan tombol konfirmasi, kamu akan menerima <strong>Kode Tiket Booking</strong>. Tunjukkan kode tersebut kepada petugas di meja perpustakaan untuk mengambil buku fisikmu.
+          </div>
+        </div>
+
+        <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button id="btnCancelBookingModal" type="button"
+            class="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+            Batal
+          </button>
+          <button id="btnSubmitBooking" type="submit"
+            class="px-5 py-2 rounded-xl bg-navy text-white text-xs font-bold hover:bg-navy-light transition shadow-sm flex items-center gap-1.5">
+            <i class="ph ph-check-circle text-base"></i>
+            <span>Konfirmasi Pengajuan</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. MODAL SUKSES TIKET BOOKING & BARCODE -->
+  <div id="modalTicketSuccess" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true">
+    <div id="modalTicketSuccessContent" class="w-full max-w-md rounded-3xl bg-white shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 p-5 sm:p-6 text-center max-h-[92vh] overflow-y-auto">
+      
+      <!-- Header Modal -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-100 mb-3 text-left">
+        <div class="flex items-center gap-2.5">
+          <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-600 text-xl shrink-0">
+            <i class="ph-fill ph-check-circle"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-extrabold text-navy">Tiket Pra-Pinjam Terbit!</h3>
+            <p class="text-[11px] text-slate-500">Tunjukkan barcode ini ke meja sirkulasi</p>
+          </div>
+        </div>
+        <button id="btnCloseTicketModalX" type="button" aria-label="Tutup Tiket" class="h-8 w-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition">
+          <i class="ph ph-x text-base"></i>
+        </button>
+      </div>
+
+      <!-- KARTU TIKET RESMI RESI CAKRAWALA -->
+      <div id="ticketPrintArea" class="rounded-2xl border-2 border-slate-200 bg-white p-4 shadow-xs text-left relative overflow-hidden">
+        <!-- Header Tiket -->
+        <div class="flex items-center justify-between border-b border-dashed border-slate-200 pb-3 mb-3">
+          <div class="flex items-center gap-2">
+            <div class="h-6 w-6 rounded-md bg-navy flex items-center justify-center text-white text-xs font-black">C</div>
+            <span class="text-xs font-black tracking-wider text-navy">PERPUSTAKAAN CAKRAWALA</span>
+          </div>
+          <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[10px] font-bold border border-amber-200">
+            <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+            Menunggu
+          </span>
+        </div>
+
+        <!-- Kode Tiket & Tombol Copy -->
+        <div class="flex items-center justify-between bg-slate-50 rounded-xl p-3 border border-slate-100 mb-3">
+          <div>
+            <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest block">KODE TIKET PRA-PINJAM</span>
+            <span id="ticketIdDisplay" class="font-mono text-xl sm:text-2xl font-black text-navy tracking-wider">PJ-000000</span>
+          </div>
+          <button id="btnCopyTicketCode" type="button" title="Salin Kode Tiket"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-bold text-slate-600 hover:text-navy hover:border-navy transition shadow-2xs">
+            <i class="ph ph-copy text-sm"></i>
+            <span id="copyTicketBtnText">Salin</span>
+          </button>
+        </div>
+
+        <!-- Switcher Barcode 1D / QR Code 2D -->
+        <div class="mb-3">
+          <div class="grid grid-cols-2 p-1 rounded-xl bg-slate-100 text-xs font-bold text-slate-600">
+            <button id="btnTabBarcode1D" type="button" class="py-1.5 rounded-lg bg-white text-navy shadow-xs transition flex items-center justify-center gap-1.5">
+              <i class="ph ph-barcode text-base"></i>
+              <span>Barcode (1D)</span>
+            </button>
+            <button id="btnTabBarcodeQR" type="button" class="py-1.5 rounded-lg hover:text-navy transition flex items-center justify-center gap-1.5 text-slate-500">
+              <i class="ph ph-qr-code text-base"></i>
+              <span>QR Code (2D)</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Area Render Barcode 1D (Code 128) -->
+        <div id="ticketBarcodeSection" class="p-3 bg-white rounded-xl border border-slate-200 flex flex-col items-center justify-center min-h-[120px]">
+          <svg id="ticketBarcodeSvg" class="max-w-full h-auto"></svg>
+          <span class="text-[9px] text-slate-400 mt-1 font-mono tracking-widest">FORMAT CODE-128 &bull; BISA DISCAN OLEH PETUGAS</span>
+        </div>
+
+        <!-- Area Render QR Code 2D -->
+        <div id="ticketQrSection" class="p-3 bg-white rounded-xl border border-slate-200 flex flex-col items-center justify-center min-h-[120px] hidden">
+          <div id="ticketQrContainer" class="p-1 bg-white"></div>
+          <span class="text-[9px] text-slate-400 mt-2 font-mono tracking-widest">FORMAT QR CODE &bull; BISA DISCAN OLEH PETUGAS</span>
+        </div>
+
+        <!-- Detail Informasi Buku & Peminjam -->
+        <div class="mt-3.5 pt-3 border-t border-dashed border-slate-200 space-y-2 text-xs">
+          <div class="flex items-start justify-between gap-2">
+            <span class="text-slate-400 shrink-0">Judul Buku:</span>
+            <span id="ticketBookTitle" class="font-bold text-slate-800 text-right line-clamp-1">Judul Buku</span>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-slate-400 shrink-0">Lokasi Rak:</span>
+            <span id="ticketRakDisplay" class="font-bold text-navy text-right">Rak Umum</span>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-slate-400 shrink-0">Nama Peminjam:</span>
+            <span id="ticketMemberNameDisplay" class="font-semibold text-slate-700 text-right">-</span>
+          </div>
+          <div class="flex items-center justify-between gap-2">
+            <span class="text-slate-400 shrink-0">Batas Pengambilan:</span>
+            <span id="ticketTempoDisplay" class="font-bold text-amber-700 text-right">-</span>
+          </div>
+        </div>
+
+        <div class="mt-3 pt-2.5 border-t border-slate-100 text-[10px] text-slate-400 text-center leading-relaxed">
+          *Tunjukkan tiket ini kepada petugas sirkulasi untuk scan barcode dan penyerahan buku fisik.
+        </div>
+      </div>
+
+      <!-- Tombol Aksi -->
+      <div class="mt-4 flex flex-col sm:flex-row items-center gap-2">
+        <button id="btnDownloadTicketPng" type="button"
+          class="w-full sm:flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 hover:text-navy transition shadow-2xs flex items-center justify-center gap-1.5">
+          <i class="ph ph-download-simple text-base"></i>
+          <span>Unduh Gambar Tiket</span>
+        </button>
+        <button id="btnCloseTicketModal" type="button"
+          class="w-full sm:flex-1 py-2.5 rounded-xl bg-navy text-white text-xs font-bold hover:bg-navy-light transition shadow-sm">
+          Selesai / Mengerti
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 4. MODAL KONFIRMASI BATAL BOOKING -->
+  <div id="modalCancelBooking" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true">
+    <div id="modalCancelBookingContent" class="w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 p-6 text-center">
+      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 text-2xl mx-auto mb-3">
+        <i class="ph ph-trash"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-900">Batalkan Pesanan Booking?</h3>
+      <p class="text-xs text-slate-500 mt-1.5 leading-relaxed">
+        Apakah kamu yakin ingin membatalkan antrean pra-pinjam <strong id="cancelBookingIdDisplay" class="text-navy font-mono">PJ-000000</strong>? Kuota antrean buku ini akan dibuka kembali untuk anggota lain.
+      </p>
+
+      <div class="mt-5 flex items-center justify-center gap-2.5">
+        <button id="btnDismissCancelBooking" type="button"
+          class="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+          Kembali
+        </button>
+        <button id="btnConfirmCancelBooking" type="button"
+          class="flex-1 py-2.5 rounded-xl bg-rose-600 text-white text-xs font-bold hover:bg-rose-700 transition shadow-sm">
+          Ya, Batalkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 5. MODAL KONFIRMASI LOGOUT -->
+  <div id="modalLogout" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs hidden opacity-0 transition-opacity duration-200" role="dialog" aria-modal="true">
+    <div id="modalLogoutContent" class="w-full max-w-sm rounded-3xl bg-white shadow-2xl overflow-hidden transform scale-95 transition-transform duration-200 border border-slate-200 p-6 text-center">
+      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 text-2xl mx-auto mb-3">
+        <i class="ph ph-sign-out"></i>
+      </div>
+      <h3 class="text-base font-bold text-slate-900">Keluar dari Akun?</h3>
+      <p class="text-xs text-slate-500 mt-1 leading-relaxed">
+        Sesi login kamu akan diakhiri. Kamu dapat masuk kembali kapan saja dengan NISN/NIP dan passwordmu.
+      </p>
+
+      <div class="mt-5 flex items-center justify-center gap-2.5">
+        <button id="btnCancelLogout" type="button"
+          class="flex-1 py-2.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+          Batal
+        </button>
+        <button id="btnConfirmLogout" type="button"
+          class="flex-1 py-2.5 rounded-xl bg-navy text-white text-xs font-bold hover:bg-navy-light transition shadow-sm">
+          Keluar
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- WADAH TOAST NOTIFIKASI -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full" aria-live="polite"></div>
+
+  <!-- SCRIPTS KONEKSI -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script type="module" src="../assets/js/supabaseClient.js"></script>
+  <script type="module" src="siswa-guru.js"></script>
+</body>
+
+</html>

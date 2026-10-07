@@ -102,7 +102,8 @@ async function loadPengumuman() {
 
     container.innerHTML = data.map(function (item) {
       return `
-        <article class="group relative flex-shrink-0 w-[380px] sm:w-[480px] h-[220px] snap-start overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-md hover:shadow-xl transition-all duration-300 flex">
+        <article class="announcement-card group relative flex-shrink-0 w-[380px] sm:w-[480px] h-[220px] snap-start flex">
+          <!-- Sisi Poster: Tampilan poster jernih natural tanpa aura/filter gradasi biru tua -->
           <div class="relative w-40 sm:w-48 h-full flex-shrink-0 overflow-hidden bg-slate-900">
             <img 
               src="${item.gambar_url || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80'}" 
@@ -110,39 +111,39 @@ async function loadPengumuman() {
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80';"
             />
-            <div class="absolute inset-0 bg-gradient-to-t from-navy/90 via-navy/30 to-transparent flex flex-col justify-between p-3.5">
-              <span class="w-fit rounded-full bg-white/20 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white border border-white/20">
+            <!-- Label Kategori di pojok atas poster -->
+            <div class="absolute top-3 left-3 pointer-events-none">
+              <span class="inline-block rounded-full bg-slate-900/70 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white border border-white/20 shadow-sm">
                 ${item.kategori}
               </span>
-              <div class="text-white">
-                <p class="text-[9px] uppercase font-bold text-blue-200 tracking-wider">Tanggal</p>
-                <p class="text-[11px] font-semibold leading-tight flex items-center gap-1 mt-0.5">
-                  <i class="ph ph-calendar-blank text-xs"></i>
-                  ${item.tanggal_event}
-                </p>
-              </div>
             </div>
           </div>
 
-          <div class="flex-1 p-5 flex flex-col justify-between bg-white">
+          <!-- Sisi Konten: Putih normal -> Gradasi Biru Dongker dengan font putih saat terkena cursor (hover) -->
+          <div class="announcement-content flex-1 p-5 flex flex-col justify-between">
             <div>
-              <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Pengumuman Resmi</p>
-              <h3 class="mt-1 text-base sm:text-lg font-bold text-slate-900 group-hover:text-navy transition-colors line-clamp-2 leading-snug">
+              <p class="announcement-badge-type text-[11px] font-bold uppercase tracking-wider">Pengumuman Resmi</p>
+              <h3 class="announcement-title mt-1 text-base sm:text-lg font-bold line-clamp-2 leading-snug">
                 ${item.judul}
               </h3>
+              <!-- Info Tanggal Agenda / Event dipindah ke sisi kanan agar gambar poster bebas tidak tertutupi -->
+              <div class="announcement-date mt-2.5 flex items-center gap-1.5 text-xs font-semibold">
+                <i class="ph ph-calendar-blank text-sm"></i>
+                <span>${item.tanggal_event}</span>
+              </div>
             </div>
 
-            <div class="pt-2 border-t border-slate-100 flex items-center justify-between">
+            <div class="announcement-divider pt-2 border-t flex items-center justify-between">
               <a 
                 href="${item.link_detail || '#'}" 
                 target="_blank" 
                 rel="noopener noreferrer"
-                class="inline-flex items-center gap-1.5 text-xs font-bold text-navy hover:text-blue-600 transition-colors"
+                class="announcement-action-link inline-flex items-center gap-1.5 text-xs font-bold"
               >
                 <span>Buka Informasi</span>
                 <i class="ph ph-arrow-right text-sm transition-transform group-hover:translate-x-1"></i>
               </a>
-              <span class="rounded-full bg-slate-100 p-1.5 text-slate-400 group-hover:bg-blue-50 group-hover:text-navy transition-colors">
+              <span class="announcement-icon-box rounded-full p-1.5">
                 <i class="ph ph-megaphone-simple text-sm"></i>
               </span>
             </div>
@@ -546,7 +547,7 @@ function initResponsiveInteractiveUI() {
     });
   }
 
-  // 2. Floating Scroll to Top Button (CSS di style.css: .btn-scroll-top.visible)
+  // 2. Floating Scroll to Top Button (CSS di landing.css: .btn-scroll-top.visible)
   var btnScrollToTop = document.getElementById('btnScrollToTop');
   if (btnScrollToTop) {
     window.addEventListener('scroll', function () {

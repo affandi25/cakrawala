@@ -151,28 +151,9 @@
     btnLogout: document.getElementById('btnLogout'),
     toastContainer: document.getElementById('toastContainer'),
 
-    // Admin Profile Settings Modal & Capsule
-    btnAdminProfile: document.getElementById('btnAdminProfile'),
+    // Admin Role Badge Capsule (Penanda Role)
     adminAvatarInitials: document.getElementById('adminAvatarInitials'),
-    modalAdminProfile: document.getElementById('modalAdminProfile'),
-    modalAdminProfileContent: document.getElementById('modalAdminProfileContent'),
-    btnCancelAdminProfileModal: document.getElementById('btnCancelAdminProfileModal'),
-    btnCloseAdminProfileModal: document.getElementById('btnCloseAdminProfileModal'),
-    formAdminProfile: document.getElementById('formAdminProfile'),
-    modalAdminAvatarPreview: document.getElementById('modalAdminAvatarPreview'),
-    modalAdminDisplayId: document.getElementById('modalAdminDisplayId'),
-    inputAdminUsername: document.getElementById('inputAdminUsername'),
-    inputAdminNewPassword: document.getElementById('inputAdminNewPassword'),
-    inputAdminConfirmPassword: document.getElementById('inputAdminConfirmPassword'),
-    btnToggleAdminNewPassword: document.getElementById('btnToggleAdminNewPassword'),
-    iconToggleAdminNewPassword: document.getElementById('iconToggleAdminNewPassword'),
-    btnToggleAdminConfirmPassword: document.getElementById('btnToggleAdminConfirmPassword'),
-    iconToggleAdminConfirmPassword: document.getElementById('iconToggleAdminConfirmPassword'),
-    modalAdminProfileError: document.getElementById('modalAdminProfileError'),
-    modalAdminProfileErrorText: document.getElementById('modalAdminProfileErrorText'),
-    btnSubmitAdminProfile: document.getElementById('btnSubmitAdminProfile'),
-    iconSubmitAdminProfileSpinner: document.getElementById('iconSubmitAdminProfileSpinner'),
-    textBtnSubmitAdminProfile: document.getElementById('textBtnSubmitAdminProfile')
+    adminUserName: document.getElementById('adminUserName')
   };
 
   // ========================================================
@@ -1720,269 +1701,6 @@
     if (avatarEl) {
       avatarEl.textContent = initials;
     }
-    const modalAvatarEl = document.getElementById('modalAdminAvatarPreview');
-    if (modalAvatarEl) {
-      modalAvatarEl.textContent = initials;
-    }
-  }
-
-  /**
-   * Buka Modal Pengaturan Profil Admin
-   */
-  async function openAdminProfileModal() {
-    if (!DOM.modalAdminProfile) return;
-
-    let currentUser = null;
-    try {
-      const raw = sessionStorage.getItem('cakrawala_user');
-      if (raw) currentUser = JSON.parse(raw);
-    } catch (_) {}
-
-    if (!currentUser) {
-      currentUser = { username: 'admin', role: 'Admin' };
-    }
-
-    if (DOM.inputAdminUsername) {
-      DOM.inputAdminUsername.value = currentUser.username || currentUser.identifier || '';
-    }
-    if (DOM.inputAdminNewPassword) {
-      DOM.inputAdminNewPassword.value = '';
-    }
-    if (DOM.inputAdminConfirmPassword) {
-      DOM.inputAdminConfirmPassword.value = '';
-    }
-    if (DOM.modalAdminProfileError) {
-      DOM.modalAdminProfileError.classList.add('hidden');
-    }
-
-    const displayId = currentUser.id_user || currentUser.identifier || 'ADM001';
-    if (DOM.modalAdminDisplayId) {
-      DOM.modalAdminDisplayId.innerHTML = `ID Akun: <span class="font-bold text-slate-800">${escapeHtml(displayId)}</span>`;
-    }
-
-    syncAdminProfileUI(currentUser);
-
-    // Jika Supabase terhubung, segarkan data user admin terkini dari database
-    if (window.db && (currentUser.id_user || currentUser.username)) {
-      try {
-        const query = currentUser.id_user 
-          ? window.db.from('data_user').select('id_user, username, role').eq('id_user', currentUser.id_user).maybeSingle()
-          : window.db.from('data_user').select('id_user, username, role').eq('username', currentUser.username).maybeSingle();
-        const { data: dbUser } = await query;
-        if (dbUser) {
-          currentUser = { ...currentUser, ...dbUser };
-          sessionStorage.setItem('cakrawala_user', JSON.stringify(currentUser));
-          if (DOM.inputAdminUsername) DOM.inputAdminUsername.value = dbUser.username;
-          if (DOM.modalAdminDisplayId) {
-            DOM.modalAdminDisplayId.innerHTML = `ID Akun: <span class="font-bold text-slate-800">${escapeHtml(dbUser.id_user || displayId)}</span>`;
-          }
-          syncAdminProfileUI(currentUser);
-        }
-      } catch (err) {
-        console.warn('Gagal memuat detail admin terkini:', err);
-      }
-    }
-
-    // Animasi muncul modal
-    DOM.modalAdminProfile.classList.remove('hidden');
-    requestAnimationFrame(() => {
-      DOM.modalAdminProfile.classList.remove('opacity-0');
-      DOM.modalAdminProfileContent.classList.remove('scale-95');
-    });
-
-    setTimeout(() => {
-      if (DOM.inputAdminUsername) DOM.inputAdminUsername.focus();
-    }, 150);
-  }
-
-  /**
-   * Tutup Modal Pengaturan Profil Admin
-   */
-  function closeAdminProfileModal() {
-    if (!DOM.modalAdminProfile) return;
-    DOM.modalAdminProfile.classList.add('opacity-0');
-    DOM.modalAdminProfileContent.classList.add('scale-95');
-    setTimeout(() => {
-      DOM.modalAdminProfile.classList.add('hidden');
-      if (DOM.formAdminProfile) DOM.formAdminProfile.reset();
-      if (DOM.modalAdminProfileError) DOM.modalAdminProfileError.classList.add('hidden');
-    }, 200);
-  }
-
-  function showAdminProfileError(message) {
-    if (DOM.modalAdminProfileError && DOM.modalAdminProfileErrorText) {
-      DOM.modalAdminProfileErrorText.textContent = message;
-      DOM.modalAdminProfileError.classList.remove('hidden');
-    }
-  }
-
-  /**
-   * Submit Formulir Pengaturan Profil Admin (Update Username & Password)
-   */
-  async function handleAdminProfileSubmit(event) {
-    event.preventDefault();
-    if (!DOM.btnSubmitAdminProfile) return;
-    if (DOM.modalAdminProfileError) DOM.modalAdminProfileError.classList.add('hidden');
-
-    const newUsername = (DOM.inputAdminUsername ? DOM.inputAdminUsername.value : '').trim();
-    const newPassword = (DOM.inputAdminNewPassword ? DOM.inputAdminNewPassword.value : '').trim();
-    const confirmPassword = (DOM.inputAdminConfirmPassword ? DOM.inputAdminConfirmPassword.value : '').trim();
-
-    // 1. Validasi Username
-    if (!newUsername) {
-      showAdminProfileError('Username admin tidak boleh kosong.');
-      return;
-    }
-    if (newUsername.length < 3) {
-      showAdminProfileError('Username admin minimal 3 karakter.');
-      return;
-    }
-    if (newUsername.length > 20) {
-      showAdminProfileError('Username admin maksimal 20 karakter.');
-      return;
-    }
-
-    // 2. Validasi Password (jika diisi)
-    if (newPassword || confirmPassword) {
-      if (newPassword.length < 6) {
-        showAdminProfileError('Password baru minimal 6 karakter.');
-        return;
-      }
-      if (newPassword !== confirmPassword) {
-        showAdminProfileError('Konfirmasi password tidak cocok dengan password baru.');
-        return;
-      }
-    }
-
-    let currentUser = null;
-    try {
-      const raw = sessionStorage.getItem('cakrawala_user');
-      if (raw) currentUser = JSON.parse(raw);
-    } catch (_) {}
-    if (!currentUser) {
-      currentUser = { username: 'admin', role: 'Admin' };
-    }
-
-    const oldUsername = currentUser.username || currentUser.identifier || 'admin';
-    const isUsernameChanged = (newUsername.toLowerCase() !== oldUsername.toLowerCase());
-
-    // Indikator Loading
-    DOM.btnSubmitAdminProfile.disabled = true;
-    if (DOM.iconSubmitAdminProfileSpinner) {
-      DOM.iconSubmitAdminProfileSpinner.className = 'ph ph-spinner animate-spin text-lg';
-    }
-    if (DOM.textBtnSubmitAdminProfile) {
-      DOM.textBtnSubmitAdminProfile.textContent = 'Menyimpan...';
-    }
-
-    try {
-      // Dapatkan password lokal saat ini jika ada
-      let currentLocalPassword = 'password123';
-      try {
-        const localAdminRaw = localStorage.getItem('cakrawala_local_admin');
-        if (localAdminRaw) {
-          const parsed = JSON.parse(localAdminRaw);
-          if (parsed && parsed.password) currentLocalPassword = parsed.password;
-        }
-      } catch (_) {}
-
-      const activePassword = newPassword || currentLocalPassword;
-
-      // Jika terhubung ke database Supabase, coba simpan ke Supabase
-      if (window.db) {
-        try {
-          if (isUsernameChanged) {
-            const { data: existingUser, error: checkErr } = await window.db
-              .from('data_user')
-              .select('id_user')
-              .eq('username', newUsername)
-              .maybeSingle();
-
-            if (!checkErr && existingUser && (!currentUser.id_user || existingUser.id_user !== currentUser.id_user)) {
-              throw new Error(`Username "${newUsername}" sudah digunakan oleh pengguna lain. Silakan pilih username lain.`);
-            }
-          }
-
-          const updatePayload = { username: newUsername };
-          if (newPassword) {
-            updatePayload.password = newPassword;
-          }
-
-          let updateSuccess = false;
-          if (currentUser.id_user) {
-            const { error: updErr } = await window.db
-              .from('data_user')
-              .update(updatePayload)
-              .eq('id_user', currentUser.id_user);
-
-            if (!updErr) {
-              updateSuccess = true;
-            }
-          }
-
-          if (!updateSuccess) {
-            const { error: updErr2 } = await window.db
-              .from('data_user')
-              .update(updatePayload)
-              .eq('username', oldUsername);
-
-            if (!updErr2) {
-              updateSuccess = true;
-            } else if (updErr2.code === '23505' || (updErr2.message && updErr2.message.includes('unique'))) {
-              throw new Error(`Username "${newUsername}" sudah digunakan oleh pengguna lain.`);
-            } else {
-              console.warn('Database update error (mungkin tabel data_user belum dibuat):', updErr2);
-            }
-          }
-        } catch (dbErr) {
-          if (dbErr.message && dbErr.message.includes('sudah digunakan')) {
-            throw dbErr;
-          }
-          console.warn('Supabase sync skipped / table missing:', dbErr);
-        }
-      }
-
-      // Selalu simpan ke localStorage agar perubahan tetap bekerja offline / sebelum tabel dibuat
-      try {
-        localStorage.setItem('cakrawala_local_admin', JSON.stringify({
-          id_user: currentUser.id_user || 'ADM001',
-          username: newUsername,
-          password: activePassword,
-          role: 'Admin'
-        }));
-      } catch (_) {}
-
-      // Update data di sessionStorage
-      const updatedUser = {
-        ...currentUser,
-        username: newUsername
-      };
-      sessionStorage.setItem('cakrawala_user', JSON.stringify(updatedUser));
-
-      // Perbarui tampilan antarmuka
-      syncAdminProfileUI(updatedUser);
-
-      // Tutup modal
-      closeAdminProfileModal();
-
-      // Notifikasi Toast
-      if (newPassword) {
-        showToast(`Profil dan password admin (${newUsername}) berhasil diperbarui!`, 'success');
-      } else {
-        showToast(`Profil admin (${newUsername}) berhasil diperbarui!`, 'success');
-      }
-    } catch (err) {
-      console.error('Error saat memperbarui profil admin:', err);
-      showAdminProfileError(err.message || 'Terjadi gangguan saat menyimpan profil admin.');
-    } finally {
-      DOM.btnSubmitAdminProfile.disabled = false;
-      if (DOM.iconSubmitAdminProfileSpinner) {
-        DOM.iconSubmitAdminProfileSpinner.className = 'ph ph-check-circle text-lg';
-      }
-      if (DOM.textBtnSubmitAdminProfile) {
-        DOM.textBtnSubmitAdminProfile.textContent = 'Simpan Profil Admin';
-      }
-    }
   }
 
   // ========================================================
@@ -2062,34 +1780,12 @@
     if (DOM.btnCancelDelete) DOM.btnCancelDelete.addEventListener('click', closeDeleteModal);
     if (DOM.btnConfirmDelete) DOM.btnConfirmDelete.addEventListener('click', handleConfirmDelete);
 
-    // 6. Admin Profile Settings Modal Actions
-    if (DOM.btnAdminProfile) DOM.btnAdminProfile.addEventListener('click', openAdminProfileModal);
-    if (DOM.btnCancelAdminProfileModal) DOM.btnCancelAdminProfileModal.addEventListener('click', closeAdminProfileModal);
-    if (DOM.btnCloseAdminProfileModal) DOM.btnCloseAdminProfileModal.addEventListener('click', closeAdminProfileModal);
-    if (DOM.formAdminProfile) DOM.formAdminProfile.addEventListener('submit', handleAdminProfileSubmit);
-
-    // Toggle Password Visibility in Admin Profile Modal
-    if (DOM.btnToggleAdminNewPassword && DOM.inputAdminNewPassword && DOM.iconToggleAdminNewPassword) {
-      DOM.btnToggleAdminNewPassword.addEventListener('click', () => {
-        const isPass = DOM.inputAdminNewPassword.type === 'password';
-        DOM.inputAdminNewPassword.type = isPass ? 'text' : 'password';
-        DOM.iconToggleAdminNewPassword.className = isPass ? 'ph ph-eye-slash' : 'ph ph-eye';
-      });
-    }
-    if (DOM.btnToggleAdminConfirmPassword && DOM.inputAdminConfirmPassword && DOM.iconToggleAdminConfirmPassword) {
-      DOM.btnToggleAdminConfirmPassword.addEventListener('click', () => {
-        const isPass = DOM.inputAdminConfirmPassword.type === 'password';
-        DOM.inputAdminConfirmPassword.type = isPass ? 'text' : 'password';
-        DOM.iconToggleAdminConfirmPassword.className = isPass ? 'ph ph-eye-slash' : 'ph ph-eye';
-      });
-    }
-
-    // 7. Mobile Sidebar Toggle
+    // 6. Mobile Sidebar Toggle
     if (DOM.btnToggleMobileSidebar) DOM.btnToggleMobileSidebar.addEventListener('click', openMobileSidebar);
     if (DOM.btnCloseMobileSidebar) DOM.btnCloseMobileSidebar.addEventListener('click', closeMobileSidebar);
     if (DOM.sidebarBackdrop) DOM.sidebarBackdrop.addEventListener('click', closeMobileSidebar);
 
-    // 8. Logout Action
+    // 7. Logout Action
     if (DOM.btnLogout) {
       DOM.btnLogout.addEventListener('click', () => {
         sessionStorage.removeItem('cakrawala_logged_in');
@@ -2099,12 +1795,9 @@
       });
     }
 
-    // 9. Keyboard Accessibility (Escape to close modals)
+    // 8. Keyboard Accessibility (Escape to close modals)
     window.addEventListener('keydown', (e) => {
       if (e.key === 'Escape') {
-        if (DOM.modalAdminProfile && !DOM.modalAdminProfile.classList.contains('hidden')) {
-          closeAdminProfileModal();
-        }
         if (!DOM.modalAddUser.classList.contains('hidden')) {
           closeAddModal();
         }
@@ -2118,12 +1811,6 @@
     });
 
     // Close modals on clicking backdrop area outside the content box
-    if (DOM.modalAdminProfile) {
-      DOM.modalAdminProfile.addEventListener('click', (e) => {
-        if (e.target === DOM.modalAdminProfile) closeAdminProfileModal();
-      });
-    }
-
     if (DOM.modalAddUser) {
       DOM.modalAddUser.addEventListener('click', (e) => {
         if (e.target === DOM.modalAddUser) closeAddModal();
@@ -2141,6 +1828,7 @@
   // 12. INITIALIZATION ON DOM READY
   // ========================================================
   document.addEventListener('DOMContentLoaded', () => {
+    syncAdminProfileUI();
     initEventListeners();
     // Render initial header according to active tab
     const config = TAB_CONFIGS[state.activeTab];

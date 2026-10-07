@@ -191,10 +191,10 @@ CREATE TABLE IF NOT EXISTS data_buku (
     harga_buku DECIMAL(10, 2) DEFAULT 50000.00 -- Nilai penggantian jika buku hilang
 );
 
--- 7. TABEL PEMINJAMAN (Prapinjam & Pinjam Langsung)
+-- 7. TABEL PEMINJAMAN (Prapinjam & Pinjam Langsung untuk Siswa & Guru)
 CREATE TABLE IF NOT EXISTS data_peminjaman (
-    id_peminjaman VARCHAR(10) PRIMARY KEY,
-    nisn_siswa VARCHAR(10) REFERENCES data_siswa(nisn_siswa) ON DELETE CASCADE,
+    id_peminjaman VARCHAR(20) PRIMARY KEY,
+    nisn_siswa VARCHAR(30), -- Menyimpan pengenal peminjam (NISN Siswa atau NIP Guru)
     id_buku VARCHAR(10) REFERENCES data_buku(id_buku) ON DELETE CASCADE,
     tanggal_pinjam DATE NOT NULL DEFAULT CURRENT_DATE,
     batas_kembali DATE NOT NULL,

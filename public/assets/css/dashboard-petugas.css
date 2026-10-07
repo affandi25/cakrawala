@@ -1,0 +1,107 @@
+/* ==========================================================================
+   CAKRAWALA DIGITAL LIBRARY - DASHBOARD PETUGAS
+   File: public/assets/css/dashboard-petugas.css
+   Fungsi: Gaya tampilan khusus meja sirkulasi petugas perpustakaan.
+   ========================================================================== */
+
+/* Mengimpor gaya umum bersama (scrollbar & animasi) */
+@import './dashboard-shared.css';
+
+/* --------------------------------------------------------------------------
+   1. KOTAK PILIHAN KONDISI BUKU (MEJA PENGEMBALIAN)
+   Menandai pilihan kondisi (Baik, Rusak, Hilang) dengan border Biru Navy tebal.
+   -------------------------------------------------------------------------- */
+.condition-radio:checked + label {
+  border-color: #eeeff5;
+  background-color: #f8fafc;
+  box-shadow: 0 0 0 2px #000c4f;
+}
+
+/* --------------------------------------------------------------------------
+   2. KARTU PRATINJAU STIKER LABEL (PREVIEW SEBELUM DICETAK)
+   Motif arsiran garis-garis diagonal 45 derajat sebagai simulasi lembar stiker.
+   -------------------------------------------------------------------------- */
+.sticker-preview-card {
+  background: repeating-linear-gradient(
+    45deg,
+    #f8fafc,
+    #f8fafc 10px,
+    #ffffff 10px,
+    #ffffff 20px
+  );
+  border: 1px dashed #cbd5e1;
+}
+
+/* --------------------------------------------------------------------------
+   3. ANIMASI LAMPU DENYUT STATUS LIVE
+   -------------------------------------------------------------------------- */
+.live-pulse {
+  animation: pulseSync 2s infinite ease-in-out;
+}
+
+@keyframes pulseSync {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.5;
+    transform: scale(1.15);
+  }
+}
+
+/* --------------------------------------------------------------------------
+   4. PENGATURAN CETAK PRINTER (@media print)
+   Khusus pencetakan stiker label barcode / QR Code buku fisik.
+   -------------------------------------------------------------------------- */
+
+/* Sembunyikan target cetak di layar monitor normal */
+@media screen {
+  #printStickerTarget {
+    display: none;
+  }
+}
+
+/* Format saat dialog cetak (Ctrl + P) aktif */
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  @page {
+    size: auto;
+    margin: 5mm;
+  }
+
+  #printStickerTarget,
+  #printStickerTarget * {
+    visibility: visible;
+  }
+
+  #printStickerTarget {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    display: block !important;
+    width: 85mm !important;
+    max-width: 85mm !important;
+    padding: 4mm !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 2px dashed #000000 !important;
+    border-radius: 4mm !important;
+    box-shadow: none !important;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+    page-break-inside: avoid;
+  }
+
+  #printStickerTarget img,
+  #printStickerTarget canvas {
+    display: block !important;
+    margin: 0 auto !important;
+    max-width: 32mm !important;
+    height: auto !important;
+    image-rendering: pixelated;
+  }
+}

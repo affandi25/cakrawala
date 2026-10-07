@@ -1,0 +1,16 @@
+/* ==========================================================================
+   CAKRAWALA DIGITAL LIBRARY - DASHBOARD ADMIN
+   File: public/assets/css/dashboard-admin.css
+   Fungsi: Gaya tampilan khusus panel administrator sistem.
+   ========================================================================== */
+
+/* Mengimpor gaya umum bersama (scrollbar & animasi) */
+@import './dashboard-shared.css';
+
+/* --------------------------------------------------------------------------
+   1. GAYA TABEL DAN BADGE STATUS ADMIN
+   -------------------------------------------------------------------------- */
+.admin-table th {
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
