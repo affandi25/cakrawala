@@ -5,10 +5,11 @@
 
 import { state, TAB_CONFIGS } from './modules/state.js';
 import { initSessionAndMember, setupLogout } from '../assets/js/auth.js';
-import { setupKatalogModule } from './modules/katalog.js';
-import { setupPinjamanModule, switchPinjamanSubtab } from './modules/pinjaman.js';
-import { setupRiwayatModule } from './modules/riwayat.js';
-import { setupProfileModule } from './modules/profil.js';
+import { setupKatalogModule, renderKatalogGrid } from './modules/katalog/index.js';
+import { setupPinjamanModule, switchPinjamanSubtab, renderPinjamanTables } from './modules/pinjaman/index.js';
+import { setupRiwayatModule, renderRiwayatTable } from './modules/riwayat.js';
+import { setupProfileModule, renderProfil } from './modules/profil/index.js';
+import { renderOverview } from './modules/overview.js';
 import { fetchAllMemberData } from './modules/data.js';
 
 /**
@@ -124,6 +125,19 @@ export function switchTab(tabKey) {
   if (headerTitle) headerTitle.textContent = config.title;
   if (headerDesc) headerDesc.textContent = config.desc;
   if (headerSubBreadcrumb) headerSubBreadcrumb.textContent = config.breadcrumb;
+
+  // Render ulang data pada tab yang aktif
+  if (tabKey === 'katalog') {
+    renderKatalogGrid();
+  } else if (tabKey === 'pinjaman') {
+    renderPinjamanTables();
+  } else if (tabKey === 'riwayat') {
+    renderRiwayatTable();
+  } else if (tabKey === 'profil') {
+    renderProfil();
+  } else if (tabKey === 'beranda') {
+    renderOverview();
+  }
 
   const sidebar = document.getElementById('memberSidebar');
   const backdrop = document.getElementById('sidebarBackdrop');

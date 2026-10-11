@@ -1,0 +1,25 @@
+<!-- RED ALERT BANNER: PERINGATAN DENDA BELUM LUNAS (PRD SECTION 4.C) -->
+<section id="bannerPeringatanDenda" class="hidden rounded-2xl bg-rose-50 border-2 border-rose-300 p-4 sm:p-5 shadow-sm">
+  <div class="flex items-start sm:items-center justify-between gap-4 flex-col sm:flex-row">
+    <div class="flex items-start gap-3.5">
+      <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-600 text-white shadow-xs">
+        <i class="ph-fill ph-warning-circle text-2xl"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h3 class="text-sm sm:text-base font-extrabold text-rose-900">Perhatian: Kamu Memiliki Tagihan Denda Perpustakaan!</h3>
+          <span class="rounded-full bg-rose-200 text-rose-900 text-[10px] font-bold px-2 py-0.5 uppercase tracking-wide">Belum Lunas</span>
+        </div>
+        <p class="text-xs text-rose-700 mt-1 leading-relaxed">
+          Total denda tertunda sebesar <strong id="bannerNominalDenda" class="text-rose-950 font-black text-sm">Rp 0</strong> (<span id="bannerJumlahKasusDenda">0 transaksi</span>). 
+          Harap segera lakukan penyelesaian pembayaran secara tunai ke <strong>Meja Petugas Sirkulasi</strong> di perpustakaan fisik.
+        </p>
+      </div>
+    </div>
+    <button type="button" onclick="window.switchTab('riwayat')"
+      class="shrink-0 inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition shadow-xs self-stretch sm:self-auto justify-center">
+      <span>Lihat Rincian Denda</span>
+      <i class="ph ph-arrow-right"></i>
+    </button>
+  </div>
+</section>

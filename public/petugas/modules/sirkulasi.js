@@ -74,10 +74,65 @@ export function setMejaSelectedBuku(book) {
     previewBox.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
   }
 
-  if (submitBtn) {
-    const hasMember = state.selectedMember || (selectSiswa && selectSiswa.value);
-    submitBtn.disabled = !(stok > 0 && hasMember);
+  checkMejaBorrowEligibility();
+}
+
+/**
+ * Memvalidasi apakah siswa/guru yang dipilih di meja Walk-In berhak meminjam buku terpilih
+ * Mencegah petugas dikelabuhi jika siswa sudah meminjam buku tersebut dan belum mengembalikannya
+ */
+export function checkMejaBorrowEligibility() {
+  const submitBtn = document.getElementById('btnSubmitMejaWalkIn');
+  const selectSiswa = document.getElementById('selectMejaSiswa');
+  const book = state.selectedMejaBuku;
+  const memberId = state.selectedMember?.id || selectSiswa?.value;
+
+  if (!submitBtn) return;
+
+  if (!book || !memberId) {
+    submitBtn.disabled = true;
+    return;
   }
+
+  const stok = Number(book.stok) || 0;
+  if (stok <= 0) {
+    submitBtn.disabled = true;
+    showToast('Stok buku fisik ini habis.', 'error');
+    return;
+  }
+
+  // Cek batas kuota maksimal peminjaman (maks. 2 buku aktif per anggota)
+  const totalActive = (state.cache.peminjaman || []).filter(p => 
+    p.nisn_siswa === memberId && 
+    (p.status === 'Dipinjam' || p.status === 'Menunggu')
+  ).length;
+
+  if (totalActive >= 2) {
+    submitBtn.disabled = true;
+    const borrower = getBorrowerInfo(memberId);
+    showToast(`Peringatan: ${borrower.nama} sudah mencapai batas kuota maksimal (${totalActive}/2 buku aktif)!`, 'warning');
+    return;
+  }
+
+  // Cek apakah peminjam masih memegang buku ini atau sedang dalam antrean prapinjam
+  const activeBorrow = (state.cache.peminjaman || []).find(p => 
+    p.nisn_siswa === memberId && 
+    p.id_buku === book.id_buku && 
+    (p.status === 'Dipinjam' || p.status === 'Menunggu')
+  );
+
+  if (activeBorrow) {
+    submitBtn.disabled = true;
+    const borrower = getBorrowerInfo(memberId);
+    if (activeBorrow.status === 'Dipinjam') {
+      showToast(`Peringatan: ${borrower.nama} masih tercatat meminjam buku "${book.judul_buku}" (${activeBorrow.id_peminjaman}) dan belum mengembalikannya!`, 'warning');
+    } else {
+      showToast(`Peringatan: ${borrower.nama} sudah memiliki tiket booking [${activeBorrow.id_peminjaman}] untuk buku ini yang belum diambil di perpustakaan!`, 'warning');
+    }
+    return;
+  }
+
+  submitBtn.disabled = false;
 }
 
 /**
@@ -97,6 +152,7 @@ export function clearMejaBukuPreview() {
 export function setupSirkulasiHandlers() {
   state.activeSirkulasiSubtab = 'prapinjam';
   state.selectedMejaBuku = null;
+  setupPrapinjamVerifyModal();
 
   const subtabs = [
     { id: 'subTabBtnPrapinjam', panelId: 'subPanelPrapinjam', key: 'prapinjam' },
@@ -165,13 +221,8 @@ export function setupSirkulasiHandlers() {
       );
       if (pendingBooking) {
         switchSirkulasiSubtab('prapinjam');
-        showToast(`Tiket Booking ${pendingBooking.id_peminjaman} terdeteksi! Silakan serahkan buku.`, 'info');
-        const searchInput = document.getElementById('inputSearchPrapinjam');
-        if (searchInput) {
-          searchInput.value = pendingBooking.id_peminjaman;
-          state.searchPrapinjamQuery = pendingBooking.id_peminjaman.toLowerCase();
-          renderPrapinjamOnlyTable();
-        }
+        showToast(`Tiket Booking ${pendingBooking.id_peminjaman} terdeteksi! Membuka verifikasi serah-terima.`, 'success');
+        openPrapinjamVerifyModal(pendingBooking, true);
         barcodeInput.value = '';
         return;
       }
@@ -242,6 +293,33 @@ export function setupSirkulasiHandlers() {
 
       if (!book || (Number(book.stok) || 0) <= 0) {
         showToast('Pilih atau scan buku fisik yang memiliki stok tersedia.', 'warning');
+        return;
+      }
+
+      // Validasi Kuota: Cek batas maksimal 2 buku aktif per anggota
+      const totalActive = (state.cache.peminjaman || []).filter(p => 
+        p.nisn_siswa === memberId && 
+        (p.status === 'Dipinjam' || p.status === 'Menunggu')
+      ).length;
+      if (totalActive >= 2) {
+        const borrower = getBorrowerInfo(memberId);
+        showToast(`Batas tercapai: ${borrower.nama} sudah memiliki ${totalActive}/2 buku aktif! Harap kembalikan buku terlebih dahulu.`, 'warning');
+        return;
+      }
+
+      // Validasi: Cek apakah peminjam masih memiliki peminjaman aktif atau antrean booking untuk buku ini
+      const activeBorrow = (state.cache.peminjaman || []).find(p => 
+        p.nisn_siswa === memberId && 
+        p.id_buku === book.id_buku && 
+        (p.status === 'Dipinjam' || p.status === 'Menunggu')
+      );
+      if (activeBorrow) {
+        const borrower = getBorrowerInfo(memberId);
+        if (activeBorrow.status === 'Dipinjam') {
+          showToast(`${borrower.nama} masih tercatat sedang meminjam buku "${book.judul_buku}" (${activeBorrow.id_peminjaman}) dan belum mengembalikannya!`, 'warning');
+        } else {
+          showToast(`${borrower.nama} sudah memiliki tiket booking [${activeBorrow.id_peminjaman}] untuk buku ini. Silakan proses via antrean Pra-Pinjam.`, 'warning');
+        }
         return;
       }
 
@@ -521,10 +599,7 @@ export function selectMember(member) {
   if (wrapperInput) wrapperInput.classList.add('hidden');
   if (cardSelected) cardSelected.classList.remove('hidden');
 
-  const submitBtn = document.getElementById('btnSubmitMejaWalkIn');
-  if (submitBtn) {
-    submitBtn.disabled = !(state.selectedMember && state.selectedMejaBuku && (Number(state.selectedMejaBuku.stok) || 0) > 0);
-  }
+  checkMejaBorrowEligibility();
 }
 
 /**
@@ -723,10 +798,11 @@ export function renderPrapinjamOnlyTable() {
               class="btn-reject-loan inline-flex items-center justify-center h-8 w-8 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 transition">
               <i class="ph ph-trash text-base"></i>
             </button>
-            <button type="button" data-action="approve-loan" data-id="${item.id_peminjaman}"
-              class="btn-approve-loan inline-flex items-center gap-1.5 rounded-xl bg-navy px-3.5 py-2 text-xs font-bold text-white hover:bg-navy-light transition shadow-sm">
-              <i class="ph ph-check-circle text-base"></i>
-              <span>Serahkan Buku</span>
+            <button type="button" data-action="verify-loan" data-id="${item.id_peminjaman}"
+              title="Pindai barcode / verifikasi tiket siswa sebelum serah terima"
+              class="btn-verify-loan inline-flex items-center gap-1.5 rounded-xl bg-navy px-3.5 py-2 text-xs font-bold text-white hover:bg-navy-light transition shadow-sm">
+              <i class="ph ph-qr-code text-base"></i>
+              <span>Verifikasi Tiket</span>
             </button>
           </div>
         </td>
@@ -736,10 +812,11 @@ export function renderPrapinjamOnlyTable() {
 
   tbody.innerHTML = rowsHtml;
 
-  tbody.querySelectorAll('.btn-approve-loan').forEach(btn => {
+  tbody.querySelectorAll('.btn-verify-loan').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      handleApprovePrapinjam(id);
+      const loan = state.cache.peminjaman.find(p => p.id_peminjaman === id);
+      if (loan) openPrapinjamVerifyModal(loan, false);
     });
   });
 
@@ -864,6 +941,215 @@ export function renderDipinjamOnlyTable() {
   });
 }
 
+let currentVerifyingLoan = null;
+let isCurrentLoanVerified = false;
+
+/**
+ * Menyiapkan listener modal verifikasi tiket prapinjam
+ */
+export function setupPrapinjamVerifyModal() {
+  const modal = document.getElementById('modalVerifyPrapinjam');
+  const content = document.getElementById('modalVerifyPrapinjamContent');
+  const closeBtn = document.getElementById('btnCloseVerifyPrapinjam');
+  const cancelBtn = document.getElementById('btnCancelVerifyModal');
+  const checkBtn = document.getElementById('btnCheckTicketCode');
+  const inputCode = document.getElementById('inputVerifyTicketCode');
+  const launchCameraBtn = document.getElementById('btnLaunchCameraFromModal');
+  const confirmBtn = document.getElementById('btnConfirmHandoverLoan');
+
+  function closeModal() {
+    hideModal(modal, content);
+    currentVerifyingLoan = null;
+    isCurrentLoanVerified = false;
+  }
+
+  if (closeBtn) closeBtn.addEventListener('click', closeModal);
+  if (cancelBtn) cancelBtn.addEventListener('click', closeModal);
+  if (modal) {
+    modal.addEventListener('click', e => {
+      if (e.target === modal) closeModal();
+    });
+  }
+
+  if (launchCameraBtn) {
+    launchCameraBtn.addEventListener('click', () => {
+      hideModal(modal, content);
+      if (window.startLiveCameraScanner) {
+        window.startLiveCameraScanner('prapinjam');
+      }
+    });
+  }
+
+  function validateTicketCode() {
+    if (!currentVerifyingLoan) return;
+    const inputVal = (inputCode.value || '').trim().toUpperCase();
+    const targetId = (currentVerifyingLoan.id_peminjaman || '').toUpperCase();
+
+    if (!inputVal) {
+      showToast('Arahkan scanner atau masukkan ID tiket peminjaman.', 'warning');
+      return;
+    }
+
+    if (inputVal === targetId || inputVal.includes(targetId) || targetId.includes(inputVal)) {
+      setLoanVerificationState(true);
+      showToast('Tiket booking terverifikasi cocok! Kunci penyerahan buku terbuka.', 'success');
+    } else {
+      showToast(`Kode tiket tidak cocok! (Harus sesuai tiket booking: ${targetId})`, 'error');
+    }
+  }
+
+  if (checkBtn) checkBtn.addEventListener('click', validateTicketCode);
+  if (inputCode) {
+    inputCode.addEventListener('keydown', e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        validateTicketCode();
+      }
+    });
+  }
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener('click', async () => {
+      if (!isCurrentLoanVerified || !currentVerifyingLoan) {
+        showToast('Wajib verifikasi tiket barcode sebelum menyerahkan buku.', 'warning');
+        return;
+      }
+      const id = currentVerifyingLoan.id_peminjaman;
+      closeModal();
+      await handleApprovePrapinjam(id);
+    });
+  }
+}
+
+/**
+ * Mengatur tampilan modal sesuai status verifikasi barcode
+ */
+function setLoanVerificationState(isVerified) {
+  isCurrentLoanVerified = isVerified;
+  const statusBanner = document.getElementById('verifyStatusBanner');
+  const statusIcon = document.getElementById('verifyStatusIcon');
+  const statusText = document.getElementById('verifyStatusText');
+  const iconBadge = document.getElementById('verifyIconBadge');
+  const inputContainer = document.getElementById('verifyInputContainer');
+  const successBox = document.getElementById('verifySuccessBox');
+  const confirmBtn = document.getElementById('btnConfirmHandoverLoan');
+  const lockIcon = document.getElementById('iconConfirmHandoverLock');
+  const btnText = document.getElementById('btnConfirmHandoverText');
+
+  if (isVerified) {
+    if (statusBanner) {
+      statusBanner.className = 'flex items-center justify-between p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 transition-colors';
+    }
+    if (statusIcon) statusIcon.className = 'ph-fill ph-check-circle text-lg text-emerald-600';
+    if (statusText) statusText.textContent = 'Barcode Tiket Terverifikasi Valid ✓';
+    if (iconBadge) {
+      iconBadge.className = 'flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 font-bold text-lg';
+    }
+    if (inputContainer) inputContainer.classList.add('hidden');
+    if (successBox) successBox.classList.remove('hidden');
+
+    if (confirmBtn) {
+      confirmBtn.disabled = false;
+      confirmBtn.className = 'w-2/3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-navy py-2.5 text-xs font-bold text-white hover:bg-navy-light cursor-pointer transition shadow-sm';
+    }
+    if (lockIcon) lockIcon.className = 'ph-bold ph-check text-base';
+    if (btnText) btnText.textContent = 'Konfirmasi & Serahkan Buku Fisik';
+  } else {
+    if (statusBanner) {
+      statusBanner.className = 'flex items-center justify-between p-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 transition-colors';
+    }
+    if (statusIcon) statusIcon.className = 'ph ph-warning-circle text-lg text-amber-600';
+    if (statusText) statusText.textContent = 'Menunggu Verifikasi Tiket / Barcode Siswa';
+    if (iconBadge) {
+      iconBadge.className = 'flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 font-bold text-lg';
+    }
+    if (inputContainer) inputContainer.classList.remove('hidden');
+    if (successBox) successBox.classList.add('hidden');
+
+    const inputCode = document.getElementById('inputVerifyTicketCode');
+    if (inputCode) {
+      inputCode.value = '';
+      setTimeout(() => inputCode.focus(), 150);
+    }
+
+    if (confirmBtn) {
+      confirmBtn.disabled = true;
+      confirmBtn.className = 'w-2/3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-200 py-2.5 text-xs font-bold text-slate-400 cursor-not-allowed transition shadow-sm';
+    }
+    if (lockIcon) lockIcon.className = 'ph ph-lock-key text-base';
+    if (btnText) btnText.textContent = 'Wajib Verifikasi Barcode Dulu';
+  }
+}
+
+/**
+ * Membuka jendela dialog verifikasi serah-terima tiket prapinjam
+ * @param {object} loan 
+ * @param {boolean} isBarcodeVerified 
+ */
+export function openPrapinjamVerifyModal(loan, isBarcodeVerified = false) {
+  if (!loan) return;
+  currentVerifyingLoan = loan;
+
+  const modal = document.getElementById('modalVerifyPrapinjam');
+  const content = document.getElementById('modalVerifyPrapinjamContent');
+  if (!modal) return;
+
+  const borrower = getBorrowerInfo(loan.nisn_siswa);
+  const buku = state.cache.buku.find(b => b.id_buku === loan.id_buku);
+
+  const badgeId = document.getElementById('verifyBadgeId');
+  const borrowerName = document.getElementById('verifyBorrowerName');
+  const borrowerBadge = document.getElementById('verifyBorrowerBadge');
+  const borrowerSub = document.getElementById('verifyBorrowerSub');
+  const borrowerContact = document.getElementById('verifyBorrowerContact');
+
+  const tglPinjam = document.getElementById('verifyTanggalPinjam');
+  const batasKembali = document.getElementById('verifyBatasKembali');
+
+  const coverContainer = document.getElementById('verifyBookCoverContainer');
+  const bookTitle = document.getElementById('verifyBookTitle');
+  const bookAuthor = document.getElementById('verifyBookAuthor');
+  const bookRak = document.getElementById('verifyBookRak');
+  const bookStock = document.getElementById('verifyBookStock');
+
+  if (badgeId) badgeId.textContent = loan.id_peminjaman;
+  if (borrowerName) borrowerName.textContent = borrower.nama;
+  if (borrowerBadge) {
+    borrowerBadge.textContent = borrower.badge;
+    borrowerBadge.className = `rounded-full ${borrower.type === 'guru' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-navy'} px-1.5 py-0.2 text-[9px] font-bold`;
+  }
+  if (borrowerSub) borrowerSub.innerHTML = borrower.sub;
+  if (borrowerContact) borrowerContact.textContent = `Kontak: ${borrower.kontak || '-'}`;
+
+  if (tglPinjam) tglPinjam.textContent = formatTanggalIndo(loan.tanggal_pinjam);
+  if (batasKembali) batasKembali.textContent = formatTanggalIndo(loan.batas_kembali);
+
+  const judul = buku ? buku.judul_buku : loan.id_buku;
+  const penulis = buku ? (buku.penulis || '-') : '-';
+  const rak = buku ? (buku.keterangan || 'Rak Koleksi') : 'Rak Koleksi';
+  const stok = buku ? (Number(buku.stok) || 0) : 0;
+  const coverUrl = buku && buku.cover_url ? buku.cover_url : null;
+
+  if (bookTitle) bookTitle.textContent = judul;
+  if (bookAuthor) bookAuthor.textContent = penulis;
+  if (bookRak) bookRak.textContent = `Ambil di Rak: ${rak}`;
+  if (bookStock) bookStock.textContent = `Stok Tersedia: ${stok}`;
+
+  if (coverContainer) {
+    coverContainer.innerHTML = coverUrl 
+      ? `<img src="${coverUrl}" class="h-full w-full object-cover" alt="Cover" />`
+      : '<i class="ph ph-book text-2xl text-slate-400"></i>';
+  }
+
+  setLoanVerificationState(isBarcodeVerified);
+  showModal(modal, content);
+}
+
+// Buka akses global ke window
+if (typeof window !== 'undefined') {
+  window.openPrapinjamVerifyModal = openPrapinjamVerifyModal;
+}
+
 /**
  * Menyetujui prapinjam dan menyerahkan buku kepada peminjam
  */
@@ -978,6 +1264,27 @@ export function setupWalkInModal() {
       const book = state.cache.buku.find(b => b.id_buku === idBuku);
       if (!book || (Number(book.stok) || 0) <= 0) {
         showToast('Buku yang dipilih tidak memiliki stok fisik tersedia.', 'error');
+        return;
+      }
+
+      // Validasi Kuota: Cek batas maksimal 2 buku aktif per anggota
+      const totalActive = (state.cache.peminjaman || []).filter(p => 
+        p.nisn_siswa === nisn && 
+        (p.status === 'Dipinjam' || p.status === 'Menunggu')
+      ).length;
+      if (totalActive >= 2) {
+        showToast(`Batas tercapai: Peminjam sudah memiliki ${totalActive}/2 buku aktif! Harap kembalikan buku terlebih dahulu.`, 'warning');
+        return;
+      }
+
+      // Validasi: Cek apakah peminjam masih meminjam buku ini atau sedang dalam antrean
+      const activeBorrow = (state.cache.peminjaman || []).find(p => 
+        p.nisn_siswa === nisn && 
+        p.id_buku === idBuku && 
+        (p.status === 'Dipinjam' || p.status === 'Menunggu')
+      );
+      if (activeBorrow) {
+        showToast(`Peminjam masih memiliki peminjaman aktif (${activeBorrow.id_peminjaman}) untuk buku ini dan belum mengembalikannya!`, 'warning');
         return;
       }
 

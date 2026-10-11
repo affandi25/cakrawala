@@ -29,6 +29,7 @@ export const state = {
   filterCategoryBook: '',      // Filter kategori buku
   filterStatusBook: '',        // Filter ketersediaan buku
   selectedPeminjamanForReturn: null, // Peminjaman aktif yang akan diproses kembali
+  selectedReturnBorrower: null,      // Peminjam terpilih di meja pengembalian
   currentQrBook: null,         // Buku yang sedang dibuka jendela stiker QR-nya
   deleteTargetBook: null,      // Buku yang ditargetkan untuk dihapus
   selectedCoverFile: null,     // Berkas gambar sampul buku yang dipilih untuk diunggah

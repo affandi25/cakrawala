@@ -7,10 +7,10 @@ import { db } from '../../assets/js/supabaseClient.js';
 import { state } from './state.js';
 import { showToast } from './siswaHelper.js';
 import { renderOverview } from './overview.js';
-import { renderKatalogGrid, renderKategoriOptions } from './katalog.js';
-import { renderPinjamanTables } from './pinjaman.js';
+import { renderKatalogGrid, renderKategoriOptions } from './katalog/index.js';
+import { renderPinjamanTables } from './pinjaman/index.js';
 import { renderRiwayatTable } from './riwayat.js';
-import { renderProfil } from './profil.js';
+import { renderProfil } from './profil/index.js';
 
 /**
  * Menjalankan render ke seluruh modul tampilan secara serentak

@@ -108,10 +108,11 @@ export function renderQuickPrapinjamTable(list) {
         </td>
         <td class="px-5 py-3 text-right whitespace-nowrap">
           <div class="flex items-center justify-end gap-1.5">
-            <button type="button" data-action="approve" data-id="${item.id_peminjaman}"
-              class="btn-quick-approve inline-flex items-center gap-1 rounded-xl bg-navy px-3 py-1.5 text-xs font-bold text-white hover:bg-navy-light transition shadow-2xs">
-              <i class="ph ph-check text-sm"></i>
-              <span>Serahkan</span>
+            <button type="button" data-action="verify" data-id="${item.id_peminjaman}"
+              title="Verifikasi barcode tiket sebelum serah terima"
+              class="btn-quick-verify inline-flex items-center gap-1 rounded-xl bg-navy px-3 py-1.5 text-xs font-bold text-white hover:bg-navy-light transition shadow-2xs">
+              <i class="ph ph-qr-code text-sm"></i>
+              <span>Verifikasi</span>
             </button>
             <button type="button" data-action="reject" data-id="${item.id_peminjaman}"
               class="btn-quick-reject inline-flex items-center gap-1 rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-xs font-bold text-slate-600 hover:bg-rose-50 hover:text-rose-600 hover:border-rose-200 transition">
@@ -123,11 +124,14 @@ export function renderQuickPrapinjamTable(list) {
     `;
   }).join('');
 
-  // Event Listeners tombol serahkan dan tolak di overview
-  tbody.querySelectorAll('.btn-quick-approve').forEach(btn => {
+  // Event Listeners tombol verifikasi dan tolak di overview
+  tbody.querySelectorAll('.btn-quick-verify').forEach(btn => {
     btn.addEventListener('click', () => {
       const id = btn.getAttribute('data-id');
-      handleApprovePrapinjam(id);
+      const loan = state.cache.peminjaman.find(p => p.id_peminjaman === id);
+      if (loan && window.openPrapinjamVerifyModal) {
+        window.openPrapinjamVerifyModal(loan, false);
+      }
     });
   });
 

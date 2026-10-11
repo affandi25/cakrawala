@@ -426,8 +426,8 @@
             <div class="text-xs text-slate-600 space-y-1">
               <h4 class="font-bold text-amber-900 text-sm">Alur Pra-Pinjam (Pemesanan Mandiri Online oleh Siswa)</h4>
               <p class="leading-relaxed">
-                <strong>Cara Kerja:</strong> Siswa memilih buku di katalog web & mengisi formulir pra-pinjam &rarr; Transaksi masuk ke antrean ini dengan status <strong>"Menunggu"</strong>.
-                Saat siswa <strong>datang ke meja sirkulasi</strong> untuk mengambil buku fisik, petugas menekan tombol <strong>"Serahkan Buku"</strong>. Status otomatis berubah menjadi <strong>"Dipinjam"</strong> dan stok fisik buku berkurang 1.
+                <strong>Cara Kerja:</strong> Siswa memilih buku di katalog web &rarr; Transaksi masuk antrean berstatus <strong>"Menunggu"</strong> dan menerbitkan tiket barcode.
+                Saat siswa <strong>datang ke meja sirkulasi</strong>, petugas <strong>memindai Barcode / QR Tiket siswa</strong> untuk verifikasi identitas dan membuka kunci penyerahan buku. Setelah diverifikasi, status resmi berubah menjadi <strong>"Dipinjam"</strong> dan stok fisik berkurang 1.
               </p>
             </div>
           </div>
@@ -456,7 +456,7 @@
           <section class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
             <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
               <h3 class="text-sm font-bold text-slate-800">Daftar Antrean Prapinjam Menunggu Penyerahan Fisik</h3>
-              <span class="text-xs text-slate-400">Klik "Serahkan Buku" saat siswa tiba</span>
+              <span class="text-xs text-slate-400">Scan barcode tiket siswa untuk membuka kunci penyerahan</span>
             </div>
 
             <div class="overflow-x-auto min-h-[260px]">
@@ -468,7 +468,7 @@
                     <th class="px-5 py-3.5">Buku & Lokasi Rak</th>
                     <th class="px-5 py-3.5">Tgl Pesan / Batas</th>
                     <th class="px-5 py-3.5">Status</th>
-                    <th class="px-5 py-3.5 text-right">Aksi Konfirmasi</th>
+                    <th class="px-5 py-3.5 text-right">Verifikasi & Penyerahan</th>
                   </tr>
                 </thead>
                 <!-- Bagian tubuh tabel: baris data siswa dan tombol 'Serahkan' disuntikkan di sini -->
@@ -743,35 +743,99 @@
                 </div>
               </div>
 
-              <!-- LANGKAH 1: Memilih transaksi buku mana yang sedang dikembalikan siswa -->
+              <!-- LANGKAH 1: Temukan Siswa & Pilih Buku yang Dikembalikan -->
               <div class="space-y-4">
-                <div>
-                  <label for="selectPeminjamanPengembalian" class="block text-xs font-bold text-slate-700 mb-1">
-                    Pilih Transaksi Peminjaman Aktif <span class="text-rose-500">*</span>
-                  </label>
-                  <select id="selectPeminjamanPengembalian"
-                    class="w-full rounded-xl border border-slate-200 bg-slate-50/60 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:bg-white focus:ring-3 focus:ring-navy/10">
-                    <option value="">-- Pilih Buku yang Sedang Dipinjam --</option>
-                  </select>
-                  <span class="text-[10px] text-slate-400 mt-1 block">Hanya menampilkan transaksi dengan status 'Dipinjam'.</span>
+                <!-- Select Peminjaman Legacy (Tetap ada sebagai hidden bridge agar aman) -->
+                <select id="selectPeminjamanPengembalian" class="hidden">
+                  <option value="">-- Pilih Buku yang Sedang Dipinjam --</option>
+                </select>
+
+                <!-- 1. Kolom Pencarian Siswa / Guru Peminjam -->
+                <div class="relative">
+                  <div class="flex items-center justify-between mb-1.5">
+                    <label for="inputSearchPeminjamPengembalian" class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <span class="flex h-5 w-5 items-center justify-center rounded-full bg-navy text-[10px] font-extrabold text-white">1</span>
+                      <span>Ketik Nama Siswa / Guru Peminjam</span>
+                      <span class="text-rose-500">*</span>
+                    </label>
+                    <span class="text-[11px] text-slate-400 font-medium">Ketik nama untuk menampilkan buku yang dipinjam</span>
+                  </div>
+
+                  <div class="relative">
+                    <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
+                    <input type="text" id="inputSearchPeminjamPengembalian"
+                      placeholder="Ketik nama siswa atau guru (contoh: Budi, Siti)..."
+                      autocomplete="off"
+                      class="w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-10 pr-9 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:bg-white focus:ring-3 focus:ring-navy/10 placeholder:text-slate-400" />
+                    <button type="button" id="btnClearSearchPeminjam" class="hidden absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
+                      <i class="ph ph-x-circle text-base"></i>
+                    </button>
+                  </div>
+
+                  <!-- Dropdown Hasil Pencarian Anggota / Pinjaman Aktif -->
+                  <div id="dropdownSearchResultsPeminjam" class="hidden absolute left-0 right-0 top-full mt-1.5 z-30 max-h-64 overflow-y-auto rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl space-y-1">
+                    <!-- Populated dynamically -->
+                  </div>
                 </div>
 
-                <!-- KOTAK PRATINJAU TRANSAKSI: Muncul otomatis setelah transaksi di atas dipilih -->
-                <div id="previewPeminjamanBox" class="hidden rounded-xl border border-blue-100 bg-blue-50/50 p-4 space-y-3">
+                <!-- 2. Kartu Profil Siswa Terpilih -->
+                <div id="cardSelectedBorrower" class="hidden rounded-xl border border-blue-200 bg-gradient-to-r from-blue-50/70 to-indigo-50/40 p-3.5 flex items-center justify-between transition-all">
+                  <div class="flex items-center gap-3">
+                    <div id="badgeAvatarBorrower" class="flex h-11 w-11 items-center justify-center rounded-xl bg-navy font-extrabold text-white text-base shadow-xs">
+                      S
+                    </div>
+                    <div>
+                      <div class="flex items-center gap-2">
+                        <h4 id="namaBorrowerPengembalian" class="text-sm font-extrabold text-slate-900">Nama Siswa</h4>
+                        <span id="badgeTipeBorrowerPengembalian" class="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-800">Siswa</span>
+                      </div>
+                      <p id="detailBorrowerPengembalian" class="text-xs text-slate-600 mt-0.5">NISN: 00123 &bull; Kelas: X-RPL</p>
+                    </div>
+                  </div>
+                  <button type="button" id="btnResetSelectedBorrower" class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-100 hover:text-rose-600 transition shadow-2xs">
+                    <i class="ph ph-arrow-counter-clockwise text-sm"></i>
+                    <span>Ganti</span>
+                  </button>
+                </div>
+
+                <!-- 3. Daftar Buku yang Sedang Dipinjam Siswa (1 atau 2 Buku Saja) -->
+                <div id="sectionDaftarBukuDipinjam" class="hidden space-y-2">
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                      <i class="ph ph-books text-navy text-base"></i>
+                      <span>Pilih Buku yang Dikembalikan:</span>
+                    </span>
+                    <span id="labelJumlahPinjamanAktif" class="text-[11px] font-semibold text-slate-500">2 buku aktif</span>
+                  </div>
+
+                  <!-- Container Kartu Buku Aktif -->
+                  <div id="containerListBukuDipinjam" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <!-- Diisi secara dinamis oleh pengembalian.js -->
+                  </div>
+                </div>
+
+                <!-- 4. KOTAK PRATINJAU TRANSAKSI: Terpilih untuk dikembalikan -->
+                <div id="previewPeminjamanBox" class="hidden rounded-xl border-2 border-emerald-500/40 bg-emerald-50/40 p-4 space-y-3 transition-all">
                   <div class="flex items-start justify-between">
                     <div>
-                      <span id="prevNisnPeminjam"
-                        class="inline-block rounded-md bg-navy px-2 py-0.5 text-[10px] font-bold text-white">NISN</span>
-                      <h4 id="prevNamaPeminjam" class="text-sm font-bold text-navy mt-1">Nama Siswa</h4>
+                      <div class="flex items-center gap-1.5">
+                        <span class="inline-flex items-center gap-1 rounded-md bg-emerald-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-2xs">
+                          <i class="ph ph-check-circle"></i>
+                          <span>Siap Dikembalikan</span>
+                        </span>
+                        <span id="prevNisnPeminjam"
+                          class="inline-block rounded-md bg-navy px-2 py-0.5 text-[10px] font-bold text-white">NISN</span>
+                      </div>
+                      <h4 id="prevNamaPeminjam" class="text-sm font-bold text-navy mt-1.5">Nama Siswa</h4>
                       <p id="prevKelasPeminjam" class="text-xs text-slate-600">Kelas / Kontak</p>
                     </div>
                     <!-- Nomor Induk Transaksi (Contoh: PJ-12345) -->
                     <span id="prevIdPeminjamanBadge"
-                      class="rounded-lg bg-white px-2.5 py-1 text-xs font-mono font-bold text-navy border border-blue-200">PJ-0000</span>
+                      class="rounded-lg bg-white px-2.5 py-1 text-xs font-mono font-bold text-navy border border-emerald-300 shadow-2xs">PJ-0000</span>
                   </div>
 
                   <!-- Rincian Buku yang Dipinjam & Tanggal Tempo -->
-                  <div class="border-t border-blue-200/50 pt-2.5 grid grid-cols-2 gap-2 text-xs">
+                  <div class="border-t border-emerald-200/60 pt-2.5 grid grid-cols-2 gap-2 text-xs">
                     <div>
                       <span class="text-slate-500">Judul Buku:</span>
                       <p id="prevJudulBuku" class="font-bold text-slate-800 line-clamp-1">Judul Buku</p>
@@ -919,26 +983,112 @@
             </div>
           </div>
 
-          <!-- Riwayat Pengembalian Terkini (Right Column) -->
+          <!-- Panel Operasional Denda & Riwayat Pengembalian (Right Column) -->
           <div class="lg:col-span-5 space-y-4">
             <section class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
-              <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+              <!-- Header Panel & Tombol Segarkan -->
+              <div class="flex items-center justify-between px-5 py-3.5 border-b border-slate-100 bg-slate-50/60">
                 <div>
-                  <h3 class="text-sm font-bold text-slate-800">Riwayat Pengembalian</h3>
-                  <p class="text-[11px] text-slate-500">Buku yang telah diserahkan kembali</p>
+                  <h3 class="text-sm font-bold text-slate-800">Operasional Denda & Riwayat</h3>
+                  <p class="text-[11px] text-slate-500">Kelola tunggakan kasbon dan arsip pengembalian</p>
                 </div>
                 <button type="button" id="btnRefreshPengembalian" title="Segarkan data"
-                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-50">
+                  class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-white hover:text-navy transition shadow-2xs">
                   <i class="ph ph-arrows-clockwise text-base"></i>
                 </button>
               </div>
 
-              <div id="listRiwayatPengembalian" class="p-4 space-y-3 max-h-[580px] overflow-y-auto">
-                <div class="py-8 text-center text-slate-400">
-                  <i class="ph ph-spinner animate-spin text-2xl inline-block mb-1"></i>
-                  <p class="text-xs">Memuat riwayat...</p>
+              <!-- Sub-tab Switcher: Tunggakan Denda vs Semua Riwayat -->
+              <div class="p-3 bg-slate-100/70 border-b border-slate-200/80">
+                <div class="grid grid-cols-2 gap-1.5 p-1 bg-slate-200/60 rounded-xl text-xs font-bold">
+                  <button type="button" id="tabBtnTunggakanDenda"
+                    class="tab-btn-fine flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-white text-rose-700 shadow-xs transition">
+                    <i class="ph-fill ph-warning-circle text-sm text-rose-600"></i>
+                    <span>Tunggakan Denda</span>
+                    <span id="badgeCountTunggakanDenda" class="ml-1 rounded-full bg-rose-600 px-1.5 py-0.2 text-[10px] font-extrabold text-white">0</span>
+                  </button>
+                  <button type="button" id="tabBtnSemuaRiwayat"
+                    class="tab-btn-fine flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                    <i class="ph ph-receipt text-sm"></i>
+                    <span>Semua Riwayat</span>
+                    <span id="badgeCountSemuaRiwayat" class="ml-1 rounded-full bg-slate-200 px-1.5 py-0.2 text-[10px] font-bold text-slate-700">0</span>
+                  </button>
                 </div>
               </div>
+
+              <!-- VIEW 1: Panel Tunggakan Denda (Belum Lunas) -->
+              <div id="viewTunggakanDenda" class="p-4 space-y-3">
+                <!-- Ringkasan Kas Tunggakan -->
+                <div class="rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50 to-amber-50/50 p-3 flex items-center justify-between">
+                  <div class="flex items-center gap-2.5">
+                    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-rose-600 text-white font-bold">
+                      <i class="ph ph-hand-coins text-lg"></i>
+                    </div>
+                    <div>
+                      <span class="text-[10px] font-bold uppercase tracking-wider text-rose-700 block">Total Denda Tertunda</span>
+                      <h4 id="summaryTotalTunggakanRupiah" class="text-sm font-extrabold text-rose-900">Rp 0</h4>
+                    </div>
+                  </div>
+                  <div class="text-right">
+                    <span id="summaryTotalSiswaTunggakan" class="text-xs font-extrabold text-slate-700">0 Siswa</span>
+                    <p class="text-[10px] text-slate-500">Belum Bayar</p>
+                  </div>
+                </div>
+
+                <!-- Input Pencarian Khusus Siswa Menunggak -->
+                <div class="relative">
+                  <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                  <input type="text" id="inputSearchTunggakanDenda"
+                    placeholder="Ketik nama siswa yang mau bayar denda..."
+                    class="w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-8 pr-3 py-2 text-xs text-slate-900 outline-none transition focus:border-navy focus:bg-white focus:ring-2 focus:ring-navy/10 placeholder:text-slate-400" />
+                </div>
+
+                <!-- Daftar Kartu Tunggakan Denda -->
+                <div id="listTunggakanDenda" class="space-y-2.5 max-h-[460px] overflow-y-auto pr-0.5">
+                  <div class="py-10 text-center text-slate-400">
+                    <i class="ph ph-spinner animate-spin text-2xl inline-block mb-1"></i>
+                    <p class="text-xs">Memuat data tunggakan...</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- VIEW 2: Panel Semua Riwayat Pengembalian (Arsip / Log) -->
+              <div id="viewSemuaRiwayat" class="hidden p-4 space-y-3">
+                <!-- Filter Status & Pencarian -->
+                <div class="space-y-2">
+                  <div class="relative">
+                    <i class="ph ph-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                    <input type="text" id="inputSearchRiwayatPengembalian"
+                      placeholder="Cari siswa, judul buku, atau ID resi..."
+                      class="w-full rounded-xl border border-slate-200 bg-slate-50/60 pl-8 pr-3 py-2 text-xs text-slate-900 outline-none transition focus:border-navy focus:bg-white focus:ring-2 focus:ring-navy/10 placeholder:text-slate-400" />
+                  </div>
+
+                  <!-- Pills Filter Status -->
+                  <div class="flex items-center gap-1 text-[11px] font-semibold">
+                    <button type="button" data-filter="semua"
+                      class="pill-filter-riwayat active rounded-lg bg-navy px-2.5 py-1 text-white transition">
+                      Semua
+                    </button>
+                    <button type="button" data-filter="lunas"
+                      class="pill-filter-riwayat rounded-lg bg-slate-100 px-2.5 py-1 text-slate-600 hover:bg-slate-200 transition">
+                      Lunas
+                    </button>
+                    <button type="button" data-filter="tanpa-denda"
+                      class="pill-filter-riwayat rounded-lg bg-slate-100 px-2.5 py-1 text-slate-600 hover:bg-slate-200 transition">
+                      Tanpa Denda
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Daftar Riwayat Keseluruhan -->
+                <div id="listRiwayatPengembalian" class="space-y-2.5 max-h-[460px] overflow-y-auto pr-0.5">
+                  <div class="py-10 text-center text-slate-400">
+                    <i class="ph ph-spinner animate-spin text-2xl inline-block mb-1"></i>
+                    <p class="text-xs">Memuat riwayat...</p>
+                  </div>
+                </div>
+              </div>
+
             </section>
           </div>
 
@@ -1534,6 +1684,132 @@
   </div>
 
   <!-- ============================================================================================= -->
+  <!-- MODAL: VERIFIKASI TIKET PRAPINJAM SEBELUM PENYERAHAN BUKU                                    -->
+  <!-- APA GUNANYA?                                                                                  -->
+  <!-- Mencegah penyerahan buku tanpa scan / verifikasi tiket barcode resmi siswa.                   -->
+  <!-- Menampilkan verifikasi barcode, identitas siswa, petunjuk rak buku fisik, dan tombol serah.   -->
+  <!-- ============================================================================================= -->
+  <div id="modalVerifyPrapinjam"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+    role="dialog" aria-modal="true">
+    <div id="modalVerifyPrapinjamContent"
+      class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-200">
+      
+      <!-- Kepala Modal Verifikasi -->
+      <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/70">
+        <div class="flex items-center gap-3">
+          <div id="verifyIconBadge" class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 font-bold text-lg">
+            <i class="ph ph-qr-code text-xl"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-extrabold tracking-tight text-slate-900">Verifikasi Tiket Booking Pra-Pinjam</h3>
+            <p id="verifyModalSubtitle" class="text-xs text-slate-500">Cocokkan barcode tiket pemesanan sebelum menyerahkan buku fisik</p>
+          </div>
+        </div>
+        <button type="button" id="btnCloseVerifyPrapinjam"
+          class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition">
+          <i class="ph ph-x text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-6 space-y-4 text-xs">
+        <!-- Status Barcode Banner -->
+        <div id="verifyStatusBanner" class="flex items-center justify-between p-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 transition-colors">
+          <div class="flex items-center gap-2">
+            <i id="verifyStatusIcon" class="ph ph-warning-circle text-lg text-amber-600"></i>
+            <span id="verifyStatusText" class="font-bold">Menunggu Verifikasi Tiket / Barcode Siswa</span>
+          </div>
+          <span id="verifyBadgeId" class="font-mono text-xs font-extrabold bg-amber-200/80 px-2 py-0.5 rounded-lg">PJ-0000</span>
+        </div>
+
+        <!-- Detail Pemesan & Jadwal Pinjam -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <!-- Card Siswa -->
+          <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 space-y-1.5">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Identitas Pemesan</p>
+            <div class="flex items-center gap-1.5">
+              <span id="verifyBorrowerName" class="font-bold text-slate-800 text-xs line-clamp-1">-</span>
+              <span id="verifyBorrowerBadge" class="rounded-full bg-blue-100 text-navy px-1.5 py-0.2 text-[9px] font-bold">Siswa</span>
+            </div>
+            <p id="verifyBorrowerSub" class="text-slate-500 text-[11px]">-</p>
+            <p id="verifyBorrowerContact" class="text-slate-400 text-[10px]">Kontak: -</p>
+          </div>
+
+          <!-- Card Jadwal -->
+          <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 space-y-1.5">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Jadwal Pinjam</p>
+            <p class="text-slate-600">Tgl Pesan: <strong id="verifyTanggalPinjam" class="text-slate-800">-</strong></p>
+            <p class="text-slate-600">Jatuh Tempo: <strong id="verifyBatasKembali" class="text-amber-800">-</strong></p>
+            <p class="text-[10px] text-slate-400">Metode: <strong class="text-navy">Pra-Pinjam Online</strong></p>
+          </div>
+        </div>
+
+        <!-- Card Buku Fisik & Lokasi Rak -->
+        <div class="flex items-center gap-3.5 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+          <div id="verifyBookCoverContainer" class="h-16 w-12 shrink-0 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center text-slate-400">
+            <i class="ph ph-book text-2xl"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <h4 id="verifyBookTitle" class="font-bold text-slate-800 text-xs line-clamp-1">-</h4>
+            <p id="verifyBookAuthor" class="text-slate-500 text-[11px]">-</p>
+            <div class="mt-1 flex items-center gap-2">
+              <span class="inline-flex items-center gap-1 rounded-lg bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-navy">
+                <i class="ph ph-books text-xs"></i>
+                <span id="verifyBookRak">Rak -</span>
+              </span>
+              <span id="verifyBookStock" class="text-[10px] text-slate-500">Stok: -</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Box Verifikasi Input / Kamera Scanner -->
+        <div id="verifyInputContainer" class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+          <div class="flex items-center justify-between">
+            <label for="inputVerifyTicketCode" class="font-bold text-slate-700">Validasi Tiket Siswa:</label>
+            <button type="button" id="btnLaunchCameraFromModal"
+              class="inline-flex items-center gap-1 rounded-lg bg-white border border-slate-300 px-2.5 py-1 text-[11px] font-bold text-navy hover:bg-navy hover:text-white transition shadow-2xs">
+              <i class="ph ph-camera"></i>
+              <span>Scan Barcode HP Siswa</span>
+            </button>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" id="inputVerifyTicketCode" placeholder="Arahkan scanner atau masukkan ID Tiket (PJ-...)"
+              class="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase text-slate-800 placeholder:text-slate-400 outline-none focus:border-navy focus:ring-2 focus:ring-navy/10" />
+            <button type="button" id="btnCheckTicketCode"
+              class="rounded-xl bg-slate-800 px-3 py-2 text-xs font-bold text-white hover:bg-slate-900 transition">
+              Cocokkan
+            </button>
+          </div>
+          <p id="verifyCodeHelper" class="text-[10px] text-slate-500">Scan barcode di ponsel siswa, atau ketik ID tiket jika kamera tidak aktif.</p>
+        </div>
+
+        <!-- Box Sukses Terverifikasi (Awalnya tersembunyi jika belum scan) -->
+        <div id="verifySuccessBox" class="hidden p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 flex items-start gap-2.5">
+          <i class="ph-fill ph-check-circle text-lg text-emerald-600 shrink-0 mt-0.5"></i>
+          <div>
+            <p class="font-bold">Verifikasi Identitas Tiket Berhasil!</p>
+            <p class="text-[11px] text-emerald-700 mt-0.5">Silakan ambil buku dari rak yang tertera di atas, serahkan kepada siswa, lalu klik konfirmasi di bawah.</p>
+          </div>
+        </div>
+
+        <!-- Tombol Aksi Penyerahan -->
+        <div class="pt-2 flex items-center gap-2.5">
+          <button type="button" id="btnCancelVerifyModal"
+            class="w-1/3 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+            Tutup
+          </button>
+          <button type="button" id="btnConfirmHandoverLoan" disabled
+            class="w-2/3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-200 py-2.5 text-xs font-bold text-slate-400 cursor-not-allowed transition shadow-sm">
+            <i class="ph ph-lock-key text-base" id="iconConfirmHandoverLock"></i>
+            <span id="btnConfirmHandoverText">Wajib Verifikasi Barcode Dulu</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ============================================================================================= -->
   <!-- MODAL 4: STRUK NOTA BUKTI PENGEMBALIAN BUKU (DIGITAL RECEIPT)                                  -->
   <!-- APA GUNANYA?                                                                                  -->
   <!-- Muncul saat petugas berhasil menyelesaikan proses pengembalian buku dan pembayaran denda.      -->
@@ -1591,6 +1867,78 @@
         class="w-full rounded-xl bg-navy py-2.5 text-xs font-bold text-white hover:bg-navy-light transition shadow-sm">
         Selesai & Tutup
       </button>
+    </div>
+  </div>
+
+  <!-- ============================================================================================= -->
+  <!-- MODAL: KONFIRMASI PELUNASAN DENDA TUNAI (VERIFIKASI FISIK DUA ARAH)                           -->
+  <!-- ============================================================================================= -->
+  <div id="modalKonfirmasiLunasiDenda"
+    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+    role="dialog" aria-modal="true" aria-labelledby="titleModalLunasiDenda">
+    <div id="modalKonfirmasiLunasiDendaContent"
+      class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-200 p-6 space-y-4">
+      
+      <!-- Header Modal -->
+      <div class="flex items-center gap-3 border-b border-slate-100 pb-3">
+        <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 text-2xl font-bold">
+          <i class="ph ph-hand-coins"></i>
+        </div>
+        <div>
+          <h3 id="titleModalLunasiDenda" class="text-base font-extrabold text-slate-900">
+            Konfirmasi Pelunasan Denda
+          </h3>
+          <p class="text-xs text-slate-500">Pastikan uang tunai telah diterima secara fisik</p>
+        </div>
+      </div>
+
+      <!-- Ringkasan Rincian Denda -->
+      <div class="rounded-xl border border-slate-200 bg-slate-50/80 p-3.5 space-y-2 text-xs">
+        <div class="flex justify-between border-b border-slate-200/70 pb-1.5 font-mono text-[11px] text-slate-400">
+          <span>NO. RESI:</span>
+          <span id="lunasiIdPengembalian" class="font-bold text-slate-800">KB-0000</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Peminjam:</span>
+          <span id="lunasiNamaPeminjam" class="font-bold text-slate-900 text-right">Nama Siswa</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Buku:</span>
+          <span id="lunasiJudulBuku" class="font-bold text-slate-800 text-right line-clamp-1 max-w-[200px]">Judul Buku</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-slate-500">Rincian Pelanggaran:</span>
+          <span id="lunasiRincianDenda" class="font-semibold text-rose-700 text-right">Terlambat 3 Hari</span>
+        </div>
+
+        <!-- Box Nominal Besar -->
+        <div class="rounded-lg bg-emerald-50 border border-emerald-200 p-2.5 text-center mt-2">
+          <span class="text-[10px] font-bold uppercase text-emerald-800 block">Total Uang yang Harus Diterima</span>
+          <h4 id="lunasiNominalDenda" class="text-2xl font-black text-emerald-700 tracking-tight">Rp 0</h4>
+        </div>
+      </div>
+
+      <!-- Checkbox Wajib Pengaman (Safety Check) -->
+      <label class="flex items-start gap-2.5 p-3 rounded-xl border border-emerald-200 bg-emerald-50/30 cursor-pointer hover:bg-emerald-50/60 transition">
+        <input type="checkbox" id="checkUangDiterima" class="mt-0.5 rounded border-emerald-400 text-emerald-600 focus:ring-emerald-500 h-4 w-4" />
+        <span class="text-xs font-semibold text-slate-700 leading-snug">
+          Saya mengonfirmasi bahwa uang pembayaran denda fisik <strong id="lunasiCheckRupiah" class="text-emerald-800">Rp 0</strong> sudah diterima secara tunai di meja.
+        </span>
+      </label>
+
+      <!-- Footer Buttons -->
+      <div class="flex items-center justify-end gap-3 pt-2">
+        <button type="button" id="btnBatalLunasiModal"
+          class="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+          Batal
+        </button>
+        <button type="button" id="btnEksekusiLunasiModal" disabled
+          class="inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-5 py-2.5 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs disabled:opacity-40 disabled:cursor-not-allowed">
+          <i class="ph ph-check-circle text-base"></i>
+          <span>Ya, Tandai Lunas</span>
+        </button>
+      </div>
+
     </div>
   </div>
 

@@ -344,7 +344,70 @@ export function handleCameraScanSuccess(decodedText, contextMode) {
 
   const upperText = text.toUpperCase();
 
-  // 1. Cek ID Booking Prapinjam
+  // 0. JIKA SCAN BERASAL DARI MEJA PENGEMBALIAN (atau sedang di tab pengembalian)
+  if (contextMode === 'pengembalian' || state.activeTab === 'pengembalian') {
+    // A. Cek apakah ini Barcode ID Peminjaman (PJ-xxx) yang statusnya 'Dipinjam'
+    const activeLoan = (state.cache.peminjaman || []).find(p => 
+      p.status === 'Dipinjam' && p.id_peminjaman && (
+        p.id_peminjaman.toUpperCase() === upperText ||
+        upperText.includes(p.id_peminjaman.toUpperCase())
+      )
+    );
+
+    if (activeLoan) {
+      if (window.switchTab) window.switchTab('pengembalian');
+      if (window.selectBorrowerForReturn) {
+        window.selectBorrowerForReturn(activeLoan.nisn_siswa, activeLoan.id_peminjaman);
+      }
+      showToast(`Pinjaman [${activeLoan.id_peminjaman}] siap dikembalikan!`, 'success');
+      return;
+    }
+
+    // B. Cek apakah ini Barcode Kartu Siswa (NISN) atau Kartu Guru (NIP)
+    const scanSiswa = (state.cache.siswa || []).find(s => s.nisn_siswa && (s.nisn_siswa.toUpperCase() === upperText || upperText.includes(s.nisn_siswa.toUpperCase())));
+    const scanGuru = !scanSiswa && (state.cache.guru || []).find(g => g.nip_guru && (g.nip_guru.toUpperCase() === upperText || upperText.includes(g.nip_guru.toUpperCase())));
+
+    if (scanSiswa || scanGuru) {
+      const borrowerId = scanSiswa ? scanSiswa.nisn_siswa : scanGuru.nip_guru;
+      const borrowerName = scanSiswa ? scanSiswa.nama_siswa : scanGuru.nama_guru;
+      if (window.switchTab) window.switchTab('pengembalian');
+      if (window.selectBorrowerForReturn) {
+        window.selectBorrowerForReturn(borrowerId);
+      }
+      showToast(`Kartu [${borrowerName}] terpilih! Silakan periksa buku yang dikembalikan.`, 'success');
+      return;
+    }
+
+    // C. Cek apakah ini Barcode Buku Fisik (BK-xxx atau kode_qr)
+    const scanBook = (state.cache.buku || []).find(b => 
+      (b.id_buku && b.id_buku.toUpperCase() === upperText) || 
+      (b.kode_qr && b.kode_qr.toUpperCase() === upperText) ||
+      (b.id_buku && upperText.includes(b.id_buku.toUpperCase())) ||
+      (b.kode_qr && upperText.includes(b.kode_qr.toUpperCase()))
+    );
+
+    if (scanBook) {
+      const matchingLoans = (state.cache.peminjaman || []).filter(p => p.status === 'Dipinjam' && p.id_buku === scanBook.id_buku);
+      if (matchingLoans.length === 1) {
+        if (window.switchTab) window.switchTab('pengembalian');
+        if (window.selectBorrowerForReturn) {
+          window.selectBorrowerForReturn(matchingLoans[0].nisn_siswa, matchingLoans[0].id_peminjaman);
+        }
+        showToast(`Buku "${scanBook.judul_buku}" cocok dengan 1 peminjam aktif! Langsung dipilih.`, 'success');
+        return;
+      } else if (matchingLoans.length > 1) {
+        if (window.switchTab) window.switchTab('pengembalian');
+        if (window.filterPengembalianByBook) {
+          window.filterPengembalianByBook(scanBook.id_buku);
+        }
+        showToast(`Buku "${scanBook.judul_buku}" sedang dipinjam oleh ${matchingLoans.length} orang. Pilih peminjamnya di dropdown.`, 'info');
+        return;
+      } else {
+        showToast(`Buku "${scanBook.judul_buku}" tidak tercatat sedang dipinjam saat ini.`, 'warning');
+        return;
+      }
+    }
+  }
   const pendingBooking = state.cache.peminjaman.find(p => 
     p.status === 'Menunggu' && p.id_peminjaman && (
       p.id_peminjaman.toUpperCase() === upperText ||
@@ -355,12 +418,15 @@ export function handleCameraScanSuccess(decodedText, contextMode) {
   if (pendingBooking) {
     if (window.switchTab) window.switchTab('sirkulasi');
     switchSirkulasiSubtab('prapinjam');
-    showToast(`Tiket Booking [${pendingBooking.id_peminjaman}] terverifikasi! Detail pesanan siap diserahkan.`, 'success');
+    showToast(`Tiket Booking [${pendingBooking.id_peminjaman}] terverifikasi! Menyiapkan penyerahan buku.`, 'success');
     const searchPrapinjam = document.getElementById('inputSearchPrapinjam');
     if (searchPrapinjam) {
       searchPrapinjam.value = pendingBooking.id_peminjaman;
       state.searchPrapinjamQuery = pendingBooking.id_peminjaman.toLowerCase();
       renderPrapinjamOnlyTable();
+    }
+    if (window.openPrapinjamVerifyModal) {
+      window.openPrapinjamVerifyModal(pendingBooking, true);
     }
     return;
   }
@@ -422,4 +488,8 @@ export function handleCameraScanSuccess(decodedText, contextMode) {
     barcodeInput.dispatchEvent(new Event('input'));
   }
   showToast(`Hasil scan: ${text}`, 'info');
+}
+
+if (typeof window !== 'undefined') {
+  window.startLiveCameraScanner = startLiveCameraScanner;
 }

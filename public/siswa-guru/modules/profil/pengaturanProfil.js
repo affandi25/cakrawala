@@ -1,22 +1,34 @@
 /**
- * CAKRAWALA Digital Library - Modul Tab 5: Kartu Anggota Digital & Pengaturan Profil
- * File: public/siswa-guru/modules/profil.js
+ * CAKRAWALA Digital Library - Modul Pengaturan Akun & Profil Mandiri
+ * File: public/siswa-guru/modules/profil/pengaturanProfil.js
+ * 
+ * Tanggung Jawab:
+ * - Kompresi gambar client-side (<50KB WebP/JPEG)
+ * - Pemilihan / penghapusan foto profil avatar
+ * - Formulir pembaruan data email & nomor WhatsApp anggota ke Supabase
  */
 
-import { state } from './state.js';
-import { db } from '../../assets/js/supabaseClient.js';
-import { showToast } from './siswaHelper.js';
-import { updateMemberProfileDisplay } from '../../assets/js/auth.js';
+import { db } from '../../../assets/js/supabaseClient.js';
+import { state } from '../state.js';
+import { showToast } from '../siswaHelper.js';
+import { updateMemberProfileDisplay } from '../../../assets/js/auth.js';
 
-// Menyimpan foto sementara sebelum disimpan ke database
 let tempPhotoBase64 = null;
+
+export function getTempPhotoBase64() {
+  return tempPhotoBase64;
+}
+
+export function setTempPhotoBase64(val) {
+  tempPhotoBase64 = val;
+}
 
 /**
  * Kompres gambar agar efisien (<50KB) sebelum disimpan
  * @param {File} file Objek file gambar dari input
  * @returns {Promise<string>} Base64 data URL
  */
-function compressImage(file, maxWidth = 360, maxHeight = 360, quality = 0.85) {
+export function compressImage(file, maxWidth = 360, maxHeight = 360, quality = 0.85) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -43,7 +55,6 @@ function compressImage(file, maxWidth = 360, maxHeight = 360, quality = 0.85) {
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img, 0, 0, width, height);
 
-        // Ekspor ke WebP jika didukung, fallback JPEG
         let dataUrl = canvas.toDataURL('image/webp', quality);
         if (!dataUrl || dataUrl.indexOf('data:image/webp') !== 0) {
           dataUrl = canvas.toDataURL('image/jpeg', quality);
@@ -59,71 +70,15 @@ function compressImage(file, maxWidth = 360, maxHeight = 360, quality = 0.85) {
 }
 
 /**
- * Mengambil inisial 2 huruf dari nama
+ * Mengisi nilai awal form pengaturan profil dan preview avatar
  */
-function getInitials(name) {
-  if (!name || !name.trim()) return 'SW';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length > 1) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return name.trim().substring(0, 2).toUpperCase();
-}
-
-/**
- * Merender kartu anggota digital dan informasi akun profil
- */
-export function renderProfil() {
-  const profile = state.memberProfile || {};
-  const isGuru = state.memberType === 'guru';
-
+export function renderFormProfil(profile, isGuru, foto) {
   const nama = isGuru ? (profile.nama_guru || 'Guru Pengajar') : (profile.nama_siswa || 'Siswa Cakrawala');
   const nomorId = isGuru ? (profile.nip_guru || state.memberId) : (profile.nisn_siswa || state.memberId);
-  const detail = isGuru ? (profile.mata_pelajaran || 'Pengajar') : `Kelas ${profile.kelas || '-'}`;
   const email = isGuru ? (profile.email_guru || '') : (profile.email_siswa || '');
   const kontak = isGuru ? (profile.kontak_guru || '') : (profile.kontak_siswa || '');
-  const foto = (tempPhotoBase64 !== null) ? tempPhotoBase64 : (profile.foto_profil || '');
 
-  // 1. Tampilan Kartu Digital
-  const cardNamaEl = document.getElementById('cardMemberNama');
-  const cardIdEl = document.getElementById('cardMemberId');
-  const cardDetailEl = document.getElementById('cardMemberDetail');
-  const cardRoleEl = document.getElementById('cardMemberRole');
-  const cardIdLabel = document.getElementById('cardMemberIdLabel');
-  const cardAvatarEl = document.getElementById('cardMemberAvatar');
-
-  if (cardNamaEl) cardNamaEl.textContent = nama;
-  if (cardIdEl) cardIdEl.textContent = nomorId;
-  if (cardDetailEl) cardDetailEl.textContent = detail;
-  if (cardRoleEl) cardRoleEl.textContent = isGuru ? 'GURU PENGAJAR' : 'SISWA PERPUSTAKAAN';
-  if (cardIdLabel) cardIdLabel.textContent = isGuru ? 'NIP' : 'NISN';
-
-  const initials = getInitials(nama);
-
-  if (cardAvatarEl) {
-    if (foto) {
-      cardAvatarEl.innerHTML = `<img src="${foto}" class="h-full w-full object-cover rounded-2xl" alt="${nama}" />`;
-    } else {
-      cardAvatarEl.innerHTML = `<i class="ph-fill ph-user text-3xl text-white"></i>`;
-      cardAvatarEl.className = 'flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-white/20 text-white shadow-md border-2 border-white/40 overflow-hidden';
-    }
-  }
-
-  // 2. Render QR Code Kartu Anggota
-  const qrContainer = document.getElementById('cardMemberQrContainer');
-  if (qrContainer && window.QRCode) {
-    qrContainer.innerHTML = '';
-    new window.QRCode(qrContainer, {
-      text: nomorId,
-      width: 90,
-      height: 90,
-      colorDark: '#000C4F',
-      colorLight: '#ffffff',
-      correctLevel: window.QRCode.CorrectLevel.M
-    });
-  }
-
-  // 3. Tampilan Preview Avatar di Form Pengaturan
+  // Pratinjau Avatar Form
   const previewAvatarEl = document.getElementById('profileAvatarPreview');
   const btnRemovePhoto = document.getElementById('btnRemoveProfilePhoto');
 
@@ -138,7 +93,7 @@ export function renderProfil() {
     }
   }
 
-  // 4. Isi Form Input Profil
+  // Isi Form Input Profil
   const inputNama = document.getElementById('inputProfileNama');
   const inputId = document.getElementById('inputProfileId');
   const inputDetail = document.getElementById('inputProfileDetail');
@@ -153,7 +108,7 @@ export function renderProfil() {
   if (labelId) labelId.textContent = isGuru ? 'Nomor Identitas (NIP)' : 'Nomor Identitas (NISN)';
   if (labelDetail) labelDetail.textContent = isGuru ? 'Mata Pelajaran Diampu' : 'Kelas Terdaftar';
 
-  // Jangan override input jika user sedang mengetik
+  // Cegah penimpaan nilai jika user sedang aktif mengetik di input
   if (inputEmail && !inputEmail.matches(':focus')) {
     inputEmail.value = email;
   }
@@ -163,9 +118,9 @@ export function renderProfil() {
 }
 
 /**
- * Menyiapkan event listener untuk upload foto profil dan form submit
+ * Setup pendengar event upload foto profil dan pengiriman formulir
  */
-export function setupProfileModule() {
+export function setupProfileForm(onProfileChanged) {
   const inputPhoto = document.getElementById('inputProfilePhoto');
   const btnRemovePhoto = document.getElementById('btnRemoveProfilePhoto');
   const formProfile = document.getElementById('formMemberProfile');
@@ -193,8 +148,7 @@ export function setupProfileModule() {
         const compressedBase64 = await compressImage(file, 360, 360, 0.85);
         tempPhotoBase64 = compressedBase64;
 
-        // Perbarui pratinjau langsung di halaman
-        renderProfil();
+        if (typeof onProfileChanged === 'function') onProfileChanged();
 
         // Perbarui pratinjau di sidebar avatar juga
         const sidebarAvatar = document.getElementById('memberAvatarInitials');
@@ -214,10 +168,10 @@ export function setupProfileModule() {
   // 2. Hapus Foto Profil
   if (btnRemovePhoto) {
     btnRemovePhoto.addEventListener('click', () => {
-      tempPhotoBase64 = ''; // String kosong menandakan foto dihapus
-      renderProfil();
+      tempPhotoBase64 = ''; // Menandakan foto dikosongkan
 
-      // Perbarui pratinjau avatar sidebar ke ikon WhatsApp default
+      if (typeof onProfileChanged === 'function') onProfileChanged();
+
       const sidebarAvatar = document.getElementById('memberAvatarInitials');
       if (sidebarAvatar) {
         sidebarAvatar.innerHTML = '<i class="ph-fill ph-user text-2xl text-white"></i>';
@@ -228,7 +182,7 @@ export function setupProfileModule() {
     });
   }
 
-  // 3. Simpan Perubahan Profil Mandiri
+  // 3. Simpan Perubahan Profil ke Supabase
   if (formProfile) {
     formProfile.addEventListener('submit', async (e) => {
       e.preventDefault();
@@ -251,7 +205,6 @@ export function setupProfileModule() {
         return;
       }
 
-      // Tentukan foto yang akan disimpan
       let newPhoto = state.memberProfile?.foto_profil || null;
       if (tempPhotoBase64 !== null) {
         newPhoto = tempPhotoBase64.length > 0 ? tempPhotoBase64 : null;
@@ -319,13 +272,9 @@ export function setupProfileModule() {
           }
         } catch (_) {}
 
-        // Reset temp photo
         tempPhotoBase64 = null;
 
-        // Render ulang kartu anggota & profil
-        renderProfil();
-
-        // Render ulang tampilan avatar dan nama di sidebar
+        if (typeof onProfileChanged === 'function') onProfileChanged();
         updateMemberProfileDisplay(state);
 
         showToast('Profil dan foto berhasil diperbarui!', 'success');

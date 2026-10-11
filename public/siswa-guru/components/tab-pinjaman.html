@@ -1,0 +1,37 @@
+<!-- TAB 3: PEMINJAMAN SAYA -->
+<section id="tabContentPinjaman" class="hidden space-y-6">
+  <!-- Sub-Tabs Switcher (Sedang Dipinjam vs Antrean Prapinjam) -->
+  <div class="flex items-center justify-between flex-wrap gap-3">
+    <div class="inline-flex rounded-xl bg-slate-200/80 p-1 text-xs">
+      <button id="subTabBtnPinjamanAktif" type="button"
+        class="subtab-pinjaman-btn flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition bg-white text-navy shadow-xs">
+        <i class="ph ph-book-open"></i>
+        <span>Sedang Dipinjam</span>
+        <span id="badgeCountPinjamanAktif" class="rounded-full bg-slate-100 px-2 py-0.2 text-[10px] font-bold text-slate-600">0</span>
+      </button>
+
+      <button id="subTabBtnPinjamanPrapinjam" type="button"
+        class="subtab-pinjaman-btn flex items-center gap-2 px-4 py-2 text-xs font-semibold rounded-lg transition text-slate-600 hover:text-navy">
+        <i class="ph ph-ticket"></i>
+        <span>Antrean Pra-Pinjam</span>
+        <span id="badgeCountPinjamanPrapinjam" class="rounded-full bg-slate-100 px-2 py-0.2 text-[10px] font-bold text-slate-600">0</span>
+      </button>
+    </div>
+
+    <p class="text-xs text-slate-400">Status diperbarui secara real-time dari meja petugas.</p>
+  </div>
+
+  <!-- Sub-Panel 1: Buku Sedang Dipinjam -->
+  <div id="subPanelPinjamanAktif" class="space-y-4">
+    <div id="containerListPinjamanAktif" class="space-y-3.5">
+      <!-- Kartu diinjeksi via JavaScript -->
+    </div>
+  </div>
+
+  <!-- Sub-Panel 2: Antrean Pra-Pinjam -->
+  <div id="subPanelPinjamanPrapinjam" class="hidden space-y-4">
+    <div id="containerListPinjamanPrapinjam" class="space-y-3.5">
+      <!-- Kartu antrean diinjeksi via JavaScript -->
+    </div>
+  </div>
+</section>
