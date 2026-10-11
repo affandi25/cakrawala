@@ -1,0 +1,113 @@
+<!-- ======================================================== -->
+      <!-- TAB 1: OVERVIEW / RINGKASAN                              -->
+      <!-- ======================================================== -->
+      <section id="tabContentOverview" class="tab-content space-y-6">
+
+        <!-- 4 Card Metrik Operasional -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card 1: Total Judul Buku -->
+          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Total Judul Buku</span>
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-navy">
+                <i class="ph ph-books text-2xl"></i>
+              </div>
+            </div>
+            <div class="mt-3">
+              <span id="statTotalBuku" class="text-3xl font-extrabold tracking-tight text-navy">...</span>
+              <p id="statTotalEksemplar" class="mt-1 text-xs font-medium text-slate-500">Memuat stok fisik...</p>
+            </div>
+          </div>
+
+          <!-- Card 2: Koleksi Sedang Dipinjam -->
+          <div class="rounded-2xl border border-slate-200 bg-white p-5 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Koleksi Dipinjam</span>
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
+                <i class="ph ph-book-open-user text-2xl"></i>
+              </div>
+            </div>
+            <div class="mt-3">
+              <span id="statSedangDipinjam" class="text-3xl font-extrabold tracking-tight text-indigo-900">...</span>
+              <p class="mt-1 text-xs font-medium text-indigo-600 flex items-center gap-1">
+                <i class="ph ph-clock"></i> Transaksi aktif dipinjam
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 3: Prapinjam Menunggu -->
+          <div
+            class="rounded-2xl border border-amber-200 bg-amber-50/50 p-5 shadow-xs hover:shadow-md transition relative overflow-hidden">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-amber-800">Prapinjam Menunggu</span>
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-amber-100 text-amber-700">
+                <i class="ph ph-hourglass-high text-2xl"></i>
+              </div>
+            </div>
+            <div class="mt-3">
+              <span id="statMenungguVerifikasi" class="text-3xl font-extrabold tracking-tight text-amber-900">...</span>
+              <p class="mt-1 text-xs font-bold text-amber-700 flex items-center gap-1">
+                <i class="ph ph-warning-circle"></i> Butuh konfirmasi penyerahan
+              </p>
+            </div>
+          </div>
+
+          <!-- Card 4: Total Denda Belum Lunas -->
+          <div class="rounded-2xl border border-rose-200 bg-rose-50/50 p-5 shadow-xs hover:shadow-md transition">
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-rose-800">Denda Belum Lunas</span>
+              <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-rose-100 text-rose-700">
+                <i class="ph ph-hand-coins text-2xl"></i>
+              </div>
+            </div>
+            <div class="mt-3">
+              <span id="statTotalDendaBelumLunas" class="text-2xl font-extrabold tracking-tight text-rose-900">Rp 0</span>
+              <p id="statJumlahKasusDenda" class="mt-1 text-xs font-medium text-rose-700">0 transaksi tertunda</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tabel Cepat: 5 Prapinjam Terbaru Butuh Konfirmasi Segera -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <div>
+              <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
+                <span class="flex h-2.5 w-2.5 rounded-full bg-amber-500"></span>
+                Antrean Prapinjam Terbaru (Menunggu Konfirmasi)
+              </h3>
+              <p class="text-xs text-slate-500 mt-0.5">Siswa yang memesan buku secara daring dan butuh penyerahan fisik.</p>
+            </div>
+            <button type="button" id="btnLihatSemuaPrapinjam"
+              class="inline-flex items-center gap-1.5 rounded-xl bg-navy px-3.5 py-2 text-xs font-bold text-white hover:bg-navy-light transition shadow-sm">
+              <span>Buka Menu Sirkulasi Lengkap</span>
+              <i class="ph ph-arrow-right"></i>
+            </button>
+          </div>
+
+          <div class="overflow-x-auto min-h-[220px]">
+            <table class="w-full text-left text-sm border-collapse">
+              <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                <tr>
+                  <th class="px-5 py-3.5">ID Pinjam</th>
+                  <th class="px-5 py-3.5">Siswa Peminjam</th>
+                  <th class="px-5 py-3.5">Buku & Lokasi Rak</th>
+                  <th class="px-5 py-3.5">Tgl Pinjam / Batas</th>
+                  <th class="px-5 py-3.5">Status</th>
+                  <th class="px-5 py-3.5 text-right">Aksi Konfirmasi</th>
+                </tr>
+              </thead>
+              <tbody id="tableQuickPrapinjamBody" class="divide-y divide-slate-100 text-slate-700">
+                <tr>
+                  <td colspan="6" class="px-5 py-8 text-center text-slate-400">
+                    <i class="ph ph-spinner animate-spin text-2xl inline-block mb-1"></i>
+                    <p class="text-xs">Memuat antrean prapinjam...</p>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        
+
+      </section>

@@ -39,29 +39,41 @@ export function renderPendingReservationsTable() {
     const rak = book ? (book.keterangan || 'Rak Umum') : '-';
     const coverUrl = book && book.cover_url ? book.cover_url : null;
 
+    const isReady = item.status_persiapan === 'Siap Diambil';
+    const cardBorderBg = isReady 
+      ? 'border-emerald-300 bg-emerald-50/30 hover:border-emerald-400' 
+      : 'border-amber-200/80 bg-amber-50/20 hover:border-amber-300';
+
     return `
-      <div class="p-5 rounded-2xl border border-amber-200/80 bg-amber-50/20 hover:border-amber-300 transition shadow-2xs">
+      <div class="p-5 rounded-2xl border ${cardBorderBg} transition shadow-2xs">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div class="flex items-center gap-4 min-w-0">
             <div class="h-16 w-12 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shadow-2xs">
               ${coverUrl ? `<img src="${coverUrl}" alt="Cover" class="h-full w-full object-cover" />` : '<i class="ph ph-book text-xl"></i>'}
             </div>
             <div class="min-w-0">
-              <div class="flex items-center gap-2">
+              <div class="flex flex-wrap items-center gap-2">
                 <span class="font-mono text-xs font-extrabold text-navy px-2 py-0.5 rounded-md bg-blue-50 border border-blue-200">
                   TIKET: ${item.id_peminjaman}
                 </span>
-                <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2.5 py-0.5 text-[10px] font-bold border border-amber-200">
-                  <span class="h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse"></span>
-                  Menunggu Pengambilan
-                </span>
+                ${isReady ? `
+                  <span class="inline-flex items-center gap-1.5 rounded-full bg-emerald-100 text-emerald-800 px-2.5 py-0.5 text-[10px] font-bold border border-emerald-200">
+                    <span class="h-2 w-2 rounded-full bg-emerald-600 animate-pulse"></span>
+                    Booking Diterima &bull; Siap Diambil di Meja!
+                  </span>
+                ` : `
+                  <span class="inline-flex items-center gap-1 rounded-full bg-amber-100 text-amber-800 px-2.5 py-0.5 text-[10px] font-bold border border-amber-200">
+                    <span class="h-1.5 w-1.5 rounded-full bg-amber-600 animate-pulse"></span>
+                    Menunggu Penyiapan Petugas
+                  </span>
+                `}
               </div>
               <h4 class="font-bold text-slate-800 text-sm mt-1.5 line-clamp-1">${judul}</h4>
               <p class="text-xs text-slate-500">${penulis} &bull; Lokasi: <strong class="text-navy">${rak}</strong></p>
             </div>
           </div>
 
-          <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-amber-200/50">
+          <div class="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto gap-2 border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-200/60">
             <div class="text-left sm:text-right text-[11px] text-slate-600">
               <span>Waktu Booking: ${formatTanggalIndo(item.tanggal_pinjam)}</span>
               <span class="block text-amber-800 font-semibold">Batas Ambil: ${formatTanggalIndo(item.batas_kembali)}</span>
@@ -70,8 +82,8 @@ export function renderPendingReservationsTable() {
             <div class="flex items-center gap-2">
               <button type="button" onclick="window.showTicketDetails('${item.id_peminjaman}')"
                 class="inline-flex items-center gap-1.5 rounded-xl bg-navy text-white hover:bg-navy-light px-3 py-1.5 text-xs font-bold transition shadow-xs">
-                <i class="ph ph-barcode text-base"></i>
-                <span>Lihat Barcode</span>
+                <i class="ph ph-qr-code text-base"></i>
+                <span>Lihat QR Tiket</span>
               </button>
               <button type="button" onclick="window.openCancelBookingModal('${item.id_peminjaman}')"
                 class="inline-flex items-center gap-1 rounded-xl border border-rose-200 bg-white text-rose-600 hover:bg-rose-50 px-2.5 py-1.5 text-xs font-bold transition shadow-2xs">
@@ -82,8 +94,15 @@ export function renderPendingReservationsTable() {
           </div>
         </div>
 
-        <div class="mt-3.5 pt-2.5 border-t border-amber-200/50 flex items-center justify-between text-[11px] text-amber-800 font-medium">
-          <span>*Tunjukkan kode tiket di atas kepada petugas di meja sirkulasi perpustakaan untuk mengambil buku fisikmu.</span>
+        <div class="mt-3.5 pt-2.5 border-t ${isReady ? 'border-emerald-200/70 text-emerald-800 font-bold' : 'border-amber-200/50 text-amber-800 font-medium'} flex items-center justify-between text-[11px]">
+          ${isReady ? `
+            <span class="flex items-center gap-1.5">
+              <i class="ph-fill ph-check-circle text-emerald-600 text-base"></i>
+              <span>Buku fisik telah disiapkan di Meja Sirkulasi! Silakan tunjukkan QR tiket kepada petugas untuk mengambil bukumu.</span>
+            </span>
+          ` : `
+            <span>*Pesanan sedang disiapkan dari rak oleh petugas. Begitu status berubah "Siap Diambil", kamu bisa langsung datang ke meja perpustakaan.</span>
+          `}
         </div>
       </div>
     `;
@@ -107,7 +126,8 @@ export function showTicketDetails(loanId) {
       rak: book?.keterangan || 'Rak Umum',
       tempo: formatTanggalIndo(item.batas_kembali),
       peminjam: state.userProfile?.nama_siswa || state.userProfile?.nama_guru || state.memberId,
-      nisn: state.memberId
+      nisn: state.memberId,
+      statusPersiapan: item.status_persiapan
     });
   }
 }

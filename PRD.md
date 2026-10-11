@@ -12,7 +12,7 @@
 
 1. **Katalog Publik & Kiosk Anjungan Mandiri (`public/index.html`):** Memfasilitasi pengunjung/siswa mencari buku, mengecek ketersediaan stok, melihat nomor rak fisik, dan membaca pengumuman kampus secara transparan tanpa kewajiban login.
 2. **Portal Anggota Siswa & Guru (`public/siswa-guru/`):** Pemesanan buku mandiri (pra-pinjam), pemantauan buku aktif, cek sisa hari jatuh tempo, tiket bukti booking (Barcode Code-128 & QR Code 2D), kartu anggota digital resmi, dan rekap denda mandiri.
-3. **Meja Operasional Petugas (`public/petugas/`):** Pemrosesan sirkulasi cepat (validasi tiket booking, peminjaman langsung *walk-in*, pengembalian cerdas berbasis nama peminjam, pemisahan meja tunggakan denda + verifikasi 2 lapis pelunasan tunai), modul **CRUD Buku (dengan cetak stiker QR)**, **Master Kategori Koleksi**, dan **CRUD Pengumuman**.
+3. **Meja Operasional Petugas (`public/petugas/`):** Pemrosesan sirkulasi cepat (penyortiran antrean pra-pinjam dengan status kesiapan rak *"Perlu Diambil"* vs *"Buku Siap di Meja"*, verifikasi barcode tiket, peminjaman langsung *walk-in*, pengembalian cerdas berbasis nama peminjam, pemisahan meja tunggakan denda + verifikasi 2 lapis pelunasan tunai), modul **CRUD Buku (dengan cetak stiker QR)**, **Master Kategori Koleksi**, dan **CRUD Pengumuman**.
 4. **Pusat Kendali Admin (`public/admin/`):** Pengelolaan hak akses pengguna (*Role-Based Access Control*) dan **CRUD Manajemen Pengguna** murni untuk entitas Siswa, Guru, dan Petugas perpustakaan.
 
 ---
@@ -45,7 +45,7 @@ Untuk mencegah file kode raksasa (*monolithic files* > 1.000 baris) yang sulit d
 | Dashboard Pribadi (Buku Aktif, Barcode Tiket & Denda) | Tidak | Ya | Ya | Tidak | Tidak |
 | Kartu Anggota Digital (QR Code NISN/NIP) | Tidak | Ya | Ya | Tidak | Tidak |
 | Peminjaman Langsung (*Walk-in*) | Tidak | Tidak | Tidak | Ya | Ya |
-| Validasi Pengambilan Pra-Pinjam | Tidak | Tidak | Tidak | Ya | Ya |
+| Penyiapan Rak & Validasi Tiket Pra-Pinjam | Tidak | Tidak | Tidak | Ya | Ya |
 | Meja Pengembalian (Cari Nama $\rightarrow$ Buku Aktif) | Tidak | Tidak | Tidak | Ya | Ya |
 | Meja Khusus Tunggakan Denda & Verifikasi Lunas Tunai | Tidak | Tidak | Tidak | Ya | Ya |
 | **CRUD Katalog Buku & Cetak Stiker QR** | Tidak | Tidak | Tidak | **Ya** | Tidak |
@@ -67,14 +67,33 @@ Untuk mencegah file kode raksasa (*monolithic files* > 1.000 baris) yang sulit d
    - Anggota wajib mengembalikan buku fisik atau membatalkan booking sebelum dapat meminjam buku lain.
 4. Anggota tidak dapat mengajukan booking ganda untuk buku yang sama.
 
-### B. Alur Pra-Pinjam & Tiket Booking Daring
-1. Pengguna mencari buku di Katalog $\rightarrow$ Klik **"Booking Buku"**.
-2. Pengguna memilih estimasi batas pengembalian (+7 hari kalender) $\rightarrow$ Klik **Konfirmasi**.
-3. Sistem membuat transaksi di `data_peminjaman` dengan `status = 'Menunggu'` dan metode `'Pra Pinjam'`.
-4. Sistem otomatis menerbitkan **Tiket Bukti Pra-Pinjam**:
-   - Dilengkapi Barcode 1D (Code 128) dan QR Code 2D.
-   - Dapat diunduh sebagai gambar PNG resmi perpustakaan via Canvas HTML5.
-5. Buku disimpan di meja sirkulasi selama maksimal **2x24 jam** sebelum otomatis dibatalkan. Pengguna juga dapat membatalkan booking mandiri melalui tab *Peminjaman Saya*.
+### B. Alur Pra-Pinjam, Penyiapan Buku dari Rak, & Tiket Booking Daring
+1. **Pengajuan Booking Mandiri (Siswa/Guru):**
+   - Pengguna mencari buku di Katalog $\rightarrow$ Klik **"Booking Buku"**.
+   - Pengguna memilih estimasi batas pengembalian (+7 hari kalender) $\rightarrow$ Klik **Konfirmasi**.
+   - Sistem membuat transaksi di `data_peminjaman` dengan `status = 'Menunggu'`, metode `'Pra Pinjam'`, dan status kesiapan default `'Perlu Diambil'`.
+2. **Penerbitan Tiket Digital:**
+   - Sistem otomatis menerbitkan **Tiket Bukti Pra-Pinjam**:
+     - Dilengkapi Barcode 1D (Code 128) dan QR Code 2D.
+     - Pratinjau status penyiapan buku secara live (*"Menunggu Disiapkan"* vs *"Buku Siap Diambil"*).
+     - Dapat diunduh sebagai gambar PNG resmi perpustakaan via Canvas HTML5.
+3. **Penyortiran & Pengambilan Buku oleh Petugas (Meja 2 Sirkulasi):**
+   - Petugas menerima antrean pra-pinjam dengan info lokasi rak buku (contoh: *Rak 3B - Sains*).
+   - Meja Petugas dilengkapi **Filter Kesiapan**:
+     - *Semua Kesiapan*: Menampilkan seluruh antrean reservasi aktif.
+     - *Perlu Diambil dari Rak*: Daftar buku yang masih harus diambil petugas dari rak fisik.
+     - *Buku Siap di Meja*: Daftar buku yang sudah diambil dan siap diserahkan kepada peminjam.
+   - Petugas mengklik tombol toggle **"Tandai Siap di Meja"** setelah mengambil buku dari rak.
+4. **Notifikasi Status di Portal Pengguna:**
+   - Setelah petugas menandai buku siap, status di dashboard Siswa/Guru otomatis berubah menjadi **"Buku Siap Diambil di Meja Sirkulasi"** (badge hijau).
+   - Pengguna datang ke meja perpustakaan membawa tiket booking fisik / digital.
+5. **Verifikasi & Serah Terima Buku:**
+   - Petugas memindai barcode tiket via kamera/upload gambar atau tombol **"Verifikasi Tiket"**.
+   - Petugas memvalidasi identitas anggota dan klik **"Serahkan Buku"**:
+     - Status transaksi beralih dari `'Menunggu'` $\rightarrow$ `'Dipinjam'`.
+     - Stok buku fisik dipotong 1.
+6. **Batas Waktu Booking:**
+   - Buku disimpan di meja sirkulasi selama maksimal **2x24 jam** sebelum otomatis hangus/dibatalkan jika tidak diambil. Pengguna juga dapat membatalkan booking mandiri melalui tab *Peminjaman Saya*.
 
 ### C. Alur Pengembalian Cerdas & Bebas Kerumitan (*Member-First Desk*)
 1. Petugas membuka menu **Meja Pengembalian**.
@@ -153,17 +172,20 @@ cakrawala/
     │       ├── overview.js               # Logika render beranda & KPI
     │       ├── riwayat.js                # Logika render tabel riwayat & filter denda
     │       │
-    │       ├── katalog/                  # Feature Module: Katalog & Booking
+    │       ├── katalog/                  # Feature Module: Katalog Buku
     │       │   ├── index.js              # Koordinator katalog & window bindings
     │       │   ├── katalogGrid.js        # Filter kategori, live search, & render grid
-    │       │   ├── modalBooking.js       # Validasi kuota 2 buku & submit booking
-    │       │   ├── modalTiket.js         # Tiket barcode Code-128, QR Code & ekspor PNG
     │       │   └── modalDetailBuku.js    # Pop-up sinopsis, rak buku, & harga buku
     │       │
     │       ├── pinjaman/                 # Feature Module: Peminjaman Saya
     │       │   ├── index.js              # Switcher subtab Aktif vs Prapinjam
     │       │   ├── pinjamanAktif.js      # Kartu buku fisik aktif & hitung tempo
-    │       │   ├── pinjamanPrapinjam.js  # Antrean pra-pinjam & trigger modal tiket
+    │       │   └── pinjamanPrapinjam.js  # Antrean pra-pinjam & status penyiapan buku
+    │       │
+    │       ├── prapinjam/                # Feature Module: Booking & Tiket Daring
+    │       │   ├── index.js              # Koordinator modul reservasi online
+    │       │   ├── modalBooking.js       # Validasi kuota 2 buku & submit booking
+    │       │   ├── modalTiket.js         # Tiket barcode Code-128, QR Code & ekspor PNG
     │       │   └── modalBatalBooking.js  # Konfirmasi pembatalan reservasi online
     │       │
     │       └── profil/                   # Feature Module: Kartu Anggota & Akun
@@ -172,51 +194,60 @@ cakrawala/
     │           └── pengaturanProfil.js   # Kompresi foto canvas, form kontak, & update DB
     │
     │   ─────────────────────────────────────────────────────────────
-    │   [2] PORTAL PETUGAS (ROADMAP PARTISI BERIKUTNYA)
+    │   [2] PORTAL PETUGAS (SUDAH 100% TERPARTISI & MODULAR)
     │   ─────────────────────────────────────────────────────────────
     ├── petugas/
-    │   ├── dashboard.html                # Target: Master Layout (< 100 baris)
+    │   ├── dashboard.html                # Master Layout Bersih (< 110 baris)
     │   ├── petugas.js                    # Router & koordinator utama
     │   │
-    │   ├── components/                   # Target Partisi HTML:
-    │   │   ├── sidebar.html              # Navigasi sidebar petugas
-    │   │   ├── header.html               # Header viewport petugas
-    │   │   ├── tab-overview.html         # Ringkasan statistik operasional
-    │   │   ├── tab-sirkulasi.html        # Meja sirkulasi (Prapinjam & Walk-in)
-    │   │   ├── tab-pengembalian.html     # Meja pengembalian & tunggakan denda
-    │   │   ├── tab-buku.html             # Manajemen koleksi buku fisik
-    │   │   ├── tab-kategori.html         # Master kategori buku
-    │   │   ├── tab-pengumuman.html       # Manajemen pengumuman landing page
-    │   │   └── modals.html               # Modal cetak QR, form buku, konfirmasi denda
+    │   ├── components/                   # Potongan kerangka HTML modular (< 300 baris)
+    │   │   ├── sidebar.html              # Mobile header, backdrop, & navigasi menu
+    │   │   ├── header.html               # Header viewport, breadcrumb, & jam operasional
+    │   │   ├── tab-overview.html         # Meja 1: Statistik ringkasan & KPI operasional
+    │   │   ├── tab-sirkulasi.html        # Meja 2: Sirkulasi langsung & pra-pinjam
+    │   │   ├── tab-pengembalian.html     # Meja 3: Pengembalian buku & tunggakan denda
+    │   │   ├── tab-inventaris.html       # Meja 4: Inventaris katalog koleksi buku
+    │   │   ├── tab-pengumuman.html       # Meja 5: Kelola pengumuman & broadcast agenda
+    │   │   └── modals.html               # Jendela pop-up (kamera scanner, struk, QR, buku, dll)
     │   │
-    │   └── modules/                      # Target Partisi JavaScript:
-    │       ├── state.js                  # State memori operasional petugas
-    │       ├── data.js                   # Fetch data petugas
-    │       ├── petugasHelper.js          # Helper operasional & formatters
-    │       ├── scanner.js                # Handler kamera scan QR (`html5-qrcode`)
+    │   └── modules/                      # Logika JavaScript berbasis fitur modular
+    │       ├── state.js                  # State memori reaktif & cache operasional petugas
+    │       ├── data.js                   # Sinkronisasi fetch data multi-tabel Supabase
+    │       ├── petugasHelper.js          # Helper mata uang, tanggal, modal, toast
+    │       ├── overview.js               # Visualisasi ringkasan KPI & shortcut aksi cepat
     │       │
-    │       ├── sirkulasi/                # Feature Module: Sirkulasi Pinjam
-    │       │   ├── index.js              # Koordinator meja sirkulasi
-    │       │   ├── prapinjamTable.js     # Verifikasi tiket & serah terima buku
-    │       │   ├── walkinDesk.js         # Form pinjam langsung di tempat
-    │       │   └── dipinjamTable.js      # Tabel monitoring buku sedang dipinjam
+    │       ├── sirkulasi/                # Feature Module: Meja 2 Sirkulasi
+    │       │   ├── index.js              # Koordinator subtab & re-exports
+    │       │   ├── memberPicker.js       # Autocomplete pencarian anggota (Siswa & Guru)
+    │       │   ├── walkIn.js             # Form peminjaman langsung di meja sirkulasi
+    │       │   ├── prapinjam.js          # Antrean booking, filter kesiapan rak, & verifikasi
+    │       │   └── pinjamanAktif.js      # Monitoring buku aktif berstatus 'Dipinjam'
     │       │
-    │       ├── pengembalian/             # Feature Module: Pengembalian & Denda
-    │       │   ├── index.js              # Koordinator meja retur
-    │       │   ├── returDesk.js          # Pencarian peminjam & hitung denda
-    │       │   ├── tunggakanDenda.js     # Meja khusus tunggakan denda belum lunas
-    │       │   ├── riwayatPengembalian.js# Log semua pengembalian
-    │       │   └── modalKonfirmasiDenda.js# Modal verifikasi tunai & safety rollback
+    │       ├── pengembalian/             # Feature Module: Meja 3 Pengembalian & Denda
+    │       │   ├── index.js              # Koordinator pengembalian & re-exports
+    │       │   ├── formPengembalian.js   # Autocomplete peminjam, buku aktif, & kalkulator denda
+    │       │   ├── riwayatDenda.js       # Sub-tab tunggakan denda, log pelunasan, & safety rollback
+    │       │   └── modalStruk.js         # Dialog cetak struk tanda terima pengembalian buku
     │       │
-    │       ├── buku/                     # Feature Module: Katalog & Stok
-    │       │   ├── index.js              # Koordinator CRUD buku
-    │       │   ├── bukuTable.js          # Tabel list buku & filter
-    │       │   ├── modalFormBuku.js      # Form tambah/edit buku & cover
-    │       │   └── cetakQrStiker.js      # Generator & cetak stiker QR buku
+    │       ├── buku/                     # Feature Module: Meja 4 Inventaris Koleksi Buku
+    │       │   ├── index.js              # Koordinator inventaris buku & re-exports
+    │       │   ├── katalogBuku.js        # Tabel katalog, filter kategori/rak, & pencarian
+    │       │   ├── modalFormBuku.js      # Dialog form Tambah/Edit buku & upload cover ke Storage
+    │       │   ├── modalQrBuku.js        # Stiker QR Code (QRCode.js), cetak fisik, & download PNG
+    │       │   └── modalHapusBuku.js     # Modal konfirmasi hapus dengan proteksi peminjaman aktif
     │       │
-    │       └── pengumuman/               # Feature Module: Broadcast Event
-    │           ├── index.js              # Koordinator pengumuman
-    │           └── modalPengumuman.js    # Form CRUD poster & event
+    │       ├── pengumuman/               # Feature Module: Meja 5 Pengumuman Agenda
+    │       │   ├── index.js              # Koordinator pengumuman & re-exports
+    │       │   ├── daftarPengumuman.js   # Tabel pengumuman, filter kategori, & badge acara
+    │       │   ├── modalFormPengumuman.js# Form Tambah/Edit pengumuman & upload poster ke Storage
+    │       │   └── modalHapusPengumuman.js# Dialog konfirmasi hapus pengumuman dari database
+    │       │
+    │       └── scanner/                  # Feature Module: Pemindai Kamera Barcode / QR
+    │           ├── index.js              # Koordinator scanner, trigger tombol, & re-exports
+    │           ├── soundFeedback.js      # Suara 'beep' audio Web Audio API saat terbaca
+    │           ├── fileDecoder.js        # Decoder barcode file gambar (Html5Qrcode & multi-pass jsQR)
+    │           ├── cameraStream.js       # Manajemen stream webcam/kamera & jsQR video loop
+    │           └── scanRouter.js         # Router pencocokan hasil scan ke entitas yang tepat
     │
     │   ─────────────────────────────────────────────────────────────
     │   [3] PORTAL ADMIN (ROADMAP PARTISI BERIKUTNYA)

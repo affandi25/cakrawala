@@ -18,11 +18,11 @@
 
 import { state, TAB_CONFIGS } from './modules/state.js';
 import { initSessionAndOfficer, setupLogout } from '../assets/js/auth.js';
-import { setupSirkulasiHandlers, setupWalkInModal, switchSirkulasiSubtab } from './modules/sirkulasi.js';
-import { setupCameraScannerModule } from './modules/scanner.js';
-import { setupPengembalianModule } from './modules/pengembalian.js';
-import { setupBooksHandlers } from './modules/buku.js';
-import { setupPengumumanModule } from './modules/pengumuman.js';
+import { setupSirkulasiHandlers, setupWalkInModal, switchSirkulasiSubtab } from './modules/sirkulasi/index.js';
+import { setupCameraScannerModule } from './modules/scanner/index.js';
+import { setupPengembalianModule } from './modules/pengembalian/index.js';
+import { setupBooksHandlers } from './modules/buku/index.js';
+import { setupPengumumanModule } from './modules/pengumuman/index.js';
 import { fetchAllData } from './modules/data.js';
 
 /**

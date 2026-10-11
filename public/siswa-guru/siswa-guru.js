@@ -7,6 +7,7 @@ import { state, TAB_CONFIGS } from './modules/state.js';
 import { initSessionAndMember, setupLogout } from '../assets/js/auth.js';
 import { setupKatalogModule, renderKatalogGrid } from './modules/katalog/index.js';
 import { setupPinjamanModule, switchPinjamanSubtab, renderPinjamanTables } from './modules/pinjaman/index.js';
+import { setupPrapinjamModule } from './modules/prapinjam/index.js';
 import { setupRiwayatModule, renderRiwayatTable } from './modules/riwayat.js';
 import { setupProfileModule, renderProfil } from './modules/profil/index.js';
 import { renderOverview } from './modules/overview.js';
@@ -157,6 +158,7 @@ if (typeof window !== 'undefined') {
 async function init() {
   setupNavigation();
   setupLogout();
+  setupPrapinjamModule();
   setupKatalogModule();
   setupPinjamanModule();
   setupRiwayatModule();

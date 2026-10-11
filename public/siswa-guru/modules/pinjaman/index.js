@@ -11,7 +11,7 @@
 import { state } from '../state.js';
 import { renderActiveLoansTable } from './pinjamanAktif.js';
 import { renderPendingReservationsTable, showTicketDetails } from './pinjamanPrapinjam.js';
-import { setupCancelBookingModal, openCancelBookingModal } from './modalBatalBooking.js';
+import { setupCancelBookingModal, openCancelBookingModal } from '../prapinjam/index.js';
 
 // Re-ekspor seluruh fungsi agar kompatibel ke semua pemanggil
 export {
@@ -40,8 +40,6 @@ export function setupPinjamanModule() {
       switchPinjamanSubtab('prapinjam');
     });
   }
-
-  setupCancelBookingModal();
 }
 
 /**
@@ -81,6 +79,5 @@ export function renderPinjamanTables() {
 // Buka akses global ke window
 if (typeof window !== 'undefined') {
   window.switchPinjamanSubtab = switchPinjamanSubtab;
-  window.openCancelBookingModal = openCancelBookingModal;
   window.showTicketDetails = showTicketDetails;
 }

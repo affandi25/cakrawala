@@ -142,9 +142,9 @@
           <div class="h-6 w-6 rounded-md bg-navy flex items-center justify-center text-white text-xs font-black">C</div>
           <span class="text-xs font-black tracking-wider text-navy">PERPUSTAKAAN CAKRAWALA</span>
         </div>
-        <span class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2 py-0.5 text-[10px] font-bold border border-amber-200">
+        <span id="ticketStatusBadge" class="inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[10px] font-bold border border-amber-200">
           <span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span>
-          Menunggu
+          <span>Menunggu</span>
         </span>
       </div>
 
@@ -161,30 +161,13 @@
         </button>
       </div>
 
-      <!-- Switcher Barcode 1D / QR Code 2D -->
-      <div class="mb-3">
-        <div class="grid grid-cols-2 p-1 rounded-xl bg-slate-100 text-xs font-bold text-slate-600">
-          <button id="btnTabBarcode1D" type="button" class="py-1.5 rounded-lg bg-white text-navy shadow-xs transition flex items-center justify-center gap-1.5">
-            <i class="ph ph-barcode text-base"></i>
-            <span>Barcode (1D)</span>
-          </button>
-          <button id="btnTabBarcodeQR" type="button" class="py-1.5 rounded-lg hover:text-navy transition flex items-center justify-center gap-1.5 text-slate-500">
-            <i class="ph ph-qr-code text-base"></i>
-            <span>QR Code (2D)</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- Area Render Barcode 1D (Code 128) -->
-      <div id="ticketBarcodeSection" class="p-3 bg-white rounded-xl border border-slate-200 flex flex-col items-center justify-center min-h-[120px]">
-        <svg id="ticketBarcodeSvg" class="max-w-full h-auto"></svg>
-        <span class="text-[9px] text-slate-400 mt-1 font-mono tracking-widest">FORMAT CODE-128 &bull; BISA DISCAN OLEH PETUGAS</span>
-      </div>
-
-      <!-- Area Render QR Code 2D -->
-      <div id="ticketQrSection" class="p-3 bg-white rounded-xl border border-slate-200 flex flex-col items-center justify-center min-h-[120px] hidden">
-        <div id="ticketQrContainer" class="p-1 bg-white"></div>
-        <span class="text-[9px] text-slate-400 mt-2 font-mono tracking-widest">FORMAT QR CODE &bull; BISA DISCAN OLEH PETUGAS</span>
+      <!-- Area Render QR Code 2D Resmi -->
+      <div id="ticketQrSection" class="p-4 bg-white rounded-2xl border border-slate-200 flex flex-col items-center justify-center shadow-2xs">
+        <div id="ticketQrContainer" class="p-2 bg-white rounded-xl border border-slate-100 shadow-2xs"></div>
+        <span class="text-[10px] font-bold text-slate-500 mt-2.5 flex items-center gap-1">
+          <i class="ph ph-qr-code text-xs text-navy"></i>
+          <span>FORMAT QR CODE (2D) &bull; SIAP DISCAN DI MEJA PERPUSTAKAAN</span>
+        </span>
       </div>
 
       <!-- Detail Informasi Buku & Peminjam -->

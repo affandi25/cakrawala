@@ -5,7 +5,7 @@
 
 import { state } from './state.js';
 import { formatRupiah, formatTanggalIndo, getBorrowerInfo } from './petugasHelper.js';
-import { handleApprovePrapinjam, handleRejectPrapinjam } from './sirkulasi.js';
+import { handleApprovePrapinjam, handleRejectPrapinjam } from './sirkulasi/index.js';
 
 /**
  * Menghitung dan menampilkan angka-angka statistik di Meja 1 (Overview)

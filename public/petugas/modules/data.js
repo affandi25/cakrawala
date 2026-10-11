@@ -11,10 +11,10 @@ import { db } from '../../assets/js/supabaseClient.js';
 import { state } from './state.js';
 import { showToast } from './petugasHelper.js';
 import { renderOverview } from './overview.js';
-import { renderSirkulasi } from './sirkulasi.js';
-import { renderPengembalianFormOptions, renderRiwayatPengembalian } from './pengembalian.js';
-import { renderCategoryDropdowns, renderBooksInventory } from './buku.js';
-import { renderPengumumanTable } from './pengumuman.js';
+import { renderSirkulasi } from './sirkulasi/index.js';
+import { renderPengembalianFormOptions, renderRiwayatPengembalian } from './pengembalian/index.js';
+import { renderCategoryDropdowns, renderBooksInventory } from './buku/index.js';
+import { renderPengumumanTable } from './pengumuman/index.js';
 
 /**
  * Menjalankan seluruh fungsi perenderan meja tampilan secara serentak

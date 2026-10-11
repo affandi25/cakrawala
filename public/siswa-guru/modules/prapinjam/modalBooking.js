@@ -1,13 +1,13 @@
 /**
  * CAKRAWALA Digital Library - Modul Form Booking Pra-Pinjam
- * File: public/siswa-guru/modules/katalog/modalBooking.js
+ * File: public/siswa-guru/modules/prapinjam/modalBooking.js
  * 
  * Tanggung Jawab:
  * - Menangani formulir pengajuan reservasi pra-pinjam daring (#modalBooking)
  * - Menerapkan aturan kuota maksimal 2 buku aktif per siswa/guru
  * - Mencegah peminjaman ganda untuk buku yang sama
- * - Menyimpan transaksi 'Menunggu' ke database Supabase
- * - Memanggil modal tiket bukti reservasi
+ * - Menyimpan transaksi 'Menunggu' ke database Supabase & mengunci stok fisik
+ * - Memanggil modal tiket bukti reservasi QR Code
  */
 
 import { db } from '../../../assets/js/supabaseClient.js';
@@ -21,7 +21,7 @@ import {
   hideModal,
   showToast
 } from '../siswaHelper.js';
-import { showTicketSuccessModal, setupTicketModalElements } from './modalTiket.js';
+import { showTicketSuccessModal } from './modalTiket.js';
 
 export const MAX_ACTIVE_LOANS = 2;
 
@@ -52,10 +52,15 @@ export function getActiveUserLoanForBook(bookId) {
   );
 }
 
+let isBookingModalSetup = false;
+
 /**
  * Setup formulir modal pra-pinjam (input tanggal, tombol submit, dan modal tiket)
  */
 export function setupBookingModal() {
+  if (isBookingModalSetup) return;
+  isBookingModalSetup = true;
+
   const modal = document.getElementById('modalBooking');
   const content = document.getElementById('modalBookingContent');
   const closeBtn = document.getElementById('btnCloseBookingModal');
@@ -85,9 +90,6 @@ export function setupBookingModal() {
       }
     });
   }
-
-  // Siapkan elemen interaksi tiket
-  setupTicketModalElements();
 
   if (form) {
     form.addEventListener('submit', async e => {
@@ -153,7 +155,7 @@ export function setupBookingModal() {
 
         const newIdPeminjaman = generateRandomId('PJ', 6);
 
-        // 1. Simpan ke database data_peminjaman dengan status 'Menunggu'
+        // 1. Simpan ke database data_peminjaman dengan status 'Menunggu' & 'Belum Diambil'
         const { error: errLoan } = await db
           .from('data_peminjaman')
           .insert({
@@ -163,13 +165,30 @@ export function setupBookingModal() {
             tanggal_pinjam: tglPinjam,
             batas_kembali: batasKembali,
             metode_peminjaman: 'Pra Pinjam',
-            status: 'Menunggu'
+            status: 'Menunggu',
+            status_persiapan: 'Belum Diambil'
           });
 
         if (errLoan) throw errLoan;
 
+        // 2. Kunci / Kurangi stok buku fisik secara instan agar tidak diambil peminjam lain
+        const sisaStok = Math.max(0, (Number(book.stok) || 1) - 1);
+        const statusBaruBuku = sisaStok === 0 ? 'Dipinjam' : 'Tersedia';
+
+        const { error: errStock } = await db
+          .from('data_buku')
+          .update({
+            stok: sisaStok,
+            status: statusBaruBuku
+          })
+          .eq('id_buku', book.id_buku);
+
+        if (errStock) {
+          console.warn('Peringatan: Gagal memotong stok buku otomatis:', errStock);
+        }
+
         closeBookingModal();
-        showToast('Pengajuan pra-pinjam berhasil diterbitkan!', 'success');
+        showToast('Pengajuan pra-pinjam berhasil! Stok buku telah diamankan untuk Anda.', 'success');
 
         // Tampilkan modal tiket bukti booking dengan barcode & QR
         showTicketSuccessModal({
@@ -178,7 +197,8 @@ export function setupBookingModal() {
           rak: book.keterangan || 'Rak Umum',
           tempo: formatTanggalIndo(batasKembali),
           peminjam: state.userProfile?.nama_siswa || state.userProfile?.nama_guru || state.memberId,
-          nisn: state.memberId
+          nisn: state.memberId,
+          statusPersiapan: 'Belum Diambil'
         });
 
         // Sinkronkan data terbaru

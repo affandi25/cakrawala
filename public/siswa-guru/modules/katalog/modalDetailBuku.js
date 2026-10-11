@@ -9,13 +9,18 @@
 
 import { state } from '../state.js';
 import { formatRupiah, showModal, hideModal } from '../siswaHelper.js';
-import { MAX_ACTIVE_LOANS, getUserActiveLoansCount, getActiveUserLoanForBook } from './modalBooking.js';
+import { MAX_ACTIVE_LOANS, getUserActiveLoansCount, getActiveUserLoanForBook } from '../prapinjam/index.js';
+
+let isDetailModalSetup = false;
 
 /**
  * Setup pendengar klik (event listeners) untuk modal detail buku
  * @param {Function} onNavigateToBooking Callback ketika tombol booking di modal ditekan
  */
 export function setupDetailModal(onNavigateToBooking) {
+  if (isDetailModalSetup) return;
+  isDetailModalSetup = true;
+
   const modal = document.getElementById('modalBookDetail');
   const content = document.getElementById('modalBookDetailContent');
   const closeBtn = document.getElementById('btnCloseDetailModal');

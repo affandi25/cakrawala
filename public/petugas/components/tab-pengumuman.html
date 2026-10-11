@@ -1,0 +1,105 @@
+<!-- ======================================================== -->
+      <section id="tabContentPengumuman" class="tab-content hidden space-y-6">
+
+        <!-- Banner Edukasi & Pengantar Singkat -->
+        <div class="rounded-2xl border border-blue-200 bg-gradient-to-r from-blue-50/80 via-white to-blue-50/40 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-2xs">
+          <div class="flex items-start gap-3.5">
+            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy text-white text-2xl font-bold shadow-md shadow-navy/20">
+              <i class="ph ph-megaphone-simple"></i>
+            </div>
+            <div>
+              <h3 class="font-extrabold text-navy text-base">Pusat Manajemen Pengumuman & Poster Event</h3>
+              <p class="text-xs text-slate-600 mt-0.5 leading-relaxed">
+                Pengumuman yang ditambahkan atau diedit di sini akan <strong>otomatis tersinkronisasi realtime</strong> ke Carousel Beranda Publik (<code class="bg-blue-100/70 text-navy px-1.5 py-0.5 rounded font-mono text-[11px]">public/index.html</code>).
+              </p>
+            </div>
+          </div>
+          <a href="../index.html#pengumuman" target="_blank"
+            class="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-3.5 py-2 text-xs font-bold text-navy hover:bg-navy hover:text-white transition shadow-2xs whitespace-nowrap">
+            <i class="ph ph-arrow-square-out text-base"></i>
+            <span>Lihat di Beranda</span>
+          </a>
+        </div>
+
+        <!-- BILAH KONTROL: Pencarian, Filter Kategori, & Tombol Tambah Pengumuman -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-xs p-4 sm:p-5">
+          <div class="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3.5">
+            
+            <!-- Kotak Pencarian Pengumuman -->
+            <div class="relative flex-1">
+              <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+              <input type="search" id="inputSearchPengumuman"
+                placeholder="Cari judul pengumuman, kategori, atau tanggal event..."
+                class="w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition focus:border-navy focus:bg-white focus:ring-3 focus:ring-navy/10" />
+              <button type="button" id="btnClearSearchPengumuman" class="hidden absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1">
+                <i class="ph ph-x-circle text-base"></i>
+              </button>
+            </div>
+
+            <div class="flex items-center gap-3 flex-wrap sm:flex-nowrap">
+              <!-- Saringan Filter Kategori Pengumuman -->
+              <select id="selectFilterKategoriPengumuman"
+                class="h-10 rounded-xl border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10">
+                <option value="">Semua Kategori</option>
+                <option value="Event Kampus">Event Kampus</option>
+                <option value="Akademik">Akademik</option>
+                <option value="Layanan">Layanan</option>
+                <option value="Pelatihan">Pelatihan</option>
+                <option value="Info Khusus">Info Khusus</option>
+              </select>
+
+              <!-- Tombol Refresh Data -->
+              <button type="button" id="btnRefreshPengumuman" title="Muat ulang data pengumuman"
+                class="flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy transition-colors">
+                <i class="ph ph-arrows-clockwise text-lg"></i>
+              </button>
+
+              <!-- Tombol Tambah Pengumuman Baru -->
+              <button type="button" id="btnOpenAddPengumumanModal"
+                class="inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-navy/25 transition-all duration-200 hover:bg-navy-light focus:outline-none focus:ring-3 focus:ring-navy/30 whitespace-nowrap">
+                <i class="ph ph-plus-circle text-lg" aria-hidden="true"></i>
+                <span>Tambah Pengumuman</span>
+              </button>
+            </div>
+
+          </div>
+        </section>
+
+        <!-- TABEL DATA PENGUMUMAN -->
+        <section class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+          <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-bold text-slate-800">Daftar Agenda & Pengumuman Aktif</h3>
+              <span id="pengumumanRecordCount"
+                class="rounded-md bg-slate-200/80 px-2 py-0.5 text-xs font-bold text-slate-700">0 Data</span>
+            </div>
+            <span class="text-xs text-slate-400">Sinkronisasi Cloud Supabase</span>
+          </div>
+
+          <div class="overflow-x-auto min-h-[300px]">
+            <table class="w-full text-left text-sm border-collapse">
+              <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+                <tr>
+                  <th class="px-5 py-3.5">Poster & ID</th>
+                  <th class="px-5 py-3.5">Judul Pengumuman</th>
+                  <th class="px-5 py-3.5">Kategori Badge</th>
+                  <th class="px-5 py-3.5">Tanggal Event / Jadwal</th>
+                  <th class="px-5 py-3.5">Tautan Luar</th>
+                  <th class="px-5 py-3.5 text-right">Aksi</th>
+                </tr>
+              </thead>
+              <tbody id="tablePengumumanBody" class="divide-y divide-slate-100 text-slate-700">
+                <!-- Baris pengumuman diisi oleh renderPengumumanTable() di petugas.js -->
+              </tbody>
+            </table>
+          </div>
+
+          <div class="px-6 py-3 border-t border-slate-100 bg-slate-50/30 flex items-center justify-between text-xs text-slate-500">
+            <div class="flex items-center gap-1.5">
+              <i class="ph ph-info text-sm text-navy" aria-hidden="true"></i>
+              <span id="pengumumanTableInfo">Menampilkan data agenda pengumuman perpustakaan.</span>
+            </div>
+          </div>
+        </section>
+
+      </section>

@@ -1,11 +1,10 @@
 /**
  * CAKRAWALA Digital Library - Modul Tiket Bukti Booking Pra-Pinjam
- * File: public/siswa-guru/modules/katalog/modalTiket.js
+ * File: public/siswa-guru/modules/prapinjam/modalTiket.js
  * 
  * Tanggung Jawab:
  * - Menampilkan pop-up modal bukti tiket booking pra-pinjam
- * - Menghasilkan Barcode 1D (Code 128) via JsBarcode
- * - Menghasilkan QR Code 2D via QRCode.js
+ * - Menghasilkan QR Code 2D resmi via QRCode.js
  * - Menyalin kode tiket ke clipboard
  * - Mengekspor & mengunduh gambar tiket berkualitas tinggi (PNG) via Canvas
  */
@@ -15,19 +14,20 @@ import { showModal, hideModal, showToast } from '../siswaHelper.js';
 
 let currentTicketData = null;
 
+let isTicketModalSetup = false;
+
 /**
- * Menyiapkan interaksi pada modal tiket booking (Salin, Switcher Barcode/QR, Unduh)
+ * Menyiapkan interaksi pada modal tiket booking (Salin, Unduh PNG)
  */
 export function setupTicketModalElements() {
+  if (isTicketModalSetup) return;
+  isTicketModalSetup = true;
+
   const modalTicket = document.getElementById('modalTicketSuccess');
   const contentTicket = document.getElementById('modalTicketSuccessContent');
   const btnCloseTicket = document.getElementById('btnCloseTicketModal');
   const btnCloseTicketX = document.getElementById('btnCloseTicketModalX');
   const btnCopy = document.getElementById('btnCopyTicketCode');
-  const btnTabBarcode1D = document.getElementById('btnTabBarcode1D');
-  const btnTabBarcodeQR = document.getElementById('btnTabBarcodeQR');
-  const barcodeSection = document.getElementById('ticketBarcodeSection');
-  const qrSection = document.getElementById('ticketQrSection');
   const btnDownload = document.getElementById('btnDownloadTicketPng');
 
   function closeTicket() {
@@ -39,23 +39,6 @@ export function setupTicketModalElements() {
   if (modalTicket) {
     modalTicket.addEventListener('click', e => {
       if (e.target === modalTicket) closeTicket();
-    });
-  }
-
-  // Switcher Tab Barcode 1D / QR Code 2D
-  if (btnTabBarcode1D && btnTabBarcodeQR && barcodeSection && qrSection) {
-    btnTabBarcode1D.addEventListener('click', () => {
-      barcodeSection.classList.remove('hidden');
-      qrSection.classList.add('hidden');
-      btnTabBarcode1D.className = 'py-1.5 rounded-lg bg-white text-navy shadow-xs transition flex items-center justify-center gap-1.5';
-      btnTabBarcodeQR.className = 'py-1.5 rounded-lg hover:text-navy transition flex items-center justify-center gap-1.5 text-slate-500';
-    });
-
-    btnTabBarcodeQR.addEventListener('click', () => {
-      qrSection.classList.remove('hidden');
-      barcodeSection.classList.add('hidden');
-      btnTabBarcodeQR.className = 'py-1.5 rounded-lg bg-white text-navy shadow-xs transition flex items-center justify-center gap-1.5';
-      btnTabBarcode1D.className = 'py-1.5 rounded-lg hover:text-navy transition flex items-center justify-center gap-1.5 text-slate-500';
     });
   }
 
@@ -90,8 +73,8 @@ export function setupTicketModalElements() {
 }
 
 /**
- * Menampilkan modal tiket sukses prapinjam dengan Barcode 1D (Code 128) & QR Code 2D
- * @param {object} data Data tiket ({ id, buku, rak, tempo, peminjam, nisn })
+ * Menampilkan modal tiket sukses prapinjam dengan QR Code 2D
+ * @param {object} data Data tiket ({ id, buku, rak, tempo, peminjam, nisn, statusPersiapan })
  */
 export function showTicketSuccessModal(data) {
   currentTicketData = data;
@@ -114,64 +97,50 @@ export function showTicketSuccessModal(data) {
   const memberId = data.nisn || state.memberId;
   if (nameEl) nameEl.textContent = `${memberName} (${memberId})`;
 
-  // 1. Render Barcode 1D (Code 128) dengan JsBarcode
-  const barcodeSvg = document.getElementById('ticketBarcodeSvg');
-  if (barcodeSvg && window.JsBarcode) {
-    try {
-      barcodeSvg.innerHTML = '';
-      window.JsBarcode('#ticketBarcodeSvg', data.id, {
-        format: 'CODE128',
-        lineColor: '#000836',
-        width: 2.2,
-        height: 65,
-        displayValue: true,
-        font: 'monospace',
-        fontSize: 14,
-        textMargin: 6,
-        margin: 8,
-        background: '#ffffff'
-      });
-    } catch (err) {
-      console.error('Gagal render JsBarcode:', err);
+  // Update Status Badge Tiket
+  const statusBadge = document.getElementById('ticketStatusBadge');
+  if (statusBadge) {
+    if (data.statusPersiapan === 'Siap Diambil') {
+      statusBadge.className = 'inline-flex items-center gap-1.5 rounded-full bg-emerald-50 text-emerald-700 px-2.5 py-0.5 text-[10px] font-bold border border-emerald-200';
+      statusBadge.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-emerald-600 animate-pulse"></span><span>Siap di Meja</span>';
+    } else {
+      statusBadge.className = 'inline-flex items-center gap-1 rounded-full bg-amber-50 text-amber-700 px-2.5 py-0.5 text-[10px] font-bold border border-amber-200';
+      statusBadge.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse"></span><span>Menunggu Penyiapan</span>';
     }
   }
 
-  // 2. Render QR Code 2D dengan QRCode.js
+  // Render QR Code 2D dengan QRCode.js
   const qrContainer = document.getElementById('ticketQrContainer');
   if (qrContainer && window.QRCode) {
     qrContainer.innerHTML = '';
     new window.QRCode(qrContainer, {
       text: data.id,
-      width: 130,
-      height: 130,
+      width: 160,
+      height: 160,
       colorDark: '#000836',
       colorLight: '#ffffff',
       correctLevel: window.QRCode.CorrectLevel.H
     });
   }
 
-  // Reset tampilan ke tab Barcode 1D
-  const btnTabBarcode1D = document.getElementById('btnTabBarcode1D');
-  if (btnTabBarcode1D) btnTabBarcode1D.click();
-
   showModal(modal, content);
 }
 
 /**
- * Mengekspor tiket pra-pinjam sebagai gambar PNG beresolusi tajam
+ * Mengekspor tiket pra-pinjam sebagai gambar PNG beresolusi tajam dengan QR Code 2D
  * @param {object} data Data tiket yang sedang aktif
  */
 export function exportTicketAsPng(data) {
   try {
     const canvas = document.createElement('canvas');
     canvas.width = 460;
-    canvas.height = 620;
+    canvas.height = 660;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
     // Background kartu putih bersih
     ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 460, 620);
+    ctx.fillRect(0, 0, 460, 660);
 
     // Header Navy Bar
     ctx.fillStyle = '#000C4F';
@@ -193,60 +162,78 @@ export function exportTicketAsPng(data) {
     ctx.lineWidth = 1.5;
     ctx.beginPath();
     if (ctx.roundRect) {
-      ctx.roundRect(24, 104, 412, 480, 16);
+      ctx.roundRect(24, 100, 412, 536, 16);
     } else {
-      ctx.rect(24, 104, 412, 480);
+      ctx.rect(24, 100, 412, 536);
     }
     ctx.fill();
     ctx.stroke();
 
-    // Kode Tiket Heading
-    ctx.fillStyle = '#64748b';
-    ctx.font = 'bold 10px Inter, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('KODE TIKET PEMINJAMAN', 230, 132);
+    // Box Putih untuk Quiet Zone QR Code
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#cbd5e1';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    if (ctx.roundRect) {
+      ctx.roundRect(120, 118, 220, 220, 12);
+    } else {
+      ctx.rect(120, 118, 220, 220);
+    }
+    ctx.fill();
+    ctx.stroke();
 
-    ctx.fillStyle = '#000C4F';
-    ctx.font = 'bold 24px monospace';
-    ctx.fillText(data.id, 230, 160);
-
-    // Render Barcode ke Offscreen Canvas untuk digambar ke gambar PNG
-    if (window.JsBarcode) {
+    // Render QR Code 2D Offscreen untuk digambar ke gambar PNG
+    if (window.QRCode) {
       try {
-        const offCanvas = document.createElement('canvas');
-        window.JsBarcode(offCanvas, data.id, {
-          format: 'CODE128',
-          lineColor: '#000C4F',
-          width: 2.2,
-          height: 65,
-          displayValue: true,
-          font: 'monospace',
-          fontSize: 14,
-          textMargin: 6,
-          margin: 10,
-          background: '#ffffff'
+        const offDiv = document.createElement('div');
+        new window.QRCode(offDiv, {
+          text: data.id,
+          width: 196,
+          height: 196,
+          colorDark: '#000836',
+          colorLight: '#ffffff',
+          correctLevel: window.QRCode.CorrectLevel.H
         });
-        const bcW = Math.min(offCanvas.width, 350);
-        const bcH = (offCanvas.height * bcW) / offCanvas.width;
-        ctx.drawImage(offCanvas, (460 - bcW) / 2, 178, bcW, bcH);
+
+        // QRCode.js bisa menghasilkan <canvas> atau <img>
+        const qrCanvas = offDiv.querySelector('canvas');
+        const qrImg = offDiv.querySelector('img');
+
+        if (qrCanvas) {
+          ctx.drawImage(qrCanvas, 132, 130, 196, 196);
+        } else if (qrImg && qrImg.src) {
+          const img = new Image();
+          img.src = qrImg.src;
+          ctx.drawImage(img, 132, 130, 196, 196);
+        }
       } catch (err) {
-        console.error('Error drawing barcode to export canvas:', err);
+        console.error('Error drawing QR Code to export canvas:', err);
       }
     }
+
+    // Kode Tiket Heading & Teks
+    ctx.fillStyle = '#64748b';
+    ctx.font = 'bold 9px Inter, sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('KODE TIKET PEMINJAMAN', 230, 362);
+
+    ctx.fillStyle = '#000C4F';
+    ctx.font = 'bold 22px monospace';
+    ctx.fillText(data.id, 230, 388);
 
     // Garis putus-putus
     ctx.setLineDash([5, 5]);
     ctx.strokeStyle = '#cbd5e1';
     ctx.beginPath();
-    ctx.moveTo(44, 305);
-    ctx.lineTo(416, 305);
+    ctx.moveTo(44, 408);
+    ctx.lineTo(416, 408);
     ctx.stroke();
     ctx.setLineDash([]);
 
     // Data Peminjaman
     ctx.textAlign = 'left';
-    const startY = 340;
-    const lineHeight = 30;
+    const startY = 438;
+    const lineHeight = 28;
 
     // 1. Judul Buku
     ctx.fillStyle = '#64748b';
@@ -286,8 +273,11 @@ export function exportTicketAsPng(data) {
     ctx.fillStyle = '#94a3b8';
     ctx.font = 'italic 10px Inter, sans-serif';
     ctx.textAlign = 'center';
-    ctx.fillText('*Tunjukkan tiket ini kepada petugas sirkulasi untuk scan barcode', 230, 520);
-    ctx.fillText('Status: Menunggu Pengambilan di Perpustakaan', 230, 540);
+    ctx.fillText('*Tunjukkan QR Code ini kepada petugas sirkulasi untuk scan dan verifikasi', 230, 580);
+    const statusNote = data.statusPersiapan === 'Siap Diambil'
+      ? 'Status: Buku Telah Siap di Meja Sirkulasi'
+      : 'Status: Menunggu Penyiapan Petugas';
+    ctx.fillText(statusNote, 230, 598);
 
     const dataUrl = canvas.toDataURL('image/png');
     const a = document.createElement('a');
@@ -296,7 +286,7 @@ export function exportTicketAsPng(data) {
     document.body.appendChild(a);
     a.click();
     a.remove();
-    showToast(`Tiket ${data.id} berhasil diunduh sebagai gambar PNG!`, 'success');
+    showToast(`Tiket ${data.id} berhasil diunduh sebagai gambar PNG dengan QR Code 2D!`, 'success');
   } catch (err) {
     console.error('Gagal export tiket PNG:', err);
     showToast('Gagal mengunduh gambar tiket: ' + err.message, 'error');

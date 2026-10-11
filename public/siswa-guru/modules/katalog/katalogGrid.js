@@ -16,7 +16,7 @@ import {
   getUserActiveLoansCount,
   getActiveUserLoanForBook,
   openBookingModal
-} from './modalBooking.js';
+} from '../prapinjam/index.js';
 
 /**
  * Setup event listeners untuk input pencarian dan dropdown filter

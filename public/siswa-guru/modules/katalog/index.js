@@ -4,8 +4,6 @@
  * 
  * Sub-modul:
  * - katalogGrid.js      : Render kartu buku, live search & penyaringan kategori/stok
- * - modalBooking.js     : Dialog booking, validasi kuota 2 buku, submit pinjaman
- * - modalTiket.js       : Tiket bukti booking, barcode 1D/2D, unduh PNG tiket
  * - modalDetailBuku.js  : Pop-up sinopsis, letak rak buku, & informasi detail
  */
 
@@ -15,37 +13,19 @@ import {
   renderKatalogGrid,
   checkUrlRedirectBooking
 } from './katalogGrid.js';
-import {
-  MAX_ACTIVE_LOANS,
-  getUserActiveLoansCount,
-  getActiveUserLoanForBook,
-  setupBookingModal,
-  openBookingModal
-} from './modalBooking.js';
-import {
-  setupTicketModalElements,
-  showTicketSuccessModal,
-  exportTicketAsPng
-} from './modalTiket.js';
+
 import {
   setupDetailModal,
   openDetailModal
 } from './modalDetailBuku.js';
 
-// Re-ekspor seluruh fungsi agar kompatibel ke semua pemanggil
+import { openBookingModal } from '../prapinjam/index.js';
+
 export {
-  MAX_ACTIVE_LOANS,
-  getUserActiveLoansCount,
-  getActiveUserLoanForBook,
   setupKatalogFilters,
   renderKategoriOptions,
   renderKatalogGrid,
   checkUrlRedirectBooking,
-  setupBookingModal,
-  openBookingModal,
-  setupTicketModalElements,
-  showTicketSuccessModal,
-  exportTicketAsPng,
   setupDetailModal,
   openDetailModal
 };
@@ -55,14 +35,11 @@ export {
  */
 export function setupKatalogModule() {
   setupKatalogFilters();
-  setupBookingModal();
   setupDetailModal((bookId) => openBookingModal(bookId));
   checkUrlRedirectBooking();
 }
 
-// Buka akses global ke window untuk atribut onclick di HTML
+// Buka akses global ke window untuk modal detail buku
 if (typeof window !== 'undefined') {
-  window.openBookingModal = openBookingModal;
   window.openDetailModal = openDetailModal;
-  window.showTicketSuccessModal = showTicketSuccessModal;
 }
