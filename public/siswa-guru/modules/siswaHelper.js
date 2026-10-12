@@ -31,11 +31,16 @@ export function getRemainingDays(batasKembaliStr) {
 
   if (diffDays < 0) {
     const late = Math.abs(diffDays);
+    const isMonthOverdue = late >= 30;
     return {
       days: diffDays,
+      lateDays: late,
       isOverdue: true,
-      text: `Terlambat ${late} Hari!`,
-      badgeClass: 'bg-rose-100 text-rose-700 border-rose-200'
+      isMonthOverdue: isMonthOverdue,
+      text: isMonthOverdue ? `Terlambat ${late} Hari (≥ 1 Bulan!)` : `Terlambat ${late} Hari!`,
+      badgeClass: isMonthOverdue
+        ? 'bg-rose-600 text-white border-rose-700 font-extrabold shadow-2xs'
+        : 'bg-rose-100 text-rose-700 border-rose-200'
     };
   } else if (diffDays === 0) {
     return {

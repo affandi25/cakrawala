@@ -1,0 +1,202 @@
+<!-- ============================================================================================= -->
+<!-- MODAL MEJA 5: FORMULIR TAMBAH/EDIT & HAPUS PENGUMUMAN                                         -->
+<!-- ============================================================================================= -->
+
+<!-- MODAL: FORMULIR TAMBAH & EDIT PENGUMUMAN -->
+<div id="modalPengumumanForm"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="dialog" aria-modal="true" aria-labelledby="modalPengumumanTitle">
+  <div id="modalPengumumanContent"
+    class="w-full max-w-xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-200">
+    
+    <!-- Header Modal -->
+    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 sticky top-0 bg-white/95 backdrop-blur-xs z-10">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy/10 text-navy font-bold text-lg">
+          <i class="ph ph-megaphone" id="iconPengumumanModal" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3 id="modalPengumumanTitle" class="text-base font-extrabold tracking-tight text-slate-900">
+            Tambah Pengumuman Baru
+          </h3>
+          <p id="modalPengumumanSubtitle" class="text-xs text-slate-500">
+            Pengumuman akan langsung tampil di beranda utama perpustakaan.
+          </p>
+        </div>
+      </div>
+      <button type="button" id="btnClosePengumumanModal" aria-label="Tutup modal"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Formulir Pengumuman -->
+    <form id="formPengumuman" class="p-6 space-y-4">
+      <input type="hidden" id="inputPengumumanId" />
+
+      <!-- 1. Judul Pengumuman -->
+      <div>
+        <label for="inputPengumumanJudul" class="block text-xs font-bold text-slate-700 mb-1">
+          Judul Pengumuman / Event <span class="text-rose-500">*</span>
+        </label>
+        <input type="text" id="inputPengumumanJudul" required maxlength="150"
+          placeholder="Contoh: Pekan Literasi Aksara & Bedah Buku 2026"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+      </div>
+
+      <!-- 2. Kategori Badge & Tanggal Event -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="selectPengumumanKategori" class="block text-xs font-bold text-slate-700 mb-1">
+            Kategori Badge <span class="text-rose-500">*</span>
+          </label>
+          <select id="selectPengumumanKategori" required
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10">
+            <option value="Event Kampus">Event Kampus</option>
+            <option value="Akademik">Akademik</option>
+            <option value="Layanan">Layanan</option>
+            <option value="Pelatihan">Pelatihan</option>
+            <option value="Info Khusus">Info Khusus</option>
+            <option value="__custom__">+ Tulis Kategori Kustom...</option>
+          </select>
+          <input type="text" id="inputCustomPengumumanKategori" placeholder="Ketik nama kategori baru"
+            class="hidden mt-2 w-full rounded-xl border border-slate-200 px-3.5 py-2 text-xs text-slate-900 outline-none transition focus:border-navy" />
+        </div>
+
+        <div>
+          <label for="inputPengumumanTanggal" class="block text-xs font-bold text-slate-700 mb-1">
+            Tanggal / Jadwal Event <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="inputPengumumanTanggal" required maxlength="50"
+            placeholder="Contoh: 24 - 28 Oktober 2026"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+        </div>
+      </div>
+
+      <!-- 3. Upload File Gambar Poster Banner dari Laptop / Komputer -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-1">
+          Foto / Gambar Poster Banner Event <span class="text-slate-400 font-normal">(Upload Berkas)</span>
+        </label>
+
+        <!-- Kotak Unggah Berkas Poster (Dropzone Interaktif) -->
+        <div id="dropzonePoster"
+          class="relative flex flex-col items-center justify-center p-4 border-2 border-dashed border-slate-300 rounded-2xl bg-slate-50/60 hover:bg-slate-100/70 hover:border-navy transition cursor-pointer group text-center">
+          
+          <!-- Keadaan Awal: Belum Memilih File Foto -->
+          <div id="posterUploadPlaceholder" class="flex flex-col items-center space-y-2 py-2">
+            <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-navy group-hover:scale-110 transition shadow-2xs">
+              <i class="ph ph-upload-simple text-2xl"></i>
+            </div>
+            <div class="text-xs">
+              <span class="font-bold text-navy hover:underline">Klik untuk pilih gambar poster</span>
+              <span class="text-slate-500"> atau seret file ke sini</span>
+            </div>
+            <p class="text-[11px] text-slate-400">Format yang didukung: PNG, JPG, JPEG, atau WEBP (Maksimal 5MB)</p>
+          </div>
+
+          <!-- Keadaan Aktif: Pratinjau Foto Poster yang Dipilih / Yang Sudah Ada -->
+          <div id="posterPreviewContainer" class="hidden w-full flex items-center justify-between gap-3 p-2 bg-white rounded-xl border border-slate-200 shadow-xs">
+            <div class="flex items-center gap-3 min-w-0">
+              <div class="h-14 w-20 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200">
+                <img id="imgPosterPreview" src="" alt="Pratinjau Poster" class="h-full w-full object-cover" />
+              </div>
+              <div class="min-w-0 text-left">
+                <p id="posterFileName" class="text-xs font-bold text-slate-800 truncate">nama_poster.jpg</p>
+                <p id="posterFileSize" class="text-[10px] text-slate-400 mt-0.5">Siap diunggah ke Supabase Storage</p>
+              </div>
+            </div>
+            <button type="button" id="btnRemovePoster" title="Hapus foto poster"
+              class="shrink-0 flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition">
+              <i class="ph ph-trash text-base"></i>
+            </button>
+          </div>
+
+          <!-- Input Berkas Tersembunyi (Dipicu Saat Kotak Dropzone Diklik) -->
+          <input type="file" id="inputPosterFile" accept="image/png, image/jpeg, image/jpg, image/webp" class="hidden" />
+        </div>
+
+        <!-- Input URL Tersembunyi untuk Menyimpan Link Gambar yang Sudah Ada / URL Final -->
+        <input type="hidden" id="inputFinalPosterUrl" />
+
+        <!-- Opsi opsional fallback: URL Online jika ingin pakai link eksternal -->
+        <div class="mt-2">
+          <details class="text-[11px] text-slate-500">
+            <summary class="cursor-pointer text-slate-500 hover:text-navy font-semibold inline-flex items-center gap-1">
+              <span>Atau gunakan link URL gambar online (Alternatif)</span>
+            </summary>
+            <div class="mt-1.5">
+              <input type="url" id="inputPengumumanGambarUrl"
+                placeholder="https://images.unsplash.com/... (opsional jika tidak upload berkas)"
+                class="w-full rounded-xl border border-slate-200 px-3 py-1.5 text-xs text-slate-900 outline-none transition focus:border-navy" />
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- 4. Link Tautan Luar (Instagram/TikTok/Web) -->
+      <div>
+        <label for="inputPengumumanLink" class="block text-xs font-bold text-slate-700 mb-1">
+          Tautan Detail Informasi (Instagram/TikTok/Web)
+        </label>
+        <div class="relative">
+          <i class="ph ph-link absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base"></i>
+          <input type="url" id="inputPengumumanLink"
+            placeholder="https://www.instagram.com/p/... atau https://..."
+            class="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+        </div>
+        <p class="text-[11px] text-slate-400 mt-1">Tautan tujuan ketika pengunjung mengklik tombol "Lihat Detail" di landing page.</p>
+      </div>
+
+      <!-- Footer Modal Buttons -->
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button type="button" id="btnCancelPengumumanModal"
+          class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors">
+          Batal
+        </button>
+        <button type="submit" id="btnSavePengumuman"
+          class="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-navy/20 hover:bg-navy-light transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+          <i class="ph ph-check-circle text-lg" id="iconSavePengumumanSpinner"></i>
+          <span id="btnSavePengumumanText">Simpan Pengumuman</span>
+        </button>
+      </div>
+    </form>
+
+  </div>
+</div>
+
+<!-- MODAL: KONFIRMASI HAPUS PENGUMUMAN -->
+<div id="modalDeletePengumuman"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="dialog" aria-modal="true" aria-labelledby="deletePengumumanModalTitle">
+  <div id="modalDeletePengumumanContent"
+    class="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-200">
+    <div class="flex items-center gap-3.5 mb-4">
+      <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 text-2xl font-bold">
+        <i class="ph ph-trash"></i>
+      </div>
+      <div>
+        <h3 id="deletePengumumanModalTitle" class="text-base font-extrabold text-slate-900">
+          Hapus Pengumuman?
+        </h3>
+        <p class="text-xs text-slate-500">Tindakan ini tidak dapat dibatalkan.</p>
+      </div>
+    </div>
+    
+    <p class="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-xl border border-slate-200/80 mb-5">
+      Pengumuman <strong id="deletePengumumanTitle" class="text-slate-900">"..."</strong> akan dihapus permanen dari sistem dan tidak lagi muncul di landing page.
+    </p>
+
+    <div class="flex items-center justify-end gap-3">
+      <button type="button" id="btnCancelDeletePengumuman"
+        class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+        Batal
+      </button>
+      <button type="button" id="btnConfirmDeletePengumuman"
+        class="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-700 transition shadow-xs">
+        <i class="ph ph-trash text-sm"></i>
+        <span>Ya, Hapus Pengumuman</span>
+      </button>
+    </div>
+  </div>
+</div>

@@ -55,75 +55,461 @@ Untuk mencegah file kode raksasa (*monolithic files* > 1.000 baris) yang sulit d
 
 ---
 
-## 4. Alur Bisnis & Aturan Operasional Sirkulasi
+## 4. Alur Bisnis & Spesifikasi Operasional Dashboard Petugas
 
-### A. Aturan Kuota Peminjaman Aktif (Maksimal 2 Buku)
-1. Setiap anggota (Siswa maupun Guru) memiliki kuota maksimal **2 buku aktif sekaligus**.
-2. Yang dihitung sebagai buku aktif:
-   - Buku yang sedang dalam antrean pesanan online (status `'Menunggu'`).
-   - Buku fisik yang sedang dibawa pulang (status `'Dipinjam'`).
-3. Jika kuota sudah mencapai 2/2:
-   - Tombol **Booking Buku** di katalog otomatis terkunci (*disabled*) dengan label `Kuota Penuh (2/2)`.
-   - Anggota wajib mengembalikan buku fisik atau membatalkan booking sebelum dapat meminjam buku lain.
-4. Anggota tidak dapat mengajukan booking ganda untuk buku yang sama.
+Dashboard Petugas dirancang dengan pendekatan **5 Meja Kerja Terintegrasi (*Feature-Driven Desk*)** ditambah **1 Modul Pemindai Universal (Scanner)** untuk memastikan layanan meja sirkulasi fisik berjalan cepat, akurat, dan bebas kertas (*paperless*):
 
-### B. Alur Pra-Pinjam, Penyiapan Buku dari Rak, & Tiket Booking Daring
-1. **Pengajuan Booking Mandiri (Siswa/Guru):**
-   - Pengguna mencari buku di Katalog $\rightarrow$ Klik **"Booking Buku"**.
-   - Pengguna memilih estimasi batas pengembalian (+7 hari kalender) $\rightarrow$ Klik **Konfirmasi**.
-   - Sistem membuat transaksi di `data_peminjaman` dengan `status = 'Menunggu'`, metode `'Pra Pinjam'`, dan status kesiapan default `'Perlu Diambil'`.
-2. **Penerbitan Tiket Digital:**
-   - Sistem otomatis menerbitkan **Tiket Bukti Pra-Pinjam**:
-     - Dilengkapi Barcode 1D (Code 128) dan QR Code 2D.
-     - Pratinjau status penyiapan buku secara live (*"Menunggu Disiapkan"* vs *"Buku Siap Diambil"*).
-     - Dapat diunduh sebagai gambar PNG resmi perpustakaan via Canvas HTML5.
-3. **Penyortiran & Pengambilan Buku oleh Petugas (Meja 2 Sirkulasi):**
-   - Petugas menerima antrean pra-pinjam dengan info lokasi rak buku (contoh: *Rak 3B - Sains*).
-   - Meja Petugas dilengkapi **Filter Kesiapan**:
-     - *Semua Kesiapan*: Menampilkan seluruh antrean reservasi aktif.
-     - *Perlu Diambil dari Rak*: Daftar buku yang masih harus diambil petugas dari rak fisik.
-     - *Buku Siap di Meja*: Daftar buku yang sudah diambil dan siap diserahkan kepada peminjam.
-   - Petugas mengklik tombol toggle **"Tandai Siap di Meja"** setelah mengambil buku dari rak.
-4. **Notifikasi Status di Portal Pengguna:**
-   - Setelah petugas menandai buku siap, status di dashboard Siswa/Guru otomatis berubah menjadi **"Buku Siap Diambil di Meja Sirkulasi"** (badge hijau).
-   - Pengguna datang ke meja perpustakaan membawa tiket booking fisik / digital.
-5. **Verifikasi & Serah Terima Buku:**
-   - Petugas memindai barcode tiket via kamera/upload gambar atau tombol **"Verifikasi Tiket"**.
-   - Petugas memvalidasi identitas anggota dan klik **"Serahkan Buku"**:
-     - Status transaksi beralih dari `'Menunggu'` $\rightarrow$ `'Dipinjam'`.
-     - Stok buku fisik dipotong 1.
-6. **Batas Waktu Booking:**
-   - Buku disimpan di meja sirkulasi selama maksimal **2x24 jam** sebelum otomatis hangus/dibatalkan jika tidak diambil. Pengguna juga dapat membatalkan booking mandiri melalui tab *Peminjaman Saya*.
-
-### C. Alur Pengembalian Cerdas & Bebas Kerumitan (*Member-First Desk*)
-1. Petugas membuka menu **Meja Pengembalian**.
-2. Petugas cukup mengetik nama siswa/guru di kotak pencarian peminjam (`#inputSearchPeminjamPengembalian`).
-3. Sistem secara otomatis menampilkan 1–2 buku yang saat ini **sedang aktif dipinjam** oleh anggota tersebut.
-4. Jika anggota hanya meminjam 1 buku, buku otomatis terpilih secara instan.
-5. Petugas memilih kondisi buku (**Baik**, **Rusak**, atau **Hilang**):
-   - Jika ada keterlambatan, denda otomatis dihitung per hari (Rp 1.000 / hari).
-   - Jika buku rusak/hilang, denda ganti rugi ditambahkan sesuai tarif `harga_buku`.
-6. Klik **"Proses Pengembalian"**:
-   - Status transaksi menjadi `'Selesai'`.
-   - Stok buku fisik otomatis kembali bertambah 1 (kecuali jika kondisi Hilang).
-   - Jika ada denda yang belum dibayar, transaksi masuk ke daftar **Tunggakan Denda**.
-
-### D. Manajemen Denda Terpisah & Verifikasi 2 Lapis Kas Fisik
-1. Meja riwayat pengembalian dipisahkan menjadi 2 sub-tab:
-   - **Sub-tab Tunggakan Denda (`#tabBtnTunggakanDenda`):** Menampilkan kartu tagihan siswa yang berstatus `'Belum Lunas'`, nominal total uang kas tertunda, dan tombol `[Lunasi Denda]`.
-   - **Sub-tab Semua Riwayat (`#tabBtnSemuaRiwayat`):** Seluruh log pengembalian dengan filter Bebas Denda, Belum Lunas, dan Lunas.
-2. **Verifikasi 2 Lapis Pelunasan Denda Tunai:**
-   - Saat tombol *Lunasi Denda* ditekan, muncul modal konfirmasi `#modalKonfirmasiLunasiDenda`.
-   - Petugas **wajib mencentang kotak verifikasi fisik**: *"Saya telah menerima uang tunai dari peminjam"*.
-   - Tombol eksekusi lunas baru dapat diklik setelah kotak tercentang.
-3. **Safety Rollback (*Batal Lunas*):**
-   - Jika petugas tidak sengaja melunaskan denda padahal uang belum diterima, sistem menyediakan tombol darurat **"Batalkan Lunas"** untuk mengembalikan status denda ke `'Belum Lunas'`.
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        DASHBOARD MEJA KERJA PETUGAS PERPUSTAKAAN                       │
+├───────────────┬─────────────────┬─────────────────┬──────────────────┬─────────────────┤
+│    MEJA 1     │     MEJA 2      │     MEJA 3      │      MEJA 4      │     MEJA 5      │
+│   OVERVIEW    │    SIRKULASI    │  PENGEMBALIAN   │    INVENTARIS    │   PENGUMUMAN    │
+│ (Statistik &  │  (Prapinjam,    │   (Kalkulator   │ (Katalog Master, │ (Agenda Kampus  │
+│  Aksi Cepat)  │   Aktif, Walk)  │ Denda & Kasir)  │ Stiker QR Code)  │ & Broadcast)    │
+└───────────────┴─────────────────┴─────────────────┴──────────────────┴─────────────────┘
+```
 
 ---
 
-## 5. Standar Struktur Folder Proyek (Current & Target Architecture)
+### 4.1. Meja 1: Overview & KPI Operasional Perpustakaan
+1. **Kartu Ringkasan Indikator Kinerja Utama (KPI Cards):**
+   - **Peminjaman Aktif:** Jumlah total buku fisik yang saat ini sedang dibawa pulang oleh anggota (status `'Dipinjam'`).
+   - **Antrean Pra-Pinjam:** Jumlah reservasi buku online yang sedang menunggu pengambilan dari rak dan verifikasi meja (status `'Menunggu'`).
+   - **Pengembalian Hari Ini:** Akumulasi buku yang berhasil dikembalikan ke perpustakaan pada tanggal kalender hari ini.
+   - **Kas Denda Tertunda:** Total akumulasi nominal rupiah denda yang masih menunggak (status `'Belum Lunas'`).
+2. **Indikator Jam Layanan & Operasional Real-Time:**
+   - Menampilkan status dinamis perpustakaan (*"Layanan Meja Buka"* vs *"Layanan Meja Tutup"*) berdasarkan jam lokal (07.30 – 15.30 WIB).
+3. **Antrean Cepat Prapinjam (Quick Desk):**
+   - Panel ringkas di beranda yang menampilkan daftar buku yang harus segera diambil petugas dari rak fisik tanpa perlu membuka tab sirkulasi.
+4. **Pintasan Aksi Cepat (Quick Actions):**
+   - Tombol shortcut satu-klik langsung menuju: *Peminjaman Walk-in Langsung*, *Buka Pemindai Barcode/QR Kamera*, *Tambah Buku Baru*, dan *Buat Pengumuman Agenda*.
 
-Struktur folder proyek menerapkan prinsip **Separation of Concerns** dan **Modular Components**:
+---
+
+### 4.2. Meja 2: Sirkulasi Peminjaman Buku Fisik
+
+#### A. Aturan Kuota Peminjaman Aktif (Maksimal 2 Buku)
+1. Setiap anggota (Siswa maupun Guru) dibatasi maksimal **2 buku aktif sekaligus**.
+2. Yang dihitung dalam kuota aktif:
+   - Buku dalam antrean reservasi online (status `'Menunggu'`).
+   - Buku fisik yang sedang dipinjam (status `'Dipinjam'`).
+3. Jika kuota telah mencapai 2/2, sistem otomatis mengunci permohonan pinjaman baru (*disabled*) hingga anggota mengembalikan buku yang dipinjam atau membatalkan reservasi.
+
+#### B. Sub-tab 1: Verifikasi Pra-Pinjam (Reservasi Daring)
+1. **Penyortiran Buku dari Rak Fisik:**
+   - Petugas memantau daftar pesanan buku yang dilengkapi lokasi rak fisik (contoh: *Rak 3B - Sains*).
+   - Dilengkapi filter kesiapan: *Semua*, *Perlu Diambil dari Rak*, dan *Buku Siap di Meja*.
+   - Petugas mengklik tombol **"Tandai Siap di Meja"** setelah mengambil buku dari rak, yang otomatis memperbarui status tiket di dashboard peminjam menjadi badge hijau (*"Buku Siap Diambil"*).
+2. **Verifikasi Tiket & Serah Terima Buku:**
+   - Peminjam datang membawa Tiket Barcode (Code-128 / QR Code).
+   - Petugas memindai tiket atau menekan tombol **"Verifikasi Tiket"** $\rightarrow$ Muncul pop-up modal `#modalVerifyPrapinjam`.
+   - Petugas memvalidasi identitas peminjam dan menekan tombol **"Serahkan Buku"**:
+     - Status transaksi beralih dari `'Menunggu'` $\rightarrow$ `'Dipinjam'`.
+     - Stok buku fisik di database dipotong 1.
+3. **Pembatalan / Penolakan Reservasi:**
+   - Petugas dapat menolak pesanan jika fisik buku di rak mengalami kerusakan tak terduga, dengan dialog konfirmasi pembatalan.
+
+#### C. Sub-tab 2: Antrean Pinjaman Aktif
+1. Menampilkan seluruh daftar buku fisik yang sedang beredar di tangan siswa dan guru.
+2. Dilengkapi badge status jatuh tempo: *Tepat Waktu*, *Batas Tempo Hari Ini*, atau *Terlambat X Hari*.
+3. **Pintasan Cepat:** Tombol **"Kembalikan Buku Ini"** langsung mengarahkan dan memilihkan transaksi peminjaman ke Meja Pengembalian tanpa perlu mengetik ulang ID.
+
+#### D. Sub-tab 3: Peminjaman Langsung di Tempat (Walk-In Desk)
+1. **Pemilih Anggota Cerdas (Member Picker):**
+   - Dropdown autocomplete pencarian nama, NISN siswa, kelas, atau NIP guru.
+   - Sistem otomatis memeriksa kuota aktif anggota sebelum transaksi dimulai.
+2. **Keranjang Peminjaman Walk-In:**
+   - Petugas memilih 1 hingga 2 buku dari koleksi perpustakaan atau memindai barcode stiker buku.
+   - Sistem otomatis menghitung estimasi batas kembali default (+7 hari kalender).
+3. **Eksekusi Peminjaman:**
+   - Transaksi langsung dicatat sebagai `'Dipinjam'` dengan metode `'Scan QR'` / manual dan stok buku otomatis terpotong.
+
+---
+
+### 4.3. Meja 3: Pengembalian Buku & Denda
+
+#### A. Formulir Penerimaan Pengembalian (Sisi Kiri Meja 3)
+1. **Pencarian Peminjam Berbasis Anggota (*Member-First Desk*):**
+   - Petugas cukup mengetik nama peminjam pada `#inputSearchPeminjamPengembalian`.
+   - Sistem secara otomatis menampilkan 1–2 buku yang saat ini **sedang aktif dipinjam** oleh anggota tersebut. Jika hanya meminjam 1 buku, buku terpilih secara otomatis.
+2. **Pencarian Cepat via Barcode Buku Fisik (`filterPengembalianByBook`):**
+   - Petugas dapat langsung memindai stiker QR pada buku fisik menggunakan kamera/scanner. Sistem otomatis mencocokkan siapa anggota yang memegang buku tersebut.
+3. **Kustomisasi Tarif Denda Harian:**
+   - Disediakan input dinamis `#inputTarifDendaPerHari` (default: Rp 1.000 / hari). Petugas berwenang mengubah tarif denda harian sesuai kebijakan perpustakaan.
+4. **Aturan Khusus Keterlambatan $\ge$ 1 Bulan (30 Hari):**
+   - Jika hari keterlambatan mencapai $\ge$ 30 hari (1 bulan), **penghitungan denda harian dinonaktifkan secara otomatis**.
+   - Sistem mengganti denda keterlambatan menjadi nominal **seharga buku fisik** (`harga_buku` dari database atau default Rp 50.000).
+   - Di formulir muncul banner peringatan merah khusus dan label tarif berubah menjadi `(Ganti Buku)`.
+   - Di dashboard Siswa/Guru, muncul badge peringatan berkedip dan keterangan denda ganti buku fisik.
+5. **Kompensasi Kondisi Fisik Buku:**
+   - **Baik:** Denda kerusakan Rp 0.
+   - **Rusak (Ringan/Sedang):** Denda kompensasi perbaikan sebesar +50% dari harga buku fisik.
+   - **Hilang / Rusak Berat:** Denda ganti rugi penuh sebesar +100% dari harga buku fisik.
+6. **Eksekusi Transaksi Pengembalian:**
+   - Petugas memilih status pembayaran denda: **Lunas (Tunai)** atau **Belum Lunas (Menunggak)**.
+   - Klik **"Selesaikan Pengembalian Buku"**:
+     - Status transaksi peminjaman diubah menjadi `'Selesai'`.
+     - Stok buku fisik di database bertambah kembali (+1), kecuali jika buku dilaporkan Hilang.
+     - Diterbitkan pop-up **Struk Tanda Terima Resmi** (`#modalReceipt`) yang memuat nomor resi, rincian denda, dan tombol cetak struk fisik (`window.print()`).
+     - Jika denda belum lunas, otomatis masuk ke antrean **Kasir Tunggakan Denda**.
+
+#### B. Operasional Kasir Tunggakan & Riwayat Pengembalian (Sisi Kanan Meja 3)
+1. **Sub-tab 1: Kasir Tunggakan Denda (`#tabBtnTunggakanDenda`):**
+   - Menampilkan kartu tagihan siswa/guru yang dendanya berstatus `'Belum Lunas'`.
+   - Ringkasan total uang denda yang masih tertunda (Rp) dan jumlah transaksi menunggak.
+   - Input pencarian khusus kasir untuk menemukan nama siswa yang datang membawa uang tunai.
+   - Tombol **"Lunasi Tunai"** membuka modal konfirmasi pelunasan 2 lapis.
+2. **Verifikasi 2 Lapis Kas Fisik:**
+   - Pada `#modalKonfirmasiLunasiDenda`, petugas **wajib mencentang kotak persetujuan**: *"Saya telah menerima uang tunai dari peminjam"*.
+   - Tombol eksekusi pelunasan baru aktif setelah kotak dicentang demi memastikan uang tunai benar-benar ada di meja sirkulasi.
+3. **Fitur Darurat Batal Lunas (*Safety Rollback*):**
+   - Jika petugas salah mengeklik tombol lunas padahal uang belum diterima, sistem menyediakan tombol **"Batal Lunas"** untuk mengembalikan status denda kembali ke `'Belum Lunas'`.
+4. **Sub-tab 2: Semua Riwayat Pengembalian (`#tabBtnSemuaRiwayat`):**
+   - Menampilkan seluruh arsip log transaksi pengembalian buku di perpustakaan.
+   - Dilengkapi filter pencarian instan berdasarkan nama peminjam (Siswa/Guru), ID NISN/NIP, kode resi pengembalian (`KB-XXXXXX`), atau judul buku.
+
+---
+
+### 4.4. Meja 4: Inventaris Koleksi Buku & Stiker Label QR
+1. **Tabel Master Katalog Buku:**
+   - Menampilkan foto cover buku, judul, pengarang, penerbit, tahun terbit, stok, nomor rak fisik, dan harga buku.
+   - Live search instan dan filter dropdown kategori buku dari database Supabase.
+2. **Formulir Tambah & Edit Buku (`#modalBookForm`):**
+   - Pembuatan ID Buku unik otomatis (`BK-AUTO`) dan string QR Code otomatis.
+   - Pengunggahan foto sampul buku via drag-and-drop / file browser langsung ke Supabase Storage wadah `covers`.
+   - Sinkronisasi dinamis pilihan kategori dari tabel `data_kategori`.
+3. **Generator & Pencetak Stiker Label QR Code (`#modalQrCode`):**
+   - Merender stiker label perpustakaan standar: Logo Cakrawala, judul buku, kode QR 2D resolusi tinggi (`QRCode.js`), dan ID buku.
+   - Tombol **"Cetak Label"** untuk mencetak langsung ke printer stiker barcode via `window.print()`.
+   - Tombol **"Download PNG"** untuk menyimpan file gambar stiker resolusi tinggi.
+4. **Hapus Buku (`#modalDeleteBook`):**
+   - Modal konfirmasi penghapusan dengan **proteksi integritas data**: Sistem menolak penghapusan buku jika buku tersebut sedang dalam status aktif dipinjam oleh anggota.
+
+---
+
+### 4.5. Meja 5: Pengumuman & Broadcast Agenda Sekolah
+1. **Manajemen Berita & Acara:**
+   - Menampilkan daftar pengumuman perpustakaan beserta badge status acara (*Mendatang* / *Selesai*), tanggal event, dan pratinjau thumbnail poster.
+   - Seluruh pengumuman otomatis tersinkronisasi secara real-time ke Landing Page publik (`public/index.html`) dan Beranda Siswa/Guru.
+2. **Formulir Pengumuman (`#modalPengumumanForm`):**
+   - Input judul acara, kategori, tanggal pelaksanaan, dan link informasi eksternal.
+   - Pengunggahan gambar poster resmi ke Supabase Storage wadah `posters`.
+3. **Hapus Pengumuman (`#modalDeletePengumuman`):**
+   - Modal konfirmasi penghapusan pengumuman dari database.
+
+---
+
+### 4.6. Fitur Pendukung Terintegrasi: Pemindai Universal Barcode & QR Scanner
+1. **Dual-Engine Pemindai Kamera:**
+   - Menggunakan webcam / kamera laptop dengan engine ganda (`Html5QrcodeScanner` dan fallback `jsQR` loop) untuk mendeteksi barcode 1D dan QR Code 2D dalam kondisi pencahayaan rendah.
+2. **Pengunggah Berkas Gambar (`fileDecoder.js`):**
+   - Petugas dapat mengunggah tangkapan layar atau foto barcode/QR langsung ke dialog modal scanner.
+3. **Audio Feedback Real-Time (`soundFeedback.js`):**
+   - Menghasilkan nada suara *beep* sukses menggunakan Web Audio API tanpa membutuhkan file audio eksternal (`.mp3`).
+4. **Smart Routing Hasil Scan (`scanRouter.js`):**
+   - **Jika memindai Tiket Pra-Pinjam (`PJ-...`):** Sistem otomatis membuka modal verifikasi serah terima Meja 2 Sirkulasi.
+   - **Jika memindai Stiker Buku (`BK-...`):** Sistem secara cerdas mengarahkan ke Meja Pengembalian (jika tab aktif adalah Pengembalian) atau ke Keranjang Walk-In (jika tab aktif adalah Sirkulasi).
+
+---
+
+## 5. Alur Bisnis & Spesifikasi Operasional Portal Siswa & Guru
+
+Portal Siswa & Guru (`public/siswa-guru/`) dirancang dengan pendekatan **Self-Service Library Portal** yang interaktif, ramah perangkat seluler (*mobile-responsive*), dan terintegrasi penuh secara *real-time* dengan Meja Kerja Petugas. Portal ini dibagi menjadi **5 Tab Layanan Mandiri**:
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                      PORTAL LAYANAN MANDIRI SISWA & GURU (ANGGOTA)                     │
+├───────────────┬─────────────────┬─────────────────┬──────────────────┬─────────────────┤
+│     TAB 1     │      TAB 2      │      TAB 3      │      TAB 4       │      TAB 5      │
+│    BERANDA    │     KATALOG     │  PINJAMAN SAYA  │  RIWAYAT & DENDA │  PROFIL & KARTU │
+│  (KPI Pribadi,│ (Pencarian Rak, │ (Buku Aktif &   │  (Log Transaksi  │ (Kartu Anggota  │
+│  Alert Denda) │  Booking Kuota) │  Tiket Barcode) │   & Kas Denda)   │  Digital & QR)  │
+└───────────────┴─────────────────┴─────────────────┴──────────────────┴─────────────────┘
+```
+
+---
+
+### 5.1. Tab 1: Beranda & Ringkasan Pribadi
+
+#### A. 4 Kartu Indikator Kinerja Pribadi (Personal KPI Cards)
+1. **Buku Sedang Dipinjam:** Menampilkan kuantitas buku fisik yang sedang dibawa pulang oleh anggota (status `'Dipinjam'`).
+2. **Reservasi Pra-Pinjam:** Menampilkan kuantitas pesanan booking daring yang sedang diproses atau menunggu serah terima di perpustakaan (status `'Menunggu'`).
+3. **Riwayat Selesai:** Total akumulasi buku yang pernah dipinjam dan telah berhasil dikembalikan dengan status `'Kembali'`.
+4. **Status Denda:** Indikator visual real-time apakah anggota berstatus *"Bebas Denda"* (badge hijau) atau memiliki tunggakan kasir yang belum diselesaikan (badge merah disertai total nominal denda).
+
+#### B. Sistem Deteksi & Banner Peringatan Denda Interaktif (`banner-denda.html`, `overview.js`)
+Sistem secara otomatis menganalisis status transaksi peminjam setiap kali halaman dimuat:
+1. **Peringatan Denda Menunggak Belum Lunas (`unpaidFines`):**
+   - Muncul otomatis jika anggota memiliki denda yang belum dibayar dari pengembalian sebelumnya.
+   - Menampilkan total tagihan rupiah dan arahan untuk segera melunasi ke Meja Kasir Petugas Perpustakaan.
+2. **Peringatan Keterlambatan Berjalan (1 – 29 Hari):**
+   - Menghitung denda harian berjalan berdasarkan selisih tanggal jatuh tempo dengan hari ini dikalikan tarif harian perpustakaan (default: Rp 1.000 / hari).
+3. **Peringatan Kritis Keterlambatan $\ge$ 30 Hari (1 Bulan):**
+   - Jika keterlambatan buku fisik telah mencapai atau melampaui 30 hari kalender, sistem **menonaktifkan penghitungan denda per hari** dan menggantinya dengan **nominal denda penuh seharga buku fisik (`harga_buku`)**.
+   - Muncul **Red Alert Banner Khusus** di bagian teratas beranda:
+     > *"⚠️ Perhatian: Peminjaman buku Anda telah terlambat lebih dari 30 hari. Perhitungan denda harian dinonaktifkan dan nominal denda disesuaikan penuh dengan harga penggantian buku fisik (Rp [harga_buku]). Harap segera temui petugas perpustakaan!"*
+
+#### C. Countdown Jatuh Tempo & Pengumuman Sekolah
+1. **Hitung Mundur Jatuh Tempo (Due Date Countdown):**
+   - Menghitung sisa hari pengembalian untuk buku pinjaman yang paling dekat dengan batas waktu.
+   - Memberikan badge status peringatan: *Aman* (sisa > 3 hari), *Mendekati Batas* ($\le$ 2 hari), *Batas Tempo Hari Ini*, atau *Terlambat X Hari*.
+2. **Slider Agenda & Pengumuman Sekolah:**
+   - Menampilkan banner pengumuman kegiatan literasi, bedah buku, jam operasional perpustakaan, atau agenda kampus yang dipublikasikan dari Meja 5 Petugas.
+3. **Pintasan Akses Cepat (Quick Access):**
+   - Tombol langsung untuk melihat rincian buku yang sedang dipinjam atau langsung menelusuri katalog koleksi baru.
+
+---
+
+### 5.2. Tab 2: Eksplorasi Katalog Koleksi Buku & Reservasi Daring
+
+#### A. Mesin Pencarian & Filter Koleksi Cerdas (`katalogGrid.js`)
+1. **Live Search Real-Time:**
+   - Pencarian instan berdasarkan judul buku, nama pengarang/penulis, atau nomor ISBN.
+2. **Filter Multi-Kategori:**
+   - Dropdown pemilihan kategori koleksi buku (misal: *Sains & Teknologi*, *Sastra & Fiksi*, *Sejarah*, *Ensiklopedia*, dll.).
+3. **Pengurutan Koleksi (Sorting):**
+   - Mengurutkan daftar buku berdasarkan *Terbaru Ditambahkan*, *Paling Sering Dipinjam*, atau *Alfabet (A-Z / Z-A)*.
+
+#### B. Kartu Koleksi Buku & Informasi Rak Fisik
+1. Setiap kartu buku menampilkan foto sampul berkualitas, judul buku, nama pengarang, kategori, serta badge ketersediaan (*"Tersedia: X Eksemplar"* vs *"Sedang Dipinjam Semua"*).
+2. **Penunjuk Lokasi Rak Fisik:**
+   - Menampilkan nomor rak spesifik di ruangan perpustakaan (contoh: *Rak 3B - Sains*) sehingga peminjam dapat mengetahui lokasi fisik buku secara transparan sebelum memesan.
+
+#### C. Modal Rincian Koleksi Buku (`#modalDetailBuku`, `modalDetailBuku.js`)
+1. **Informasi Lengkap Buku:**
+   - Menampilkan sinopsis buku, nomor ISBN, nama penerbit, tahun terbit, nomor rak fisik, serta **Harga Buku Fisik**.
+   - Pencantuman harga buku memberikan transparansi penuh kepada siswa/guru mengenai nilai buku dan nilai ganti rugi jika terjadi kehilangan atau keterlambatan $> 30$ hari.
+2. **Mekanisme & Validasi Booking Pra-Pinjam:**
+   - **Validasi Kuota Peminjaman Aktif (Maksimal 2 Buku):**
+     - Sistem menjumlahkan buku yang sedang dibawa pulang (`status = 'Dipinjam'`) + buku yang sedang direservasi (`status = 'Menunggu'`).
+     - Jika total kuota aktif telah mencapai $\ge 2$, tombol **"Booking Buku Ini"** otomatis dinonaktifkan (*disabled*) dengan teks penjelas *"Kuota Peminjaman Penuh (Maks. 2 Buku)"*.
+   - **Validasi Stok Fisik:**
+     - Jika stok buku yang tersedia adalah 0, tombol booking dinonaktifkan dengan status *"Stok Sedang Kosong"*.
+   - **Validasi Tunggakan Denda:**
+     - Jika anggota memiliki catatan denda yang belum dilunasi, sistem memunculkan konfirmasi peringatan agar anggota menyelesaikan denda terlebih dahulu.
+
+---
+
+### 5.3. Modul Reservasi Mandiri, Tiket Digital Barcode & Pembatalan
+
+#### A. Dialog Konfirmasi Booking (`modalBooking.js`)
+1. Mengklik tombol booking pada buku yang valid akan membuka dialog pop-up `#modalBookingKonfirmasi`.
+2. Menampilkan informasi ringkasan buku, tanggal reservasi hari ini, batas toleransi pengambilan fisik di meja sirkulasi (maksimal 1x24 jam operasional perpustakaan).
+3. Setelah konfirmasi diklik:
+   - Data transaksi baru dicatat di database Supabase dengan status `'Menunggu'` dan metode `'Booking'`.
+   - Kuota peminjaman aktif anggota seketika terpakai.
+   - Sistem langsung menampilkan **Modal Tiket Pra-Pinjam Digital**.
+
+#### B. Tiket Pra-Pinjam Digital Barcode & QR Code (`modalTiket.js`)
+1. **Format Identitas Unik Tiket:**
+   - Memiliki nomor transaksi unik berformat `PJ-[TANGGAL]-[KODE]`.
+2. **Dual-Rendering Simultan (1D Barcode & 2D QR Code):**
+   - Merender **Barcode 1D Code-128** menggunakan pustaka `JsBarcode` (mudah dipindai menggunakan barcode gun / scanner laser meja petugas).
+   - Merender **QR Code 2D** menggunakan pustaka `QRCode.js` (mudah dipindai menggunakan kamera webcam / smartphone petugas).
+3. **Indikator Kesiapan Rak Real-Time:**
+   - **Badge Oranye (*"Menunggu Diambil Petugas dari Rak"*):** Menandakan pesanan baru masuk dan petugas belum mengambil buku dari rak koleksi.
+   - **Badge Hijau (*"Buku Siap Diambil di Meja Sirkulasi"*):** Menandakan petugas Meja 2 telah mengambil buku dari rak dan menyiapkannya di meja serah terima. Anggota dapat langsung mendatangi meja sirkulasi.
+4. **Fitur Ekspor Tiket Menjadi Gambar (Download PNG via Canvas):**
+   - Disediakan tombol **"Unduh Tiket (PNG)"** yang menggabungkan seluruh elemen visual tiket, barcode, nama buku, dan identitas anggota ke dalam berkas grafis PNG menggunakan HTML5 Canvas.
+   - Memungkinkan siswa/guru menyimpan tiket secara luring (*offline*) di galeri handphone atau mencetaknya tanpa bergantung pada koneksi internet sekolah.
+
+#### C. Pembatalan Reservasi Mandiri (`modalBatalBooking.js`)
+1. Jika siswa/guru berhalangan atau berubah pikiran, mereka dapat membatalkan pesanan secara mandiri dengan menekan tombol **"Batalkan Reservasi"** selama statusnya masih `'Menunggu'`.
+2. Konfirmasi pembatalan akan memperbarui status transaksi menjadi `'Dibatalkan'`.
+3. Kuota peminjaman aktif anggota seketika dipulihkan kembali (menjadi 0/2 atau 1/2) sehingga dapat digunakan untuk meminjam buku lain.
+
+---
+
+### 5.4. Tab 3: Pinjaman & Reservasi Saya
+
+#### A. Sub-tab 1: Buku Fisik Sedang Dipinjam (`pinjamanAktif.js`)
+1. Menampilkan seluruh koleksi buku fisik yang saat ini sedang dibawa pulang oleh siswa/guru.
+2. Rincian data kartu mencakup: Sampul buku, judul, tanggal mulai pinjam, batas akhir jatuh tempo (*due date*), serta nomor rak pengembalian.
+3. **Pemantauan Keterlambatan & Denda Berjalan:**
+   - **Status Tepat Waktu:** Badge hijau dengan estimasi sisa hari pengembalian.
+   - **Terlambat 1 – 29 Hari:** Badge oranye/merah yang menampilkan jumlah hari keterlambatan beserta kalkulasi denda harian berjalan (misal: *Terlambat 5 Hari - Denda Berjalan Rp 5.000*).
+   - **Terlambat $\ge$ 30 Hari (1 Bulan):** Badge merah tua pekat dengan notifikasi:
+     > *"⚠️ Denda Ditutup: Menunggak $\ge$ 30 Hari. Denda disesuaikan penuh seharga buku fisik (Rp [harga_buku]). Harap segera kembalikan buku ke Meja 3 Petugas."*
+
+#### B. Sub-tab 2: Daftar Reservasi / Pra-Pinjam Aktif (`pinjamanPrapinjam.js`)
+1. Menampilkan seluruh antrean booking online yang belum diambil di meja sirkulasi.
+2. Setiap kartu pesanan dilengkapi tombol **"Lihat Tiket Barcode"** (membuka kembali dialog modal tiket) dan tombol **"Batalkan Booking"**.
+
+---
+
+### 5.5. Tab 4: Riwayat Peminjaman & Buku Kas Denda Pribadi
+
+#### A. Arsip Historis Pengembalian Buku (`riwayat.js`, `tab-riwayat.html`)
+1. Menampilkan seluruh catatan transaksi peminjaman buku yang telah selesai dikembalikan ke perpustakaan (status transaksi `'Kembali'`).
+2. Menampilkan tanggal pinjam, batas tempo, tanggal pengembalian aktual, serta catatan kepatuhan (*"Kembali Tepat Waktu"* atau *"Terlambat X Hari"*).
+
+#### B. Transparansi Catatan Kas Denda Transaksi
+1. **Status Bebas Denda:**
+   - Diberikan pada peminjaman yang kembali tepat waktu dengan nilai denda Rp 0.
+2. **Status Denda Lunas:**
+   - Menampilkan nominal denda keterlambatan/kerusakan yang telah berhasil dibayarkan dan diverifikasi oleh petugas di Meja Kasir Tunggakan dengan badge hijau bertuliskan *"Lunas"*.
+3. **Status Denda Belum Lunas (Tunggakan Aktif):**
+   - Menampilkan nominal denda yang dicatat saat pengembalian buku namun pembayarannya ditangguhkan.
+   - Badge merah tebal *"Belum Lunas"* mengingatkan anggota untuk segera melunasi kewajiban finansialnya di Meja Petugas.
+
+#### C. Filter & Pencarian Riwayat
+1. **Live Search:** Pencarian cepat berdasarkan judul buku atau kode transaksi peminjaman.
+2. **Filter Status Denda:** Memilah tampilan riwayat berdasarkan: *Semua Riwayat*, *Bebas Denda*, *Denda Lunas*, atau *Tunggakan Belum Lunas*.
+
+---
+
+### 5.6. Tab 5: Profil Anggota & Kartu Digital Perpustakaan
+
+#### A. Kartu Anggota Digital Resmi (*Smart Digital Library Card*, `kartuAnggota.js`)
+1. **Desain Kartu Identitas Perpustakaan:**
+   - Didesain menyerupai kartu tanda anggota fisik modern dengan gradien elegan, logo resmi perpustakaan Cakrawala, dan nama institusi sekolah.
+   - Menampilkan foto profil pengguna, Nama Lengkap, Nomor Induk (NISN untuk Siswa / NIP untuk Guru), Kelas/Jabatan, dan Status Keanggotaan Aktif.
+2. **QR Code Anggota Unik 2D:**
+   - Menghasilkan QR Code dinamis berbasis ID Anggota / NISN menggunakan pustaka `QRCode.js`.
+   - **Integrasi Meja Sirkulasi:** QR Code pada layar smartphone ini dapat langsung dipindai oleh Petugas Perpustakaan saat siswa/guru melakukan peminjaman langsung di tempat (Walk-In) atau saat check-in kehadiran di kiosk mandiri perpustakaan.
+3. **Fitur Unduh Kartu Anggota:**
+   - Anggota dapat mengunduh kartu digital dalam format gambar untuk disimpan di ponsel cerdas masing-masing.
+
+#### B. Pengaturan Profil & Keamanan Akun (`pengaturanProfil.js`)
+1. **Pembaruan Kontak Pribadi:**
+   - Anggota dapat memperbarui nomor kontak WhatsApp aktif dan alamat surel (email) agar memudahkan komunikasi pemberitahuan keterlambatan atau ketersediaan buku.
+2. **Manajemen Kata Sandi (Password):**
+   - Formulir mandiri untuk memperbarui kata sandi akun dengan validasi: kata sandi saat ini, kata sandi baru, dan konfirmasi kata sandi baru.
+3. **Fitur Keluar Sesi (Logout):**
+   - Tombol logout aman yang membersihkan token otentikasi sesi di peramban dan mengalihkan pengguna kembali ke halaman utama login.
+
+---
+
+## 6. Alur Bisnis & Spesifikasi Operasional Dashboard Admin
+
+Dashboard Admin (`public/admin/`) dirancang sebagai **Pusat Kendali Pengguna Terpusat (User Management Control Center)** yang bertindak sebagai otoritas tertinggi (*Super Administrator*) dalam mengelola akun autentikasi dan master profil dari seluruh entitas sistem: Siswa, Guru, dan Petugas Perpustakaan.
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                        PUSAT KENDALI ADMINISTRATOR (SUPER ADMIN)                       │
+├────────────────────────────┬────────────────────────────┬──────────────────────────────┤
+│           TAB 1            │           TAB 2            │            TAB 3             │
+│      MANAJEMEN SISWA       │       MANAJEMEN GURU       │      MANAJEMEN PETUGAS       │
+│  (NISN, Kelas, Kredensial, │  (NIP, Mapel, Kredensial,  │ (ID Petugas, Otorisasi Meja, │
+│     Reset Kata Sandi)      │     Reset Kata Sandi)      │      Reset Kata Sandi)       │
+└────────────────────────────┴────────────────────────────┴──────────────────────────────┘
+```
+
+---
+
+### 6.1. Otorisasi Akses & Keamanan Sesi Super Administrator (`auth.js`)
+1. **Pemeriksaan Sesi & Role Guard:**
+   - Setiap kali halaman dashboard admin dimuat, sistem memanggil fungsi `initSessionAndAdmin()` dari modul `auth.js`.
+   - Mengambil identitas sesi dari `sessionStorage` / `localStorage` dan memverifikasi kolom `role === 'Admin'`.
+   - Jika pengguna belum terotentikasi atau mencoba masuk dengan hak akses selain Administrator (misal: Siswa atau Guru), sistem secara otomatis menghentikan akses dan mengarahkan (*redirect*) ke `login.html` disertai notifikasi toast peringatan keamanan.
+2. **Kapsul Identitas Administrator:**
+   - Bagian bawah sidebar menampilkan avatar inisial (*AD*), nama pengguna administrator aktif, dan indikator status *Online* berdenyut (*pulse*).
+3. **Modal Keluar Sesi Universal (Logout Controller):**
+   - Tombol keluar memicu dialog modal konfirmasi keluar. Setelah dikonfirmasi, seluruh token otentikasi dibersihkan secara aman.
+
+---
+
+### 6.2. Tab 1: Manajemen Data Siswa (`state.activeTab = 'siswa'`)
+1. **Penyajian Data Tabel Terstruktur:**
+   - Menampilkan daftar seluruh siswa yang terdaftar di sistem dengan kolom:
+     *No, NISN Siswa, Nama Siswa, Kelas, Email, No. Kontak / WA, Username Akun, dan Tombol Aksi*.
+2. **Formulir Tambah Siswa Baru (`openAddModal`):**
+   - **NISN Siswa:** Input numerik maksimal 10 digit (kunci primer entitas siswa).
+   - **Kelas:** Tingkat dan rombongan belajar (contoh: *XII MIPA 1*).
+   - **Nama Lengkap Siswa:** Nama resmi siswa (maksimal 50 karakter).
+   - **Email & Kontak Siswa:** Surel aktif dan nomor WhatsApp untuk keperluan notifikasi peminjaman.
+   - **Kredensial Akun:** Input Username unik dan Password akun login awal (minimal 6 karakter).
+3. **Formulir Edit Data Siswa (`openEditModal`):**
+   - Field **NISN Siswa** otomatis dikunci dalam mode *Read-Only* (*disabled*) untuk menjaga integritas relasi data transaksi peminjaman di database.
+   - Administrator dapat memperbarui nama, kelas, email, nomor kontak, serta username akun siswa.
+   - **Reset Password Mandiri:** Disediakan field password opsional. Jika diisi $\ge$ 6 karakter, password siswa langsung di-reset. Jika dikosongkan, password akun yang lama tetap dipertahankan.
+
+---
+
+### 6.3. Tab 2: Manajemen Data Guru (`state.activeTab = 'guru'`)
+1. **Penyajian Data Tabel Guru:**
+   - Menampilkan daftar guru terdaftar dengan kolom:
+     *No, NIP Guru, Nama Guru & Gelar, Mata Pelajaran, Email, No. Kontak / WA, Username Akun, dan Tombol Aksi*.
+2. **Formulir Tambah Guru Baru:**
+   - **NIP Guru:** Nomor Induk Pegawai 20 digit (kunci primer entitas guru).
+   - **Mata Pelajaran:** Bidang studi yang diampu (contoh: *Bahasa Indonesia*, *Fisika*).
+   - **Nama Lengkap & Gelar:** Nama resmi beserta gelar akademik (contoh: *Dr. Budi Santoso, M.Pd.*).
+   - **Email & Kontak Guru:** Kontak resmi guru pengajar.
+   - **Kredensial Akun:** Pembuatan username dan password awal.
+3. **Formulir Edit Data Guru:**
+   - Field **NIP Guru** dikunci dalam mode *Read-Only*.
+   - Admin dapat memperbarui biodata, mata pelajaran, kontak, username, serta melakukan reset password akun guru kapan saja jika guru mengalami kendala lupa kata sandi.
+
+---
+
+### 6.4. Tab 3: Manajemen Data Petugas Perpustakaan (`state.activeTab = 'petugas'`)
+1. **Penyajian Data Tabel Petugas:**
+   - Menampilkan staf pustakawan yang memiliki otorisasi operasional sirkulasi dengan kolom:
+     *No, ID Petugas, Nama Petugas, Email, No. Kontak / WA, Username Akun, dan Tombol Aksi*.
+2. **Formulir Tambah Petugas Baru:**
+   - **ID Petugas Otomatis:** Sistem secara cerdas mengisikan format ID petugas standar perpustakaan secara otomatis (contoh: `PTG...`).
+   - **Nama Lengkap & Kontak:** Identitas staf sirkulasi perpustakaan.
+   - **Kredensial Otorisasi:** Username dan password untuk mengakses 5 Meja Kerja Petugas.
+3. **Formulir Edit Data Petugas:**
+   - Field **ID Petugas** dikunci dalam mode *Read-Only*.
+   - Admin dapat memperbarui identitas, kontak, username, dan me-reset password akun petugas sirkulasi.
+
+---
+
+### 6.5. Logika Transaksi Data Relasional & Keamanan (Two-Phase Commit & Rollback)
+
+Untuk menjaga konsistensi database Supabase tanpa meninggalkan *ghost/orphan account*, modul admin menerapkan arsitektur transaksi bertahap (*two-phase execution*):
+
+```text
+┌────────────────────────────────────────────────────────────────────────────────────────┐
+│                 ALUR TRANSAKSI PENAMBAHAN PENGGUNA BARU (2-PHASE COMMIT)               │
+├────────────────────────────────────────────────────────────────────────────────────────┤
+│ 1. VALIDASI INPUT    ──> Cek kelengkapan field, panjang password min. 6 karakter        │
+│ 2. GENERATE ID_USER  ──> Buat ID acak unik (contoh: U9XYZ12345) muat dalam VARCHAR(10) │
+│ 3. INSERT TAHAP 1    ──> Simpan kredensial ke tabel sentral 'data_user' (role diset)   │
+│                          │                                                             │
+│                          ├── GAGAL: Batalkan & tampilkan pesan username duplikat       │
+│                          └── SUKSES: Lanjut ke Tahap 2                                 │
+│                                                                                        │
+│ 4. INSERT TAHAP 2    ──> Simpan profil ke 'data_siswa' / 'data_guru' / 'data_petugas'  │
+│                          │                                                             │
+│                          ├── SUKSES: Tutup modal & tampilkan notifikasi toast sukses   │
+│                          └── GAGAL:  [KOMPENSASI ROLLBACK OTOMATIS]                    │
+│                                      Sistem seketika menghapus baris 'data_user' yang  │
+│                                      baru dibuat agar database tetap bersih & higienis │
+└────────────────────────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Alur Perubahan Data & Reset Password Cerdas (`handleAddUserSubmit`):**
+   - Dalam mode edit, sistem memperbarui record `data_user` (username dan password baru bila diisi) sekaligus memperbarui tabel entitas profil terkait dalam satu proses terkoordinasi.
+   - Jika username yang dimasukkan telah dipakai pengguna lain, sistem menangkap kode error unique constraint (`23505`) dan memunculkan peringatan yang ramah pengguna.
+2. **Alur Penghapusan Pengguna Aman (Cascading Deletion, `handleConfirmDelete`):**
+   - Menghindari penghapusan tidak sengaja dengan menampilkan modal konfirmasi bahaya `#modalDeleteConfirm` yang mencantumkan nama dan peran entitas secara jelas.
+   - Eksekusi penghapusan dilakukan langsung pada entitas induk `data_user` (`.eq('id_user', id_user)`). Relasi foreign key di database secara otomatis membersihkan profil siswa, guru, atau petugas secara bersih (*clean cascade*).
+
+---
+
+### 6.6. Fitur Pendukung Produktivitas & Antarmuka Responsif Admin
+
+1. **Mesin Filter & Live Search Multi-Field (`table.js`):**
+   - Pencarian real-time tanpa perlu me-reload peramban.
+   - Mencari kecocokan secara simultan di seluruh field: Nama Lengkap, Nomor Induk (NISN/NIP/ID), Kelas/Mata Pelajaran, Email, dan Username akun.
+   - Dilengkapi tombol reset pencarian (*clear button*) dengan pintasan tombol `Esc`.
+2. **Animasi Skeleton Loading Shimmer:**
+   - Saat proses pengambilan data dari cloud Supabase berlangsung, tabel menampilkan animasi placeholder skeleton 5 baris yang halus, menggantikan penggunaan spinner generik yang kaku.
+3. **Indikator Jumlah Data Dinamis (Badge Counters):**
+   - Menghitung dan menyinkronkan total kuantitas siswa, guru, dan petugas secara otomatis pada tab navigasi.
+4. **Pembaruan Data Cepat (Force Refresh Button):**
+   - Tombol sinkronisasi cepat (`btnRefreshData`) yang menarik data terbaru dari Supabase tanpa kehilangan posisi tab aktif saat ini.
+5. **Sidebar Kapsul Responsif Seluler:**
+   - Navigasi samping yang dapat disembunyikan (*collapsible off-canvas drawer*) dengan lapisan latar belakang blur (*backdrop overlay*) agar mudah dioperasikan pada perangkat layar sentuh, tablet, dan laptop layar kecil.
+
+---
+
+## 7. Standar Struktur Folder Proyek (Current & Target Modular Architecture)
+
+Struktur folder proyek menerapkan prinsip **Separation of Concerns**, **Feature-Driven Architecture**, dan **HTML Component Partials** pada ketiga portal pengguna (Siswa-Guru, Petugas, dan Admin):
 
 ```text
 cakrawala/
@@ -141,137 +527,186 @@ cakrawala/
     │   ├── css/
     │   │   ├── style.css                 # Style umum landing page
     │   │   ├── dashboard-siswa-guru.css  # Style portal anggota
-    │   │   └── dashboard-petugas.css     # Style portal petugas
+    │   │   ├── dashboard-petugas.css     # Style portal petugas
+    │   │   └── admin.css                 # Style portal admin
     │   └── js/
     │       ├── supabaseClient.js         # Client Supabase terpusat
     │       ├── sharedUtils.js            # Utility format rupiah, tanggal, modal, toast
     │       └── auth.js                   # Manajemen sesi, login, logout, & role guard
     │
     │   ─────────────────────────────────────────────────────────────
-    │   [1] PORTAL SISWA & GURU (SUDAH 100% TERPARTISI & MODULAR)
+    │   [1] PORTAL SISWA & GURU (ARSITEKTUR MODULAR FITUR)
     │   ─────────────────────────────────────────────────────────────
     ├── siswa-guru/
-    │   ├── dashboard.html                # Master Layout (< 100 baris)
+    │   ├── dashboard.html                # Master Layout Ringkas (< 100 baris)
     │   ├── siswa-guru.js                 # Router utama tab & inisialisasi sesi
     │   │
-    │   ├── components/                   # Potongan kerangka HTML modular (< 200 baris)
-    │   │   ├── sidebar.html              # Mobile header & sidebar navigasi
-    │   │   ├── header.html               # Header viewport atas & breadcrumb
-    │   │   ├── banner-denda.html         # Red alert banner peringatan denda
-    │   │   ├── tab-beranda.html          # Tab 1: Beranda sambutan & kartu KPI
-    │   │   ├── tab-katalog.html          # Tab 2: Filter pencarian & grid buku
-    │   │   ├── tab-pinjaman.html         # Tab 3: Subtab buku aktif & antrean booking
-    │   │   ├── tab-riwayat.html          # Tab 4: Riwayat & filter denda
-    │   │   ├── tab-profil.html           # Tab 5: Kartu anggota digital & form akun
-    │   │   └── modals.html               # Modal pop-up (detail, booking, tiket, logout)
-    │   │
-    │   └── modules/                      # Logika JavaScript berbasis fitur
-    │       ├── state.js                  # State reaktif & konfigurasi tab
-    │       ├── data.js                   # Sinkronisasi fetch data Supabase
-    │       ├── siswaHelper.js            # Helper kalkulasi hari & ID generator
-    │       ├── overview.js               # Logika render beranda & KPI
-    │       ├── riwayat.js                # Logika render tabel riwayat & filter denda
-    │       │
-    │       ├── katalog/                  # Feature Module: Katalog Buku
-    │       │   ├── index.js              # Koordinator katalog & window bindings
-    │       │   ├── katalogGrid.js        # Filter kategori, live search, & render grid
-    │       │   └── modalDetailBuku.js    # Pop-up sinopsis, rak buku, & harga buku
-    │       │
-    │       ├── pinjaman/                 # Feature Module: Peminjaman Saya
-    │       │   ├── index.js              # Switcher subtab Aktif vs Prapinjam
-    │       │   ├── pinjamanAktif.js      # Kartu buku fisik aktif & hitung tempo
-    │       │   └── pinjamanPrapinjam.js  # Antrean pra-pinjam & status penyiapan buku
-    │       │
-    │       ├── prapinjam/                # Feature Module: Booking & Tiket Daring
-    │       │   ├── index.js              # Koordinator modul reservasi online
-    │       │   ├── modalBooking.js       # Validasi kuota 2 buku & submit booking
-    │       │   ├── modalTiket.js         # Tiket barcode Code-128, QR Code & ekspor PNG
-    │       │   └── modalBatalBooking.js  # Konfirmasi pembatalan reservasi online
-    │       │
-    │       └── profil/                   # Feature Module: Kartu Anggota & Akun
-    │           ├── index.js              # Koordinator profil & update display
-    │           ├── kartuAnggota.js       # Render visual kartu anggota & QR Code
-    │           └── pengaturanProfil.js   # Kompresi foto canvas, form kontak, & update DB
-    │
-    │   ─────────────────────────────────────────────────────────────
-    │   [2] PORTAL PETUGAS (SUDAH 100% TERPARTISI & MODULAR)
-    │   ─────────────────────────────────────────────────────────────
-    ├── petugas/
-    │   ├── dashboard.html                # Master Layout Bersih (< 110 baris)
-    │   ├── petugas.js                    # Router & koordinator utama
-    │   │
-    │   ├── components/                   # Potongan kerangka HTML modular (< 300 baris)
-    │   │   ├── sidebar.html              # Mobile header, backdrop, & navigasi menu
-    │   │   ├── header.html               # Header viewport, breadcrumb, & jam operasional
-    │   │   ├── tab-overview.html         # Meja 1: Statistik ringkasan & KPI operasional
-    │   │   ├── tab-sirkulasi.html        # Meja 2: Sirkulasi langsung & pra-pinjam
-    │   │   ├── tab-pengembalian.html     # Meja 3: Pengembalian buku & tunggakan denda
-    │   │   ├── tab-inventaris.html       # Meja 4: Inventaris katalog koleksi buku
-    │   │   ├── tab-pengumuman.html       # Meja 5: Kelola pengumuman & broadcast agenda
-    │   │   └── modals.html               # Jendela pop-up (kamera scanner, struk, QR, buku, dll)
+    │   ├── components/                   # Potongan kerangka HTML modular
+    │   │   ├── header.html               # Topbar sapaan user & foto profil
+    │   │   ├── sidebar.html              # Navigasi menu samping
+    │   │   ├── banner-denda.html         # Red alert banner denda / terlambat >= 1 bulan
+    │   │   │
+    │   │   ├── tabs/                     # Tampilan Layar Utama Sesuai Menu:
+    │   │   │   ├── tab-beranda.html      # Tab 1: Ringkasan KPI, buku aktif, slider pengumuman
+    │   │   │   ├── tab-katalog.html      # Tab 2: Pencarian buku, filter rak & kategori
+    │   │   │   ├── tab-pinjaman.html     # Tab 3: Buku fisik aktif & tiket prapinjam
+    │   │   │   ├── tab-riwayat.html      # Tab 4: Arsip log pengembalian & catatan denda
+    │   │   │   └── tab-profil.html       # Tab 5: Kartu anggota digital & ganti password
+    │   │   │
+    │   │   └── modals/                   # Modal Pop-up Terpisah Per Fitur:
+    │   │       ├── modal-detail-buku.html     # Pratinjau buku, sinopsis & harga buku
+    │   │       ├── modal-booking.html         # Formulir konfirmasi booking prapinjam
+    │   │       ├── modal-tiket-reservasi.html # Tiket barcode Code-128 & QR Code
+    │   │       └── modal-batal-booking.html   # Dialog konfirmasi pembatalan reservasi
     │   │
     │   └── modules/                      # Logika JavaScript berbasis fitur modular
-    │       ├── state.js                  # State memori reaktif & cache operasional petugas
-    │       ├── data.js                   # Sinkronisasi fetch data multi-tabel Supabase
-    │       ├── petugasHelper.js          # Helper mata uang, tanggal, modal, toast
-    │       ├── overview.js               # Visualisasi ringkasan KPI & shortcut aksi cepat
+    │       ├── core/                     # Sentral data & helper
+    │       │   ├── state.js              # State reaktif & konfigurasi tab
+    │       │   ├── syncData.js           # Sinkronisasi fetch data Supabase user
+    │       │   └── siswaHelper.js        # Helper hari, format rupiah, cek terlambat 1 bulan
     │       │
-    │       ├── sirkulasi/                # Feature Module: Meja 2 Sirkulasi
-    │       │   ├── index.js              # Koordinator subtab & re-exports
-    │       │   ├── memberPicker.js       # Autocomplete pencarian anggota (Siswa & Guru)
-    │       │   ├── walkIn.js             # Form peminjaman langsung di meja sirkulasi
-    │       │   ├── prapinjam.js          # Antrean booking, filter kesiapan rak, & verifikasi
-    │       │   └── pinjamanAktif.js      # Monitoring buku aktif berstatus 'Dipinjam'
+    │       ├── 1-beranda/                # MENU 1: Beranda & KPI
+    │       │   └── overview.js           # Render KPI, banner denda, quick list buku aktif
     │       │
-    │       ├── pengembalian/             # Feature Module: Meja 3 Pengembalian & Denda
-    │       │   ├── index.js              # Koordinator pengembalian & re-exports
-    │       │   ├── formPengembalian.js   # Autocomplete peminjam, buku aktif, & kalkulator denda
-    │       │   ├── riwayatDenda.js       # Sub-tab tunggakan denda, log pelunasan, & safety rollback
-    │       │   └── modalStruk.js         # Dialog cetak struk tanda terima pengembalian buku
+    │       ├── 2-katalog/                # MENU 2: Eksplorasi Katalog
+    │       │   ├── index.js              # Koordinator katalog & window bindings
+    │       │   ├── gridBuku.js           # Live search, filter kategori, render grid
+    │       │   └── detailBuku.js         # Modal informasi buku & cek kuota booking
     │       │
-    │       ├── buku/                     # Feature Module: Meja 4 Inventaris Koleksi Buku
-    │       │   ├── index.js              # Koordinator inventaris buku & re-exports
-    │       │   ├── katalogBuku.js        # Tabel katalog, filter kategori/rak, & pencarian
-    │       │   ├── modalFormBuku.js      # Dialog form Tambah/Edit buku & upload cover ke Storage
-    │       │   ├── modalQrBuku.js        # Stiker QR Code (QRCode.js), cetak fisik, & download PNG
-    │       │   └── modalHapusBuku.js     # Modal konfirmasi hapus dengan proteksi peminjaman aktif
+    │       ├── 3-pinjaman/               # MENU 3: Pinjaman & Reservasi
+    │       │   ├── index.js              # Koordinator modul pinjaman
+    │       │   ├── pinjamanAktif.js      # Buku fisik aktif & peringatan denda harga buku
+    │       │   ├── prapinjamList.js      # Daftar reservasi online & status rak
+    │       │   ├── formBooking.js        # Validasi kuota 2 buku & submit booking
+    │       │   └── tiketBooking.js       # Tiket barcode/QR canvas & pembatalan booking
     │       │
-    │       ├── pengumuman/               # Feature Module: Meja 5 Pengumuman Agenda
-    │       │   ├── index.js              # Koordinator pengumuman & re-exports
-    │       │   ├── daftarPengumuman.js   # Tabel pengumuman, filter kategori, & badge acara
-    │       │   ├── modalFormPengumuman.js# Form Tambah/Edit pengumuman & upload poster ke Storage
-    │       │   └── modalHapusPengumuman.js# Dialog konfirmasi hapus pengumuman dari database
+    │       ├── 4-riwayat/                # MENU 4: Riwayat & Denda
+    │       │   └── riwayatDenda.js       # Log pengembalian, status lunas, & filter denda
     │       │
-    │       └── scanner/                  # Feature Module: Pemindai Kamera Barcode / QR
-    │           ├── index.js              # Koordinator scanner, trigger tombol, & re-exports
-    │           ├── soundFeedback.js      # Suara 'beep' audio Web Audio API saat terbaca
-    │           ├── fileDecoder.js        # Decoder barcode file gambar (Html5Qrcode & multi-pass jsQR)
-    │           ├── cameraStream.js       # Manajemen stream webcam/kamera & jsQR video loop
-    │           └── scanRouter.js         # Router pencocokan hasil scan ke entitas yang tepat
+    │       └── 5-profil/                 # MENU 5: Kartu Anggota & Akun
+    │           ├── index.js              # Koordinator profil & update display
+    │           ├── kartuAnggota.js       # Render visual kartu anggota & QR Code
+    │           └── pengaturanAkun.js     # Form update no. kontak & ganti password
     │
     │   ─────────────────────────────────────────────────────────────
-    │   [3] PORTAL ADMIN (ROADMAP PARTISI BERIKUTNYA)
+    │   [2] PORTAL PETUGAS (ARSITEKTUR MODULAR MEJA OPERASIONAL)
+    │   ─────────────────────────────────────────────────────────────
+    ├── petugas/
+    │   ├── dashboard.html                # Master Layout Bersih (< 100 baris)
+    │   ├── petugas.js                    # Router & koordinator utama aplikasi
+    │   │
+    │   ├── components/                   # Potongan kerangka HTML modular
+    │   │   ├── header.html               # Header viewport, breadcrumb, & jam operasional
+    │   │   ├── sidebar.html              # Mobile header, backdrop, & navigasi menu
+    │   │   │
+    │   │   ├── tabs/                     # Tampilan Layar Utama Meja Kerja:
+    │   │   │   ├── tab-overview.html     # Meja 1: Statistik ringkasan & KPI operasional
+    │   │   │   ├── tab-sirkulasi.html    # Meja 2: Sirkulasi langsung & pra-pinjam
+    │   │   │   ├── tab-pengembalian.html # Meja 3: Pengembalian buku & kalkulator denda
+    │   │   │   ├── tab-inventaris.html   # Meja 4: Inventaris katalog koleksi buku
+    │   │   │   └── tab-pengumuman.html   # Meja 5: Kelola pengumuman & broadcast agenda
+    │   │   │
+    │   │   └── modals/                   # Modal Pop-up Terpisah Per Meja:
+    │   │       ├── modal-sirkulasi.html    # Verifikasi reservasi prapinjam & tiket
+    │   │       ├── modal-pengembalian.html # Struk pengembalian & konfirmasi lunas tunai
+    │   │       ├── modal-buku.html         # Form tambah/edit buku, cetak QR, hapus
+    │   │       ├── modal-pengumuman.html   # Form tambah/edit pengumuman & hapus
+    │   │       └── modal-scanner.html      # Dialog viewfinder scanner kamera
+    │   │
+    │   └── modules/                      # Logika JavaScript berbasis fitur modular
+    │       ├── core/                     # Fondasi Sentral Sistem:
+    │       │   ├── state.js              # State memori reaktif & cache multi-tabel
+    │       │   ├── syncData.js           # Sinkronisasi fetch 7 tabel Supabase
+    │       │   └── petugasHelper.js      # Helper rupiah, tanggal, borrower resolver
+    │       │
+    │       ├── scanner/                  # Mesin Pemindai Universal Barcode / QR:
+    │       │   ├── index.js              # Koordinator scanner & event bindings
+    │       │   ├── cameraStream.js       # Manajemen stream webcam/kamera
+    │       │   ├── fileDecoder.js        # Decoder barcode file gambar (Html5Qrcode & jsQR)
+    │       │   ├── scanRouter.js         # Router pencocokan hasil scan ke meja kerja
+    │       │   └── soundFeedback.js      # Suara 'beep' Web Audio API saat scan sukses
+    │       │
+    │       ├── 1-overview/               # MEJA 1: Overview & KPI Operasional
+    │       │   └── overview.js           # Ringkasan KPI harian & shortcut aksi cepat
+    │       │
+    │       ├── 2-sirkulasi/              # MEJA 2: Sirkulasi Peminjaman Buku
+    │       │   ├── index.js              # Koordinator Meja Sirkulasi
+    │       │   ├── memberPicker.js       # Autocomplete pemilih anggota (Siswa & Guru)
+    │       │   ├── pinjamanAktif.js      # Monitoring buku aktif berstatus 'Dipinjam'
+    │       │   ├── prapinjam.js          # Antrean booking, filter kesiapan rak, verifikasi
+    │       │   └── walkIn.js             # Form peminjaman langsung di meja sirkulasi
+    │       │
+    │       ├── 3-pengembalian/           # MEJA 3: Pengembalian Buku & Denda
+    │       │   ├── index.js              # Koordinator Meja Pengembalian
+    │       │   ├── formPengembalian.js   # Koordinator form penerimaan buku
+    │       │   ├── seleksiPeminjam.js    # Dropdown peminjam, kartu buku aktif, scan lookup
+    │       │   ├── kalkulatorDenda.js    # Mesin hitung denda, tarif dinamis, aturan 1 bulan
+    │       │   ├── eksekusiPengembalian.js # Simpan ke Supabase, pulihkan stok (+1), struk
+    │       │   ├── modalStruk.js         # Dialog cetak struk tanda terima pengembalian
+    │       │   └── denda/                # Sub-modul Operasional Denda & Riwayat:
+    │       │       ├── index.js          # Re-export operasional denda
+    │       │       ├── kasirTunggakan.js # Kasir denda belum lunas, modal 2 lapis, rollback
+    │       │       ├── arsipRiwayat.js   # Log arsip pengembalian & pencarian nama user
+    │       │       └── subtabDenda.js    # Switcher sub-tab Tunggakan vs Riwayat & total kas
+    │       │
+    │       ├── 4-buku/                   # MEJA 4: Inventaris Koleksi Buku
+    │       │   ├── index.js              # Koordinator inventaris buku
+    │       │   ├── katalogBuku.js        # Tabel katalog, filter kategori/rak, live search
+    │       │   ├── modalFormBuku.js      # Dialog form Tambah/Edit buku & upload cover
+    │       │   ├── modalQrBuku.js        # Stiker QR Code (QRCode.js), cetak & download PNG
+    │       │   └── modalHapusBuku.js     # Modal konfirmasi hapus dengan proteksi pinjaman
+    │       │
+    │       └── 5-pengumuman/             # MEJA 5: Pengumuman Agenda Sekolah
+    │           ├── index.js              # Koordinator pengumuman
+    │           ├── daftarPengumuman.js   # Tabel pengumuman, filter kategori, badge acara
+    │           ├── modalFormPengumuman.js# Form Tambah/Edit pengumuman & upload poster
+    │           └── modalHapusPengumuman.js# Dialog konfirmasi hapus pengumuman
+    │
+    │   ─────────────────────────────────────────────────────────────
+    │   [3] PORTAL ADMIN (ARSITEKTUR MODULAR MANAJEMEN PENGGUNA)
     │   ─────────────────────────────────────────────────────────────
     └── admin/
-        ├── dashboard.html                # Target: Master Layout (< 100 baris)
-        ├── admin.js                      # Router & koordinator utama
+        ├── dashboard.html                # Master Layout Bersih (< 100 baris)
+        ├── admin.js                      # Router & koordinator utama admin
         │
-        ├── components/                   # Target Partisi HTML:
-        │   ├── sidebar.html              # Navigasi sidebar admin
-        │   ├── header.html               # Header viewport admin
-        │   ├── tab-overview.html         # Statistik jumlah pengguna
-        │   ├── tab-siswa.html            # Tabel manajemen siswa
-        │   ├── tab-guru.html             # Tabel manajemen guru
-        │   ├── tab-petugas.html          # Tabel manajemen petugas
-        │   └── modals.html               # Modal tambah/edit akun pengguna
+        ├── components/                   # Potongan kerangka HTML modular
+        │   ├── header.html               # Header status server & akun super admin
+        │   ├── sidebar.html              # Navigasi sidebar kelola akun pengguna
+        │   │
+        │   ├── tabs/                     # Layar Master Tabel Sesuai Role:
+        │   │   ├── tab-overview.html     # Statistik total user & status akun aktif
+        │   │   ├── tab-siswa.html        # Tabel master data akun siswa sekolah
+        │   │   ├── tab-guru.html         # Tabel master data akun guru & staf
+        │   │   └── tab-petugas.html      # Tabel master data akun petugas perpustakaan
+        │   │
+        │   └── modals/                   # Modal Form CRUD Terpisah Sesuai Entitas:
+        │       ├── modal-siswa.html      # Pop-up tambah/edit & hapus siswa
+        │       ├── modal-guru.html       # Pop-up tambah/edit & hapus guru
+        │       └── modal-petugas.html    # Pop-up tambah/edit & hapus akun petugas
         │
-        └── modules/                      # Target Partisi JavaScript:
-            ├── state.js                  # State memori admin
-            ├── data.js                   # Fetch data user admin
-            ├── adminHelper.js            # Helper validasi & hashing
-            ├── siswa/                    # Feature Module: CRUD Siswa
-            ├── guru/                     # Feature Module: CRUD Guru
-            └── petugas/                  # Feature Module: CRUD Petugas
+        └── modules/                      # Logika JavaScript berbasis fitur modular
+            ├── core/                     # Sentral Data & Validasi:
+            │   ├── state.js              # Cache memori user (siswa, guru, petugas)
+            │   ├── syncAdmin.js          # Sinkronisasi master data user Supabase
+            │   └── adminHelper.js        # Validasi NISN/NIP, modal helper, & toast
+            │
+            ├── 1-overview/               # MEJA 1: Statistik & Ringkasan Akun
+            │   └── overview.js           # KPI total pengguna, grafik pendaftaran, log sistem
+            │
+            ├── 2-siswa/                  # MEJA 2: Manajemen Siswa
+            │   ├── index.js              # Koordinator modul siswa
+            │   ├── tabelSiswa.js         # Render tabel siswa, search NISN/nama, pagination
+            │   └── formSiswa.js          # Tambah/edit data siswa & modal hapus siswa
+            │
+            ├── 3-guru/                   # MEJA 3: Manajemen Guru
+            │   ├── index.js              # Koordinator modul guru
+            │   ├── tabelGuru.js          # Render tabel guru, search NIP/mapel
+            │   └── formGuru.js           # Tambah/edit data guru & modal hapus guru
+            │
+            └── 4-petugas/                # MEJA 4: Manajemen Petugas Perpustakaan
+                ├── index.js              # Koordinator modul petugas
+                ├── tabelPetugas.js       # Render tabel petugas & hak akses
+                └── formPetugas.js        # Buat akun petugas baru, reset password, hapus
 ```
 
 ---

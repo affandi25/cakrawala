@@ -3,12 +3,22 @@
  * File: public/petugas/modules/scanner/fileDecoder.js
  * 
  * FUNGSI:
- * - Membaca kode QR/Barcode dari file gambar statis (JPG, PNG, WEBP)
- * - Multi-layer engine: Html5Qrcode (ZXing) + Multi-pass jsQR (Raw, Scaled, Quiet-Zone, Crop) + BarcodeDetector
+ * - Membaca kode QR / Barcode dari berkas gambar yang diunggah (JPG, PNG, WEBP)
+ * - Multi-layer engine:
+ *   1. Html5Qrcode (ZXing Core)
+ *   2. Multi-pass jsQR (Raw, Scaled-Down, Quiet-Zone Padding, Center-Crop)
+ *   3. Native BarcodeDetector API (Browser modern)
  */
 
+/**
+ * Ekstraksi kode teks dari file gambar
+ * @param {File} file 
+ * @returns {Promise<string>}
+ */
 export async function decodeQrFromFile(file) {
-  // Strategi 1: Coba Html5Qrcode scanFile (berbasis ZXing C++, sangat kuat untuk file gambar statis)
+  if (!file) throw new Error('Berkas gambar tidak ditemukan');
+
+  // Strategi 1: Coba Html5Qrcode scanFile (berbasis ZXing C++, sangat kuat untuk file statis)
   if (window.Html5Qrcode) {
     try {
       let targetId = 'cameraScannerTarget';
@@ -36,7 +46,7 @@ export async function decodeQrFromFile(file) {
     }
   }
 
-  // Strategi 2: jsQR dengan multi-pass (Raw, Scaled-Down, Quiet Zone Padding, dan Cropped Center)
+  // Strategi 2: jsQR dengan multi-pass canvas
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -61,9 +71,9 @@ export async function decodeQrFromFile(file) {
             const rawCtx = rawCanvas.getContext('2d');
             rawCtx.drawImage(img, 0, 0);
             let code = scanCanvas(rawCanvas);
-            if (code) return resolve(code);
+            if (code && code.trim()) return resolve(code.trim());
 
-            // 2. Pass 2: Downscaled Canvas jika gambar beresolusi tinggi (misal foto HP / screenshot)
+            // 2. Pass 2: Downscaled Canvas jika gambar beresolusi sangat besar (misal kamera HP 4K)
             if (img.width > 800 || img.height > 800) {
               const maxDim = 800;
               const scale = Math.min(maxDim / img.width, maxDim / img.height);
@@ -73,10 +83,10 @@ export async function decodeQrFromFile(file) {
               const sCtx = scaledCanvas.getContext('2d');
               sCtx.drawImage(img, 0, 0, scaledCanvas.width, scaledCanvas.height);
               code = scanCanvas(scaledCanvas);
-              if (code) return resolve(code);
+              if (code && code.trim()) return resolve(code.trim());
             }
 
-            // 3. Pass 3: Quiet Zone (Border Putih 40px)
+            // 3. Pass 3: Quiet Zone (Border Putih 40px di sekeliling gambar)
             const pad = 40;
             const padCanvas = document.createElement('canvas');
             padCanvas.width = img.width + (pad * 2);
@@ -86,7 +96,7 @@ export async function decodeQrFromFile(file) {
             padCtx.fillRect(0, 0, padCanvas.width, padCanvas.height);
             padCtx.drawImage(img, pad, pad);
             code = scanCanvas(padCanvas);
-            if (code) return resolve(code);
+            if (code && code.trim()) return resolve(code.trim());
 
             // 4. Pass 4: Cropped Center Box (Fokus area tengah tempat QR code tiket berada)
             const cropCanvas = document.createElement('canvas');
@@ -99,30 +109,34 @@ export async function decodeQrFromFile(file) {
             const cropCtx = cropCanvas.getContext('2d');
             cropCtx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
             code = scanCanvas(cropCanvas);
-            if (code) return resolve(code);
+            if (code && code.trim()) return resolve(code.trim());
           }
 
-          // Strategi 3: Native Web BarcodeDetector API (jika browser mendukung)
+          // Strategi 3: Native Web BarcodeDetector API (Chrome/Edge modern)
           if ('BarcodeDetector' in window) {
-            const detector = new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'code_39', 'ean_13'] });
+            const detector = new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'code_39', 'ean_13', 'upc_a'] });
             detector.detect(img).then(barcodes => {
-              if (barcodes && barcodes.length > 0) {
-                return resolve(barcodes[0].rawValue);
+              if (barcodes && barcodes.length > 0 && barcodes[0].rawValue) {
+                return resolve(barcodes[0].rawValue.trim());
               }
-              reject(new Error('Barcode tidak terdeteksi'));
-            }).catch(() => reject(new Error('Barcode tidak terdeteksi')));
+              reject(new Error('Barcode tidak terdeteksi pada gambar'));
+            }).catch(() => reject(new Error('Barcode tidak terdeteksi pada gambar')));
             return;
           }
 
-          reject(new Error('Barcode tidak terdeteksi'));
+          reject(new Error('Barcode tidak terdeteksi pada gambar'));
         } catch (e) {
           reject(e);
         }
       };
-      img.onerror = () => reject(new Error('Gagal memproses gambar'));
+      img.onerror = () => reject(new Error('Gagal memproses file gambar'));
       img.src = reader.result;
     };
     reader.onerror = () => reject(new Error('Gagal membaca file gambar'));
     reader.readAsDataURL(file);
   });
+}
+
+if (typeof window !== 'undefined') {
+  window.decodeQrFromFile = decodeQrFromFile;
 }

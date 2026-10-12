@@ -26,11 +26,36 @@ export function renderFineAlertBanner() {
   if (!banner) return;
 
   const unpaid = state.unpaidFines || [];
+  const activeLoans = (state.cache.peminjaman || []).filter(p => p.status === 'Dipinjam');
 
-  if (unpaid.length > 0) {
-    const totalNominal = unpaid.reduce((sum, item) => sum + (Number(item.denda) || 0), 0);
+  // Deteksi pinjaman aktif yang terlambat >= 30 hari (denda seharga buku)
+  const monthOverdueLoans = activeLoans.filter(loan => {
+    const dueInfo = getRemainingDays(loan.batas_kembali);
+    return dueInfo.isMonthOverdue;
+  });
+
+  const hasUnpaidFines = unpaid.length > 0;
+  const hasMonthOverdue = monthOverdueLoans.length > 0;
+
+  if (hasUnpaidFines || hasMonthOverdue) {
+    let totalNominal = unpaid.reduce((sum, item) => sum + (Number(item.denda) || 0), 0);
+
+    // Tambahkan nominal seharga buku jika pinjaman aktif terlambat >= 30 hari
+    let monthOverdueNote = '';
+    if (hasMonthOverdue) {
+      const totalHargaBuku = monthOverdueLoans.reduce((sum, loan) => {
+        const book = (state.cache.buku || []).find(b => b.id_buku === loan.id_buku);
+        return sum + (book ? (Number(book.harga_buku) || 50000) : 50000);
+      }, 0);
+      totalNominal += totalHargaBuku;
+      monthOverdueNote = ` (termasuk denda seharga buku untuk ${monthOverdueLoans.length} pinjaman terlambat ≥ 1 bulan)`;
+    }
+
     if (nominalEl) nominalEl.textContent = formatRupiah(totalNominal);
-    if (jumlahKasusEl) jumlahKasusEl.textContent = `${unpaid.length} transaksi belum diselesaikan`;
+    if (jumlahKasusEl) {
+      const totalKasus = unpaid.length + monthOverdueLoans.length;
+      jumlahKasusEl.textContent = `${totalKasus} transaksi / pinjaman tertunggak${monthOverdueNote}`;
+    }
     banner.classList.remove('hidden');
   } else {
     banner.classList.add('hidden');
@@ -114,30 +139,43 @@ export function renderActiveBorrowQuickList() {
     const rak = book ? (book.keterangan || 'Rak Umum') : '-';
     const coverUrl = book && book.cover_url ? book.cover_url : null;
     const dueInfo = getRemainingDays(loan.batas_kembali);
+    const hargaBuku = book ? (Number(book.harga_buku) || 50000) : 50000;
 
     return `
-      <div class="flex items-center justify-between p-4 rounded-xl border border-slate-200/80 bg-white hover:border-slate-300 transition shadow-2xs">
-        <div class="flex items-center gap-3.5 min-w-0">
-          <div class="h-14 w-10 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
-            ${coverUrl ? `<img src="${coverUrl}" alt="Cover" class="h-full w-full object-cover" />` : '<i class="ph ph-book text-lg"></i>'}
-          </div>
-          <div class="min-w-0">
-            <h4 class="font-bold text-slate-800 text-xs sm:text-sm line-clamp-1">${judul}</h4>
-            <p class="text-[11px] text-slate-500 truncate">${penulis} &bull; <span class="text-navy font-bold">${rak}</span></p>
-            <div class="flex items-center gap-2 mt-1">
-              <span class="text-[10px] text-slate-400">Pinjam: ${formatTanggalIndo(loan.tanggal_pinjam)}</span>
-              <span class="text-[10px] text-slate-300">&bull;</span>
-              <span class="text-[10px] font-semibold text-slate-600">Tempo: ${formatTanggalIndo(loan.batas_kembali)}</span>
+      <div class="p-4 rounded-xl border ${dueInfo.isMonthOverdue ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200/80 bg-white'} hover:border-slate-300 transition shadow-2xs space-y-2.5">
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3.5 min-w-0">
+            <div class="h-14 w-10 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400">
+              ${coverUrl ? `<img src="${coverUrl}" alt="Cover" class="h-full w-full object-cover" />` : '<i class="ph ph-book text-lg"></i>'}
             </div>
+            <div class="min-w-0">
+              <h4 class="font-bold text-slate-800 text-xs sm:text-sm line-clamp-1">${judul}</h4>
+              <p class="text-[11px] text-slate-500 truncate">${penulis} &bull; <span class="text-navy font-bold">${rak}</span></p>
+              <div class="flex items-center gap-2 mt-1">
+                <span class="text-[10px] text-slate-400">Pinjam: ${formatTanggalIndo(loan.tanggal_pinjam)}</span>
+                <span class="text-[10px] text-slate-300">&bull;</span>
+                <span class="text-[10px] font-semibold text-slate-600">Tempo: ${formatTanggalIndo(loan.batas_kembali)}</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="shrink-0 text-right ml-3">
+            <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${dueInfo.badgeClass}">
+              ${dueInfo.text}
+            </span>
+            <span class="block text-[10px] font-mono text-slate-400 mt-1">${loan.id_peminjaman}</span>
           </div>
         </div>
 
-        <div class="shrink-0 text-right ml-3">
-          <span class="inline-flex items-center px-2.5 py-1 rounded-full text-[10px] font-bold border ${dueInfo.badgeClass}">
-            ${dueInfo.text}
-          </span>
-          <span class="block text-[10px] font-mono text-slate-400 mt-1">${loan.id_peminjaman}</span>
-        </div>
+        ${dueInfo.isMonthOverdue ? `
+          <div class="px-3 py-2 rounded-lg bg-rose-100/90 border border-rose-300 text-rose-900 text-[11px] flex items-center justify-between gap-2">
+            <span class="flex items-center gap-1.5 font-bold">
+              <i class="ph-fill ph-warning-octagon text-rose-600 text-sm"></i>
+              <span>Denda Seharga Buku:</span>
+            </span>
+            <span class="font-extrabold text-rose-950 underline">${formatRupiah(hargaBuku)}</span>
+          </div>
+        ` : ''}
       </div>
     `;
   }).join('');

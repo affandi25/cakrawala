@@ -1,0 +1,124 @@
+<!-- ============================================================================================= -->
+<!-- MODAL VERIFIKASI TIKET BOOKING PRA-PINJAM (MEJA 2 SIRKULASI)                                  -->
+<!-- File: public/petugas/components/modals/modal-sirkulasi.html                                   -->
+<!--                                                                                               -->
+<!-- Menampilkan verifikasi barcode, identitas siswa/guru, petunjuk rak fisik, dan tombol serah.  -->
+<!-- ============================================================================================= -->
+<div id="modalVerifyPrapinjam"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="dialog" aria-modal="true">
+  <div id="modalVerifyPrapinjamContent"
+    class="w-full max-w-lg rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-200">
+    
+    <!-- Kepala Modal Verifikasi -->
+    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/70">
+      <div class="flex items-center gap-3">
+        <div id="verifyIconBadge" class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-700 font-bold text-lg">
+          <i class="ph ph-qr-code text-xl"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold tracking-tight text-slate-900">Verifikasi Tiket Booking Pra-Pinjam</h3>
+          <p id="verifyModalSubtitle" class="text-xs text-slate-500">Cocokkan barcode tiket pemesanan sebelum menyerahkan buku fisik</p>
+        </div>
+      </div>
+      <button type="button" id="btnCloseVerifyPrapinjam"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4 text-xs">
+      <!-- Status Barcode Banner -->
+      <div id="verifyStatusBanner" class="flex items-center justify-between p-3 rounded-xl border border-amber-200 bg-amber-50 text-amber-900 transition-colors">
+        <div class="flex items-center gap-2">
+          <i id="verifyStatusIcon" class="ph ph-warning-circle text-lg text-amber-600"></i>
+          <span id="verifyStatusText" class="font-bold">Menunggu Verifikasi Tiket / Barcode Anggota</span>
+        </div>
+        <span id="verifyBadgeId" class="font-mono text-xs font-extrabold bg-amber-200/80 px-2 py-0.5 rounded-lg">PJ-0000</span>
+      </div>
+
+      <!-- Detail Pemesan & Jadwal Pinjam -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <!-- Card Identitas -->
+        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 space-y-1.5">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Identitas Pemesan</p>
+          <div class="flex items-center gap-1.5">
+            <span id="verifyBorrowerName" class="font-bold text-slate-800 text-xs line-clamp-1">-</span>
+            <span id="verifyBorrowerBadge" class="rounded-full bg-blue-100 text-navy px-1.5 py-0.2 text-[9px] font-bold">Siswa</span>
+          </div>
+          <p id="verifyBorrowerSub" class="text-slate-500 text-[11px]">-</p>
+          <p id="verifyBorrowerContact" class="text-slate-400 text-[10px]">Kontak: -</p>
+        </div>
+
+        <!-- Card Jadwal -->
+        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 space-y-1.5">
+          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Jadwal Pinjam</p>
+          <p class="text-slate-600">Tgl Pesan: <strong id="verifyTanggalPinjam" class="text-slate-800">-</strong></p>
+          <p class="text-slate-600">Jatuh Tempo: <strong id="verifyBatasKembali" class="text-amber-800">-</strong></p>
+          <p class="text-[10px] text-slate-400">Metode: <strong class="text-navy">Pra-Pinjam Online</strong></p>
+        </div>
+      </div>
+
+      <!-- Card Buku Fisik & Lokasi Rak -->
+      <div class="flex items-center gap-3.5 rounded-xl border border-slate-200 bg-white p-3.5 shadow-2xs">
+        <div id="verifyBookCoverContainer" class="h-16 w-12 shrink-0 rounded-lg bg-slate-100 overflow-hidden border border-slate-200 flex items-center justify-center text-slate-400">
+          <i class="ph ph-book text-2xl"></i>
+        </div>
+        <div class="flex-1 min-w-0">
+          <h4 id="verifyBookTitle" class="font-bold text-slate-800 text-xs line-clamp-1">-</h4>
+          <p id="verifyBookAuthor" class="text-slate-500 text-[11px]">-</p>
+          <div class="mt-1 flex items-center gap-2">
+            <span class="inline-flex items-center gap-1 rounded-lg bg-blue-50 border border-blue-200 px-2 py-0.5 text-[11px] font-bold text-navy">
+              <i class="ph ph-books text-xs"></i>
+              <span id="verifyBookRak">Rak -</span>
+            </span>
+            <span id="verifyBookStock" class="text-[10px] text-slate-500">Stok: -</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Box Verifikasi Input / Kamera Scanner -->
+      <div id="verifyInputContainer" class="p-3.5 rounded-xl border border-slate-200 bg-slate-50 space-y-2">
+        <div class="flex items-center justify-between">
+          <label for="inputVerifyTicketCode" class="font-bold text-slate-700">Validasi Tiket Anggota:</label>
+          <button type="button" id="btnLaunchCameraFromModal"
+            class="inline-flex items-center gap-1 rounded-lg bg-white border border-slate-300 px-2.5 py-1 text-[11px] font-bold text-navy hover:bg-navy hover:text-white transition shadow-2xs">
+            <i class="ph ph-qr-code text-xs"></i>
+            <span>Scan QR Tiket HP Anggota</span>
+          </button>
+        </div>
+        <div class="flex gap-2">
+          <input type="text" id="inputVerifyTicketCode" placeholder="Arahkan scanner atau masukkan ID Tiket (PJ-...)"
+            class="flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-mono uppercase text-slate-800 placeholder:text-slate-400 outline-none focus:border-navy focus:ring-2 focus:ring-navy/10" />
+          <button type="button" id="btnCheckTicketCode"
+            class="rounded-xl bg-slate-800 px-3 py-2 text-xs font-bold text-white hover:bg-slate-900 transition">
+            Cocokkan
+          </button>
+        </div>
+        <p id="verifyCodeHelper" class="text-[10px] text-slate-500">Scan QR Code di ponsel anggota, tembak barcode scanner, atau ketik ID tiket jika kamera tidak aktif.</p>
+      </div>
+
+      <!-- Box Sukses Terverifikasi (Awalnya tersembunyi jika belum scan) -->
+      <div id="verifySuccessBox" class="hidden p-3 rounded-xl border border-emerald-200 bg-emerald-50 text-emerald-900 flex items-start gap-2.5">
+        <i class="ph-fill ph-check-circle text-lg text-emerald-600 shrink-0 mt-0.5"></i>
+        <div>
+          <p class="font-bold">Verifikasi Identitas Tiket Berhasil!</p>
+          <p class="text-[11px] text-emerald-700 mt-0.5">Silakan ambil buku dari rak yang tertera di atas, serahkan kepada peminjam, lalu klik konfirmasi di bawah.</p>
+        </div>
+      </div>
+
+      <!-- Tombol Aksi Penyerahan -->
+      <div class="pt-2 flex items-center gap-2.5">
+        <button type="button" id="btnCancelVerifyModal"
+          class="w-1/3 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+          Tutup
+        </button>
+        <button type="button" id="btnConfirmHandoverLoan" disabled
+          class="w-2/3 inline-flex items-center justify-center gap-1.5 rounded-xl bg-slate-200 py-2.5 text-xs font-bold text-slate-400 cursor-not-allowed transition shadow-sm">
+          <i class="ph ph-lock-key text-base" id="iconConfirmHandoverLock"></i>
+          <span id="btnConfirmHandoverText">Wajib Verifikasi Barcode Dulu</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

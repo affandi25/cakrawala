@@ -1,0 +1,330 @@
+<!-- ============================================================================================= -->
+<!-- MODAL MEJA 4: INVENTARIS BUKU, STIKER QR CODE, & HAPUS KOLEKSI                                -->
+<!-- ============================================================================================= -->
+
+<!-- MODAL 1: FORMULIR TAMBAH & EDIT BUKU (DENGAN UPLOAD GAMBAR KE CLOUD STORAGE)                  -->
+<div id="modalBookForm"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="dialog" aria-modal="true" aria-labelledby="modalBookTitle">
+  <div id="modalBookContent"
+    class="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-slate-100 transform scale-95 transition-transform duration-200">
+    
+    <!-- Kepala Modal (Header Form) -->
+    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 sticky top-0 bg-white/95 backdrop-blur-xs z-10">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy/10 text-navy font-bold text-lg">
+          <i class="ph ph-book-bookmark" id="iconBookModal" aria-hidden="true"></i>
+        </div>
+        <div>
+          <h3 id="modalBookTitle" class="text-base font-extrabold tracking-tight text-slate-900">
+            Tambah Buku Baru
+          </h3>
+          <p id="modalBookSubtitle" class="text-xs text-slate-500">
+            ID Buku dan string QR Code akan digenerate otomatis oleh sistem.
+          </p>
+        </div>
+      </div>
+      <!-- Tombol silang untuk menutup modal tanpa menyimpan -->
+      <button type="button" id="btnCloseBookModal" aria-label="Tutup form modal"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Isi Formulir Isian Data Buku -->
+    <form id="formBook" class="p-6 space-y-4" novalidate>
+      <!-- Nilai rahasia penanda mode: bernilai 'add' jika tambah baru, 'edit' jika memperbarui buku lama -->
+      <input type="hidden" id="bookFormMode" value="add" />
+      <input type="hidden" id="editBookId" value="" />
+      <!-- Menyimpan link URL gambar cover setelah berhasil diupload ke server -->
+      <input type="hidden" id="inputFinalCoverUrl" value="" />
+
+      <!-- Banner Info: Menampilkan pratinjau ID Buku dan Kode Barcode yang dibuat otomatis -->
+      <div class="rounded-xl border border-blue-200 bg-blue-50/70 p-3.5 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <i class="ph-fill ph-magic-wand text-2xl text-navy"></i>
+          <div>
+            <span class="text-[10px] font-bold uppercase tracking-wider text-blue-800">Generated Auto by System</span>
+            <p class="text-xs text-slate-700 font-medium">
+              ID Buku: <strong id="previewAutoBookId" class="font-mono text-navy font-bold">BK-AUTO</strong> |
+              QR Code: <strong id="previewAutoQrCode" class="font-mono text-slate-600">AUTO</strong>
+            </p>
+          </div>
+        </div>
+        <span class="rounded-full bg-blue-200 px-2 py-0.5 text-[10px] font-bold text-navy">Otomatis</span>
+      </div>
+
+      <!-- KOTAK UNGGAH GAMBAR COVER BUKU (DRAG & DROP ATAU KLIK PILIH FILE) -->
+      <div class="rounded-2xl border border-slate-200 bg-slate-50/60 p-4 space-y-3">
+        <div class="flex items-center justify-between">
+          <label class="block text-xs font-bold text-slate-700">
+            Cover Buku <span class="text-slate-400 font-normal">(Upload ke Supabase Storage)</span>
+          </label>
+          <span id="uploadStatusBadge" class="text-[10px] font-semibold text-slate-500">Mendukung JPG, PNG, WEBP</span>
+        </div>
+
+        <!-- Drag and Drop / Click Upload Box -->
+        <div id="dropzoneCover"
+          class="relative flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-300 bg-white p-5 text-center cursor-pointer transition hover:border-navy hover:bg-slate-50/80">
+          <input type="file" id="inputCoverFile" accept="image/png,image/jpeg,image/jpg,image/webp" class="hidden" />
+          
+          <!-- Default Placeholder State -->
+          <div id="coverUploadPlaceholder" class="flex flex-col items-center">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-navy/5 text-navy mb-2">
+              <i class="ph ph-cloud-arrow-up text-2xl"></i>
+            </div>
+            <p class="text-xs font-bold text-slate-700">Klik untuk memilih gambar atau seret file ke sini</p>
+            <p class="text-[11px] text-slate-400 mt-0.5">Ukuran maksimal file: 5 MB</p>
+          </div>
+
+          <!-- Preview Image State (When selected/uploaded) -->
+          <div id="coverPreviewContainer" class="hidden flex items-center gap-4 text-left w-full">
+            <div class="h-20 w-14 shrink-0 rounded-lg overflow-hidden border border-slate-200 bg-slate-100 shadow-xs">
+              <img id="imgCoverPreview" src="" alt="Pratinjau Cover" class="h-full w-full object-cover" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <p id="coverFileName" class="text-xs font-bold text-slate-800 truncate">nama_file.jpg</p>
+              <p id="coverFileSize" class="text-[11px] text-slate-500">0 KB</p>
+              <p id="coverUploadMessage" class="text-[10px] font-bold text-emerald-600 mt-1 flex items-center gap-1">
+                <i class="ph ph-check-circle"></i> Siap diunggah ke storage
+              </p>
+            </div>
+            <button type="button" id="btnRemoveCover"
+              class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition">
+              <i class="ph ph-trash text-lg"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Opsi Tambahan: Input URL Eksternal (Opsional / Fallback) -->
+        <div class="pt-1">
+          <details class="text-xs text-slate-500 cursor-pointer">
+            <summary class="font-medium hover:text-navy transition select-none">
+              Atau gunakan URL Cover Gambar Langsung (Opsional)
+            </summary>
+            <div class="mt-2">
+              <input type="url" id="inputCoverUrl" placeholder="https://domain.com/gambar-cover.jpg"
+                class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2 text-xs text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Nomor Resmi ID Buku & Kode QR Terstandarisasi (Readonly Auto-generated) -->
+      <div>
+        <label for="inputBookIdDisplay" class="block text-xs font-bold text-slate-700 mb-1">
+          Nomor Resmi ID Buku & String QR Code <span class="text-slate-400 font-normal">(Terisi Otomatis)</span>
+        </label>
+        <div class="relative">
+          <i class="ph ph-barcode absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-lg"></i>
+          <input type="text" id="inputBookIdDisplay" readonly disabled
+            class="w-full rounded-xl border border-slate-200 bg-slate-100 pl-10 pr-3.5 py-2.5 text-sm font-mono font-bold text-navy outline-none cursor-not-allowed select-all"
+            placeholder="BK-001" />
+        </div>
+        <p class="text-[11px] text-slate-400 mt-1">Format resmi terstandarisasi untuk stiker barcode & cetak label QR fisik buku.</p>
+      </div>
+
+      <!-- Row 1: Judul Buku -->
+      <div>
+        <label for="inputJudulBuku" class="block text-xs font-bold text-slate-700 mb-1">
+          Judul Buku <span class="text-rose-500">*</span>
+        </label>
+        <input type="text" id="inputJudulBuku" required placeholder="Contoh: Laskar Pelangi"
+          class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+      </div>
+
+      <!-- Row 2: Penulis & Penerbit -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="inputPenulisBuku" class="block text-xs font-bold text-slate-700 mb-1">
+            Penulis <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="inputPenulisBuku" required placeholder="Contoh: Andrea Hirata"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+        </div>
+        <div>
+          <label for="inputPenerbitBuku" class="block text-xs font-bold text-slate-700 mb-1">
+            Penerbit <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="inputPenerbitBuku" required placeholder="Contoh: Bentang Pustaka"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+        </div>
+      </div>
+
+      <!-- Row 3: Tahun Terbit & Kategori -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="inputTahunTerbit" class="block text-xs font-bold text-slate-700 mb-1">
+            Tahun Terbit <span class="text-rose-500">*</span>
+          </label>
+          <input type="number" id="inputTahunTerbit" required min="1900" max="2099" placeholder="2024"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+        </div>
+        <div>
+          <label for="selectKategoriBuku" class="block text-xs font-bold text-slate-700 mb-1">
+            Kategori Koleksi <span class="text-rose-500">*</span>
+          </label>
+          <select id="selectKategoriBuku" required
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10">
+            <option value="">-- Pilih Kategori --</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Row 4: Stok Fisik & Lokasi Rak -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label for="inputStokBuku" class="block text-xs font-bold text-slate-700 mb-1">
+            Jumlah Stok Fisik <span class="text-rose-500">*</span>
+          </label>
+          <input type="number" id="inputStokBuku" required min="0" value="1"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+        </div>
+        <div>
+          <label for="inputLokasiRak" class="block text-xs font-bold text-slate-700 mb-1">
+            Lokasi Rak Fisik (Keterangan) <span class="text-rose-500">*</span>
+          </label>
+          <input type="text" id="inputLokasiRak" required placeholder="Contoh: Rak 3B - Sains"
+            class="w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+        </div>
+      </div>
+
+      <!-- Row 5: Harga Penggantian Buku -->
+      <div>
+        <label for="inputHargaBuku" class="block text-xs font-bold text-slate-700 mb-1">
+          Harga Buku (Nilai Penggantian jika Hilang) <span class="text-rose-500">*</span>
+        </label>
+        <div class="relative">
+          <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+          <input type="number" id="inputHargaBuku" required min="1000" step="500" value="50000"
+            class="w-full rounded-xl border border-slate-200 pl-10 pr-3.5 py-2 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" />
+        </div>
+        <span class="text-[10px] text-slate-400 mt-1 block">Digunakan oleh modul kalkulator denda saat buku hilang.</span>
+      </div>
+
+      <!-- Modal Footer Buttons -->
+      <div class="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button type="button" id="btnCancelBookModal"
+          class="rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300">
+          Batal
+        </button>
+        <button type="submit" id="btnSaveBook"
+          class="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 text-sm font-bold text-white shadow-sm shadow-navy/20 hover:bg-navy-light transition-all focus:outline-none focus:ring-3 focus:ring-navy/30 disabled:opacity-60 disabled:cursor-not-allowed">
+          <i class="ph ph-check-circle text-lg" id="iconSaveBookSpinner"></i>
+          <span id="btnSaveBookText">Simpan Buku</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- MODAL 2: LIHAT & CETAK STIKER BARCODE / QR CODE BUKU FISIK (MENGGUNAKAN PUSTAKA QRCode.js)     -->
+<div id="modalQrCode"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="dialog" aria-modal="true">
+  <div id="modalQrContent"
+    class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-200">
+    
+    <!-- Kepala Modal QR: Ikon Barcode & Judul -->
+    <div class="flex items-center justify-between border-b border-slate-100 px-6 py-4 bg-slate-50/50">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy/10 text-navy font-bold text-lg">
+          <i class="ph ph-qr-code text-xl"></i>
+        </div>
+        <div>
+          <h3 class="text-base font-extrabold tracking-tight text-slate-900">Label Stiker QR Buku</h3>
+          <p class="text-xs text-slate-500">Cetak label fisik untuk ditempel pada buku.</p>
+        </div>
+      </div>
+      <!-- Tombol silang untuk menutup modal QR -->
+      <button type="button" id="btnCloseQrModal"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Badan Modal: Pratinjau Kartu Stiker Perpustakaan Resmi -->
+    <div class="p-6 text-center space-y-4">
+      <!-- Kartu Bentuk Stiker yang Menyerupai Label Fisik Asli -->
+      <div id="qrStickerPreview"
+        class="sticker-preview-card p-4 rounded-xl border border-slate-300 text-left space-y-2 bg-white shadow-xs">
+        <div class="text-center border-b border-slate-200 pb-2">
+          <h4 class="text-xs font-black tracking-wider text-navy uppercase">PERPUSTAKAAN DIGITAL CAKRAWALA</h4>
+          <p class="text-[9px] text-slate-500 font-semibold tracking-wide">LABEL INVENTARIS BUKU FISIK</p>
+        </div>
+
+        <!-- Wadah tempat pustaka QRCode.js menggambar kotak barcode hitam-putih -->
+        <div class="flex justify-center py-2">
+          <div id="qrcodeCanvasContainer" class="p-2 bg-white rounded-lg border border-slate-200 shadow-2xs"></div>
+        </div>
+
+        <!-- Keterangan Teks Label: ID Buku, Judul, Pengarang, Kategori, dan Rak -->
+        <div class="text-center space-y-0.5 border-t border-slate-200 pt-2">
+          <p id="qrModalBookId" class="text-xs font-mono font-black text-navy tracking-wider">BK-0000</p>
+          <p id="qrModalBookTitle" class="text-xs font-extrabold text-slate-800 line-clamp-1">Judul Buku</p>
+          <p id="qrModalBookAuthor" class="text-[10px] text-slate-500 line-clamp-1">Penulis</p>
+          <div
+            class="flex items-center justify-between text-[9px] text-slate-600 font-semibold pt-1 border-t border-dashed border-slate-200 mt-1">
+            <span id="qrModalCategory">Kategori</span>
+            <span id="qrModalShelf">Rak</span>
+          </div>
+        </div>
+      </div>
+
+      <p class="text-xs text-slate-500">
+        Cetak stiker secara langsung pada kertas label atau unduh barcode sebagai gambar PNG.
+      </p>
+
+      <!-- Tombol Aksi Cetak & Unduh Gambar PNG -->
+      <div class="grid grid-cols-2 gap-3 pt-2">
+        <button type="button" id="btnPrintQrLabel"
+          class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-navy py-2.5 px-3 text-xs font-bold text-white shadow-sm hover:bg-navy-light transition">
+          <i class="ph ph-printer text-base"></i>
+          <span>Print Label QR</span>
+        </button>
+        <button type="button" id="btnDownloadQrPng"
+          class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-slate-200 py-2.5 px-3 text-xs font-bold text-slate-700 hover:bg-slate-50 transition">
+          <i class="ph ph-download-simple text-base"></i>
+          <span>Unduh PNG</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL 3: KONFIRMASI HAPUS BUKU KOLEKSI (ALERT DIALOG PENGAMAN)                                -->
+<div id="modalDeleteBook"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="alertdialog" aria-modal="true">
+  <div id="modalDeleteBookContent"
+    class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-100 p-6 transform scale-95 transition-transform duration-200">
+    <div class="flex items-start gap-4">
+      <!-- Ikon Tong Sampah Merah -->
+      <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
+        <i class="ph ph-trash text-2xl" aria-hidden="true"></i>
+      </div>
+      <div class="flex-1">
+        <h3 class="text-lg font-extrabold tracking-tight text-slate-900">
+          Hapus Buku Koleksi?
+        </h3>
+        <p class="mt-1.5 text-xs leading-relaxed text-slate-600">
+          Apakah Anda yakin ingin menghapus buku <strong id="deleteBookTitle"
+            class="text-slate-900 font-bold">...</strong>? Tindakan ini akan menghapus buku dari katalog perpustakaan.
+        </p>
+      </div>
+    </div>
+
+    <!-- Pilihan Tombol Batal atau Ya Hapus -->
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <button type="button" id="btnCancelDeleteBook"
+        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300">
+        Batal
+      </button>
+      <button type="button" id="btnConfirmDeleteBook"
+        class="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-rose-600/25 hover:bg-rose-700 transition-all focus:outline-none focus:ring-3 focus:ring-rose-400">
+        <i class="ph ph-trash-simple text-base"></i>
+        <span>Ya, Hapus Buku</span>
+      </button>
+    </div>
+  </div>
+</div>

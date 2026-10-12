@@ -1,18 +1,18 @@
 <!doctype html>
 <!--
   =============================================================================================
-  CAKRAWALA DIGITAL LIBRARY - DASHBOARD PETUGAS SIRKULASI (MODULAR)
-  File: dashboard.html
+  CAKRAWALA DIGITAL LIBRARY - DASHBOARD PETUGAS SIRKULASI (MODULAR MASTER LAYOUT)
+  File: public/petugas/dashboard.html
   
-  STRUKTUR MODULAR:
-  - components/sidebar.html          : Sidebar navigasi desktop & bilah menu mobile
-  - components/header.html           : Papan atas judul meja kerja & breadcrumb
-  - components/tab-overview.html     : Meja 1 - Statistik, ringkasan, dan kartu metrik
-  - components/tab-sirkulasi.html    : Meja 2 - Antrean prapinjam daring & peminjaman walk-in
-  - components/tab-pengembalian.html : Meja 3 - Pengembalian buku & kasir pelunasan denda
-  - components/tab-inventaris.html   : Meja 4 - Katalog buku induk & cetak stiker QR
-  - components/tab-pengumuman.html   : Meja 5 - Manajemen pengumuman & poster event
-  - components/modals.html           : 10 Jendela pop-up modal dialog
+  STRUKTUR KOMPONEN MODULAR TAHAP 1:
+  - components/sidebar.html              : Sidebar navigasi desktop & bilah menu mobile
+  - components/header.html               : Topbar judul meja kerja & breadcrumb
+  - components/tabs/tab-overview.html    : Meja 1 - Statistik, ringkasan, dan kartu metrik
+  - components/tabs/tab-sirkulasi.html   : Meja 2 - Antrean prapinjam & peminjaman walk-in
+  - components/tabs/tab-pengembalian.html: Meja 3 - Pengembalian buku & kalkulator denda
+  - components/tabs/tab-inventaris.html  : Meja 4 - Master katalog & cetak stiker QR
+  - components/tabs/tab-pengumuman.html  : Meja 5 - Kelola agenda & broadcast pengumuman
+  - components/modals.html               : Jendela pop-up modal dialog sistem
   =============================================================================================
 -->
 <html lang="id">
@@ -22,7 +22,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard Petugas Sirkulasi | CAKRAWALA Digital Library</title>
 
-  <!-- Tailwind CSS CDN & Konfigurasi Tema -->
+  <!-- Tailwind CSS CDN & Konfigurasi Tema Navy Cakrawala -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -52,10 +52,8 @@
   <!-- QRCode.js Generator -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
-  <!-- jsQR Decoder untuk file upload gambar barcode/QR -->
+  <!-- jsQR Decoder & HTML5-QRCode Scanner -->
   <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.min.js"></script>
-
-  <!-- HTML5-QRCode Scanner Kamera -->
   <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 
   <!-- Stylesheet Khusus Dashboard Petugas -->
@@ -64,41 +62,40 @@
 
 <body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col md:flex-row selection:bg-navy selection:text-white">
 
-  <!-- Navigasi Sidebar & Header Mobile -->
+  <!-- 1. Navigasi Sidebar & Header Mobile -->
   <include src="./components/sidebar.html" />
 
-  <!-- Area Konten Utama (Ruang Kerja di Sebelah Kanan) -->
+  <!-- 2. Area Konten Utama Meja Kerja -->
   <div class="flex-1 flex flex-col min-w-0">
-
-    <!-- Header Atas Dinamis: Judul Meja Kerja & Breadcrumb -->
+    <!-- Header Atas Dinamis: Breadcrumb & Judul Meja -->
     <include src="./components/header.html" />
 
-    <!-- Ruang Kerja (Main): Berisi 5 Meja Kerja -->
+    <!-- Ruang Kerja Utama (5 Meja Operasional) -->
     <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
-      <!-- Meja 1: Overview / Ringkasan Operasional -->
-      <include src="./components/tab-overview.html" />
+      <!-- Meja 1: Overview Operasional & KPI -->
+      <include src="./components/tabs/tab-overview.html" />
 
       <!-- Meja 2: Sirkulasi Peminjaman & Prapinjam -->
-      <include src="./components/tab-sirkulasi.html" />
+      <include src="./components/tabs/tab-sirkulasi.html" />
 
       <!-- Meja 3: Pengembalian Buku & Denda -->
-      <include src="./components/tab-pengembalian.html" />
+      <include src="./components/tabs/tab-pengembalian.html" />
 
-      <!-- Meja 4: Inventaris & Katalog Buku -->
-      <include src="./components/tab-inventaris.html" />
+      <!-- Meja 4: Inventaris Katalog Buku -->
+      <include src="./components/tabs/tab-inventaris.html" />
 
-      <!-- Meja 5: Kelola Pengumuman & Poster Event -->
-      <include src="./components/tab-pengumuman.html" />
+      <!-- Meja 5: Kelola Pengumuman & Poster -->
+      <include src="./components/tabs/tab-pengumuman.html" />
     </main>
   </div>
 
-  <!-- Jendela-Jendela Modal Pop-up Tersembunyi -->
+  <!-- Jendela-Jendela Modal Pop-up Terpusat -->
   <include src="./components/modals.html" />
 
-  <!-- Wadah Pemberitahuan Mengambang (Toast Notification) -->
+  <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full" aria-live="polite"></div>
 
-  <!-- Koneksi Skrip Utama -->
+  <!-- Script Modules -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="../assets/js/supabaseClient.js"></script>
   <script type="module" src="petugas.js"></script>

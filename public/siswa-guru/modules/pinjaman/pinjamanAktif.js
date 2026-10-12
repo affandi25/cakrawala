@@ -8,7 +8,7 @@
  */
 
 import { state } from '../state.js';
-import { formatTanggalIndo, getRemainingDays } from '../siswaHelper.js';
+import { formatTanggalIndo, formatRupiah, getRemainingDays } from '../siswaHelper.js';
 
 /**
  * Merender daftar buku yang sedang aktif dipinjam
@@ -39,9 +39,10 @@ export function renderActiveLoansTable() {
     const rak = book ? (book.keterangan || 'Rak Umum') : '-';
     const coverUrl = book && book.cover_url ? book.cover_url : null;
     const dueInfo = getRemainingDays(item.batas_kembali);
+    const hargaBuku = book ? (Number(book.harga_buku) || 50000) : 50000;
 
     return `
-      <div class="p-5 rounded-2xl border border-slate-200/80 bg-white hover:border-slate-300 transition shadow-2xs">
+      <div class="p-5 rounded-2xl border ${dueInfo.isMonthOverdue ? 'border-rose-400 bg-rose-50/20' : 'border-slate-200/80 bg-white'} hover:border-slate-300 transition shadow-2xs">
         <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div class="flex items-center gap-4 min-w-0">
             <div class="h-16 w-12 shrink-0 rounded-lg overflow-hidden bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-400 shadow-2xs">
@@ -68,10 +69,27 @@ export function renderActiveLoansTable() {
           </div>
         </div>
 
+        ${dueInfo.isMonthOverdue ? `
+          <div class="mt-3.5 p-3 rounded-xl bg-rose-100/80 border border-rose-300 text-rose-900 text-xs flex items-start gap-2.5">
+            <i class="ph-fill ph-warning-octagon text-rose-600 text-xl shrink-0 mt-0.5"></i>
+            <div class="space-y-1">
+              <div class="flex items-center gap-2 font-black text-rose-950">
+                <span>Peringatan: Keterlambatan Telah Mencapai 1 Bulan (${dueInfo.lateDays} Hari)!</span>
+                <span class="rounded bg-rose-700 text-white px-2 py-0.5 text-[10px] font-bold">Denda Seharga Buku</span>
+              </div>
+              <p class="text-[11px] leading-relaxed text-rose-800">
+                Perhitungan denda harian telah <strong>dinonaktifkan</strong>. Sistem menetapkan nominal denda penggantian seharga buku fisik sebesar 
+                <strong class="text-rose-950 font-black text-xs underline">${formatRupiah(hargaBuku)}</strong>. 
+                Harap segera temui Petugas Perpustakaan untuk menyelesaikan buku ini.
+              </p>
+            </div>
+          </div>
+        ` : ''}
+
         <div class="mt-3.5 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/60 -mx-5 -mb-5 px-5 py-2.5 rounded-b-2xl">
           <span class="flex items-center gap-1.5 text-[11px]">
-            <i class="ph ph-info text-navy text-sm"></i>
-            <span>Kembalikan buku fisik tepat waktu ke meja sirkulasi untuk menghindari denda.</span>
+            <i class="ph ${dueInfo.isMonthOverdue ? 'ph-warning text-rose-600 font-bold' : 'ph-info text-navy'} text-sm"></i>
+            <span class="${dueInfo.isMonthOverdue ? 'text-rose-700 font-semibold' : ''}">${dueInfo.isMonthOverdue ? 'Buku harus segera dikembalikan ke meja sirkulasi.' : 'Kembalikan buku fisik tepat waktu ke meja sirkulasi untuk menghindari denda.'}</span>
           </span>
           <span class="font-semibold text-emerald-600 text-[11px]">&bull; Sedang Dipinjam</span>
         </div>
