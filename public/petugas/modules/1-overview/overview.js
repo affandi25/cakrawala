@@ -182,10 +182,17 @@ export function renderQuickPrapinjamTable(list) {
       <tr class="hover:bg-slate-50/80 transition">
         <td class="px-5 py-3 font-mono font-bold text-xs text-navy">${item.id_peminjaman}</td>
         <td class="px-5 py-3">
-          <div class="font-bold text-xs text-slate-900">${borrower.nama}</div>
-          <div class="flex items-center gap-1.5 mt-0.5">
-            <span class="rounded-full ${badgeRoleClass} px-2 py-0.2 text-[9px] font-bold">${borrower.badge}</span>
-            <span class="text-[10px] text-slate-500">${borrower.id} &bull; ${borrower.kelas}</span>
+          <div class="flex items-center gap-2.5">
+            ${borrower.foto && typeof borrower.foto === 'string' && borrower.foto.trim() !== ''
+              ? `<img src="${borrower.foto}" class="h-8 w-8 rounded-lg object-cover shrink-0 border border-slate-200/80 shadow-2xs" alt="${borrower.nama}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-[11px] font-bold\\'>${(borrower.nama || 'A').charAt(0).toUpperCase()}</div>';"/>`
+              : `<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-[11px] font-bold">${(borrower.nama || 'A').charAt(0).toUpperCase()}</div>`}
+            <div class="min-w-0">
+              <div class="font-bold text-xs text-slate-900">${borrower.nama}</div>
+              <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="rounded-full ${badgeRoleClass} px-2 py-0.2 text-[9px] font-bold">${borrower.badge}</span>
+                <span class="text-[10px] text-slate-500">${borrower.id} &bull; ${borrower.kelas}</span>
+              </div>
+            </div>
           </div>
         </td>
         <td class="px-5 py-3">

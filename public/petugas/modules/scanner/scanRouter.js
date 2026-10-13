@@ -17,10 +17,9 @@
 import { state } from '../core/state.js';
 import { showToast } from '../core/petugasHelper.js';
 import { playScanBeep, playErrorBeep } from './soundFeedback.js';
-import { stopCamera, stopAndCloseCameraScanner } from './cameraStream.js';
+import { stopAndCloseCameraScanner } from './cameraStream.js';
 import {
   addBookToWalkInCart,
-  setMejaSelectedBuku,
   switchSirkulasiSubtab,
   selectMember,
   renderPrapinjamOnlyTable,
@@ -127,7 +126,8 @@ export async function handleCameraScanSuccess(decodedText, contextMode) {
         id: matchedSiswa.nisn_siswa,
         nama: matchedSiswa.nama_siswa,
         detail: `NISN: ${matchedSiswa.nisn_siswa} &bull; Kelas ${matchedSiswa.kelas || '-'}`,
-        badge: 'Siswa'
+        badge: 'Siswa',
+        foto: matchedSiswa.foto_profil || null
       });
     } else {
       selectMember({
@@ -135,7 +135,8 @@ export async function handleCameraScanSuccess(decodedText, contextMode) {
         id: matchedGuru.nip_guru,
         nama: matchedGuru.nama_guru,
         detail: `NIP: ${matchedGuru.nip_guru} &bull; ${matchedGuru.mata_pelajaran || 'Pengajar'}`,
-        badge: 'Guru'
+        badge: 'Guru',
+        foto: matchedGuru.foto_profil || null
       });
     }
     showToast(`Kartu [${memberName}] berhasil dipindai!`, 'success');
@@ -188,11 +189,13 @@ export async function handleCameraScanSuccess(decodedText, contextMode) {
 
     // RUTE C: Jika di tab lain (Overview, Inventaris Meja 4, Pengumuman Meja 5) -> Buka rincian Meja 4
     if (window.switchTab) window.switchTab('inventaris');
-    state.searchBooksQuery = matchedBook.judul_buku || matchedBook.id_buku;
+    state.searchBooksQuery = (matchedBook.judul_buku || matchedBook.id_buku).toLowerCase();
 
-    const inputSearchBuku = document.getElementById('inputSearchBuku');
+    const inputSearchBuku = document.getElementById('inputSearchBooks');
+    const btnClearSearch = document.getElementById('btnClearSearchBooks');
     if (inputSearchBuku) {
       inputSearchBuku.value = matchedBook.judul_buku;
+      if (btnClearSearch) btnClearSearch.classList.remove('hidden');
     }
 
     if (window.renderBooksInventory) {
@@ -200,7 +203,7 @@ export async function handleCameraScanSuccess(decodedText, contextMode) {
     }
 
     if (window.openBookModal) {
-      window.openBookModal(matchedBook);
+      window.openBookModal('edit', matchedBook.id_buku);
     }
 
     showToast(`Buku "${matchedBook.judul_buku}" ditemukan di inventaris!`, 'success');

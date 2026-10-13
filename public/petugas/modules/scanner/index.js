@@ -132,6 +132,7 @@ export function setupCameraScannerModule() {
   const btnOpenWalkIn = document.getElementById('btnOpenScannerCamera');
   const btnOpenPrapinjam = document.getElementById('btnScanCameraPrapinjam');
   const btnLaunchFromModal = document.getElementById('btnLaunchCameraFromModal');
+  const btnOpenPengembalian = document.getElementById('btnScanCameraPengembalian');
 
   // 1. Tombol Tutup / Batal Scanner
   if (closeBtn) {
@@ -210,6 +211,11 @@ export function setupCameraScannerModule() {
   if (btnLaunchFromModal) {
     btnLaunchFromModal.addEventListener('click', () => {
       startLiveCameraScanner('prapinjam');
+    });
+  }
+  if (btnOpenPengembalian) {
+    btnOpenPengembalian.addEventListener('click', () => {
+      startLiveCameraScanner('pengembalian');
     });
   }
 

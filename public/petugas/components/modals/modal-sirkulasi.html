@@ -40,14 +40,19 @@
       <!-- Detail Pemesan & Jadwal Pinjam -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
         <!-- Card Identitas -->
-        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 space-y-1.5">
-          <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Identitas Pemesan</p>
-          <div class="flex items-center gap-1.5">
-            <span id="verifyBorrowerName" class="font-bold text-slate-800 text-xs line-clamp-1">-</span>
-            <span id="verifyBorrowerBadge" class="rounded-full bg-blue-100 text-navy px-1.5 py-0.2 text-[9px] font-bold">Siswa</span>
+        <div class="rounded-xl border border-slate-200 bg-slate-50/60 p-3 flex items-start gap-3">
+          <div id="verifyBorrowerAvatarContainer" class="h-10 w-10 shrink-0 rounded-xl overflow-hidden border border-slate-200/80 bg-slate-100 flex items-center justify-center text-slate-400 shadow-2xs">
+            <i class="ph-fill ph-user text-xl text-slate-400"></i>
           </div>
-          <p id="verifyBorrowerSub" class="text-slate-500 text-[11px]">-</p>
-          <p id="verifyBorrowerContact" class="text-slate-400 text-[10px]">Kontak: -</p>
+          <div class="min-w-0 flex-1 space-y-1">
+            <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400">Identitas Pemesan</p>
+            <div class="flex items-center gap-1.5">
+              <span id="verifyBorrowerName" class="font-bold text-slate-800 text-xs line-clamp-1">-</span>
+              <span id="verifyBorrowerBadge" class="rounded-full bg-blue-100 text-navy px-1.5 py-0.2 text-[9px] font-bold">Siswa</span>
+            </div>
+            <p id="verifyBorrowerSub" class="text-slate-500 text-[11px]">-</p>
+            <p id="verifyBorrowerContact" class="text-slate-400 text-[10px]">Kontak: -</p>
+          </div>
         </div>
 
         <!-- Card Jadwal -->

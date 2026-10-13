@@ -4,7 +4,7 @@
  */
 
 export const state = {
-  activeTab: 'siswa', // 'siswa' | 'guru' | 'petugas'
+  activeTab: 'beranda', // 'beranda' | 'siswa' | 'guru' | 'petugas'
   searchQuery: '',
   isLoading: false,
   modalMode: 'add', // 'add' | 'edit'
@@ -19,6 +19,16 @@ export const state = {
 
 // Konfigurasi Metadata Tab Admin
 export const TAB_CONFIGS = {
+  beranda: {
+    title: 'Beranda Administrator',
+    breadcrumb: 'Beranda',
+    desc: 'Pusat ringkasan statistik dan manajemen pengguna CAKRAWALA Digital Library.',
+    tableTitle: '',
+    addBtnText: '',
+    modalTitle: '',
+    modalSubtitle: '',
+    columns: []
+  },
   siswa: {
     title: 'Manajemen Data Siswa',
     breadcrumb: 'Manajemen Siswa',
@@ -58,6 +68,7 @@ export const DOM = {
   get adminSidebar() { return document.getElementById('adminSidebar'); },
   get sidebarBackdrop() { return document.getElementById('sidebarBackdrop'); },
 
+  get tabBtnBeranda() { return document.getElementById('tabBtnBeranda'); },
   get tabBtnSiswa() { return document.getElementById('tabBtnSiswa'); },
   get tabBtnGuru() { return document.getElementById('tabBtnGuru'); },
   get tabBtnPetugas() { return document.getElementById('tabBtnPetugas'); },
@@ -70,17 +81,47 @@ export const DOM = {
   get headerPageTitle() { return document.getElementById('headerPageTitle'); },
   get headerPageDesc() { return document.getElementById('headerPageDesc'); },
 
-  get searchInput() { return document.getElementById('searchInput'); },
-  get btnClearSearch() { return document.getElementById('btnClearSearch'); },
-  get btnRefreshData() { return document.getElementById('btnRefreshData'); },
-  get iconRefresh() { return document.getElementById('iconRefresh'); },
-  get btnOpenAddModal() { return document.getElementById('btnOpenAddModal'); },
-  get btnAddText() { return document.getElementById('btnAddText'); },
+  get searchInput() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`searchInput${cap}`) || document.getElementById('searchInput'); 
+  },
+  get btnClearSearch() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`btnClearSearch${cap}`) || document.getElementById('btnClearSearch'); 
+  },
+  get btnRefreshData() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`btnRefreshData${cap}`) || document.getElementById('btnRefreshData'); 
+  },
+  get iconRefresh() { 
+    const btn = DOM.btnRefreshData;
+    return (btn && btn.querySelector('i')) || document.getElementById('iconRefresh'); 
+  },
+  get btnOpenAddModal() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`btnOpenAddModal${cap}`) || document.getElementById('btnOpenAddModal'); 
+  },
+  get btnAddText() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`btnAddText${cap}`) || document.getElementById('btnAddText'); 
+  },
 
-  get tableTitle() { return document.getElementById('tableTitle'); },
-  get tableRecordCount() { return document.getElementById('tableRecordCount'); },
-  get tableHeadRow() { return document.getElementById('tableHeadRow'); },
-  get tableBody() { return document.getElementById('tableBody'); },
+  get tableTitle() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`tableTitle${cap}`) || document.getElementById('tableTitle'); 
+  },
+  get tableRecordCount() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`tableRecordCount${cap}`) || document.getElementById('tableRecordCount'); 
+  },
+  get tableHeadRow() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`tableHeadRow${cap}`) || document.getElementById('tableHeadRow'); 
+  },
+  get tableBody() { 
+    const cap = state.activeTab.charAt(0).toUpperCase() + state.activeTab.slice(1);
+    return document.getElementById(`tableBody${cap}`) || document.getElementById('tableBody'); 
+  },
 
   get modalAddUser() { return document.getElementById('modalAddUser'); },
   get modalAddContent() { return document.getElementById('modalAddContent'); },

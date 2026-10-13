@@ -103,14 +103,19 @@ export function renderSemuaRiwayatList() {
     html += `
       <div class="rounded-xl border border-slate-200 bg-white p-3.5 transition hover:border-slate-300 hover:shadow-xs space-y-2">
         <div class="flex items-start justify-between gap-2">
-          <div>
-            <div class="flex items-center gap-2">
-              <span class="font-mono text-[10px] font-bold text-navy bg-navy/10 px-1.5 py-0.5 rounded">${item.id_pengembalian}</span>
-              <span class="text-xs font-bold text-slate-900">${namaSiswa}</span>
+          <div class="flex items-start gap-2.5 min-w-0">
+            ${borrower.foto && typeof borrower.foto === 'string' && borrower.foto.trim() !== ''
+              ? `<img src="${borrower.foto}" class="h-8 w-8 rounded-lg object-cover shrink-0 border border-slate-200/80 shadow-2xs mt-0.5" alt="${borrower.nama}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-[11px] font-bold mt-0.5\\'>${(borrower.nama || 'A').charAt(0).toUpperCase()}</div>';"/>`
+              : `<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-[11px] font-bold mt-0.5">${(borrower.nama || 'A').charAt(0).toUpperCase()}</div>`}
+            <div class="min-w-0">
+              <div class="flex items-center gap-2 flex-wrap">
+                <span class="font-mono text-[10px] font-bold text-navy bg-navy/10 px-1.5 py-0.5 rounded">${item.id_pengembalian}</span>
+                <span class="text-xs font-bold text-slate-900 truncate">${namaSiswa}</span>
+              </div>
+              <p class="text-xs text-slate-700 mt-1 line-clamp-1">
+                <i class="ph ph-book text-slate-400 mr-1"></i>${judulBuku}
+              </p>
             </div>
-            <p class="text-xs text-slate-700 mt-1 line-clamp-1">
-              <i class="ph ph-book text-slate-400 mr-1"></i>${judulBuku}
-            </p>
           </div>
           <div class="text-right">
             ${badgeDenda}

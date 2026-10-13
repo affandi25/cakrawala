@@ -1,94 +1,93 @@
 <!-- ============================================================================================= -->
-  <!-- BAGIAN 4: JENDELA-JENDELA MODAL (BILIK POP-UP TERSEMBUNYI)                                     -->
-  <!-- APA ITU MODAL?                                                                                -->
-  <!-- Modal adalah jendela melayang di tengah layar yang awalnya disembunyikan (hidden).            -->
-  <!-- Ketika petugas menekan tombol (misal 'Tambah Buku' atau 'Scan Kamera'), JavaScript akan      -->
-  <!-- menghapus kelas 'hidden' sehingga jendela ini muncul lembut di depan mata petugas.             -->
-  <!-- ============================================================================================= -->
+<!-- BAGIAN 4: JENDELA-JENDELA MODAL (BILIK POP-UP TERSEMBUNYI)                                     -->
+<!-- APA ITU MODAL?                                                                                -->
+<!-- Modal adalah jendela melayang di tengah layar yang awalnya disembunyikan (hidden).            -->
+<!-- Ketika petugas menekan tombol (misal 'Tambah Buku' atau 'Scan Kamera'), JavaScript akan      -->
+<!-- menghapus kelas 'hidden' sehingga jendela ini muncul lembut di depan mata petugas.             -->
+<!-- ============================================================================================= -->
 
-  <!-- MEJA 4: MODAL INVENTARIS BUKU, STIKER QR CODE, & HAPUS KOLEKSI -->
-  <include src="./modals/modal-buku.html" />
-
-
-  <!-- MODAL PEMINDAI UNIVERSAL (BARCODE & QR CODE SCANNER KAMERA) -->
-  <include src="./modals/modal-scanner.html" />
-
-  <!-- ============================================================================================= -->
-  <!-- MODAL: VERIFIKASI TIKET PRAPINJAM SEBELUM PENYERAHAN BUKU                                    -->
-  <!-- APA GUNANYA?                                                                                  -->
-  <!-- Mencegah penyerahan buku tanpa scan / verifikasi tiket barcode resmi siswa.                   -->
-  <!-- ============================================================================================= -->
-  <!-- MODAL MEJA 2: VERIFIKASI TIKET BOOKING PRA-PINJAM                                             -->
-  <!-- ============================================================================================= -->
-  <include src="./modals/modal-sirkulasi.html" />
+<!-- MEJA 4: MODAL INVENTARIS BUKU, STIKER QR CODE, & HAPUS KOLEKSI -->
+<include src="./modals/modal-buku.html" />
 
 
+<!-- MODAL PEMINDAI UNIVERSAL (BARCODE & QR CODE SCANNER KAMERA) -->
+<include src="./modals/modal-scanner.html" />
 
-  <!-- MEJA 3: MODAL PENGEMBALIAN & KASIR DENDA -->
-  <include src="./modals/modal-pengembalian.html" />
+<!-- ============================================================================================= -->
+<!-- MODAL: VERIFIKASI TIKET PRAPINJAM SEBELUM PENYERAHAN BUKU                                    -->
+<!-- APA GUNANYA?                                                                                  -->
+<!-- Mencegah penyerahan buku tanpa scan / verifikasi tiket barcode resmi siswa.                   -->
+<!-- ============================================================================================= -->
+<!-- MODAL MEJA 2: VERIFIKASI TIKET BOOKING PRA-PINJAM                                             -->
+<!-- ============================================================================================= -->
+<include src="./modals/modal-sirkulasi.html" />
 
 
 
+<!-- MEJA 3: MODAL PENGEMBALIAN & KASIR DENDA -->
+<include src="./modals/modal-pengembalian.html" />
 
-  <!-- ============================================================================================= -->
-  <!-- MODAL 6: KONFIRMASI KELUAR DARI APLIKASI (LOGOUT SESI PETUGAS)                                -->
-  <!-- APA GUNANYA?                                                                                  -->
-  <!-- Menghapus catatan kunci masuk (sessionStorage) di browser komputer sehingga orang lain         -->
-  <!-- tidak dapat menyalahgunakan meja sirkulasi petugas setelah ditinggalkan.                      -->
-  <!-- ============================================================================================= -->
-  <div id="modalLogout"
-    class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
-    role="dialog" aria-modal="true">
-    <div id="modalLogoutContent"
-      class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-100 p-6 text-center space-y-4 transform scale-95 transition-transform duration-200">
-      <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 mx-auto">
-        <i class="ph-fill ph-sign-out text-2xl text-navy"></i>
-      </div>
-      <div>
-        <h3 class="text-base font-extrabold text-slate-900">Keluar dari Sesi Petugas?</h3>
-        <p class="text-xs text-slate-500 mt-1">
-          Anda akan keluar dari meja sirkulasi dan harus masuk kembali untuk mengelola perpustakaan.
-        </p>
-      </div>
-      <div class="grid grid-cols-2 gap-3 pt-2">
-        <button type="button" id="btnCancelLogout"
-          class="rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
-          Batal
-        </button>
-        <button type="button" id="btnConfirmLogout"
-          class="rounded-xl bg-navy py-2.5 text-xs font-bold text-white hover:bg-navy-light transition shadow-sm">
-          Ya, Keluar
-        </button>
-      </div>
+
+
+
+<!-- ============================================================================================= -->
+<!-- MODAL 6: KONFIRMASI KELUAR DARI APLIKASI (LOGOUT SESI PETUGAS)                                -->
+<!-- APA GUNANYA?                                                                                  -->
+<!-- Menghapus catatan kunci masuk (sessionStorage) di browser komputer sehingga orang lain         -->
+<!-- tidak dapat menyalahgunakan meja sirkulasi petugas setelah ditinggalkan.                      -->
+<!-- ============================================================================================= -->
+<div id="modalLogout"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="dialog" aria-modal="true">
+  <div id="modalLogoutContent"
+    class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-100 p-6 text-center space-y-4 transform scale-95 transition-transform duration-200">
+    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 mx-auto">
+      <i class="ph-fill ph-sign-out text-2xl text-navy"></i>
+    </div>
+    <div>
+      <h3 class="text-base font-extrabold text-slate-900">Keluar dari Sesi Petugas?</h3>
+      <p class="text-xs text-slate-500 mt-1">
+        Anda akan keluar dari meja sirkulasi dan harus masuk kembali untuk mengelola perpustakaan.
+      </p>
+    </div>
+    <div class="grid grid-cols-2 gap-3 pt-2">
+      <button type="button" id="btnCancelLogout"
+        class="rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+        Batal
+      </button>
+      <button type="button" id="btnConfirmLogout"
+        class="rounded-xl bg-navy py-2.5 text-xs font-bold text-white hover:bg-navy-light transition shadow-sm">
+        Ya, Keluar
+      </button>
     </div>
   </div>
+</div>
 
-  <!-- ============================================================================================= -->
-  <!-- ELEMEN KHUSUS CETAK PRINTER FISIK (ISOLASI CSS @MEDIA PRINT)                                  -->
-  <!-- APA GUNANYA?                                                                                  -->
-  <!-- Elemen ini TIDAK TERLIHAT di layar komputer biasa (disembunyikan oleh dashboard-petugas.css). -->
-  <!-- Namun saat petugas menekan tombol 'Print Label QR', CSS print hanya akan mencetak kotak ini    -->
-  <!-- dengan ukuran mini pas kertas stiker, sementara seluruh tombol, sidebar, dan tabel disembunyikan.-->
-  <!-- ============================================================================================= -->
-  <div id="printStickerTarget">
-    <div style="text-align: center; border-bottom: 1.5px solid #000; padding-bottom: 2mm; margin-bottom: 2mm;">
-      <div style="font-size: 8pt; font-weight: 900; letter-spacing: 0.5px;">PERPUSTAKAAN DIGITAL CAKRAWALA</div>
-      <div style="font-size: 6pt; color: #333;">LABEL STIKER INVENTARIS BUKU</div>
-    </div>
-    <!-- Wadah penampung gambar QR yang digambar khusus untuk kertas printer -->
-    <div id="printQrTargetCanvas" style="text-align: center; margin: 2mm 0;"></div>
-    <div style="text-align: center; line-height: 1.2;">
-      <div id="printBookId" style="font-size: 8pt; font-weight: 900; font-family: monospace;">BK-0000</div>
-      <div id="printBookTitle" style="font-size: 7.5pt; font-weight: bold; margin-top: 1mm;">Judul Buku</div>
-      <div id="printBookAuthor" style="font-size: 6.5pt; color: #444;">Penulis Buku</div>
-      <div
-        style="border-top: 1px dashed #666; margin-top: 2mm; padding-top: 1.5mm; font-size: 6pt; display: flex; justify-content: space-between;">
-        <span id="printBookCategory">Kategori</span>
-        <span id="printBookShelf">Lokasi Rak</span>
-      </div>
+<!-- ============================================================================================= -->
+<!-- ELEMEN KHUSUS CETAK PRINTER FISIK (ISOLASI CSS @MEDIA PRINT)                                  -->
+<!-- APA GUNANYA?                                                                                  -->
+<!-- Elemen ini TIDAK TERLIHAT di layar komputer biasa (disembunyikan oleh dashboard-petugas.css). -->
+<!-- Namun saat petugas menekan tombol 'Print Label QR', CSS print hanya akan mencetak kotak ini    -->
+<!-- dengan ukuran mini pas kertas stiker, sementara seluruh tombol, sidebar, dan tabel disembunyikan.-->
+<!-- ============================================================================================= -->
+<div id="printStickerTarget">
+  <div style="text-align: center; border-bottom: 1.5px solid #000; padding-bottom: 2mm; margin-bottom: 2mm;">
+    <div style="font-size: 8pt; font-weight: 900; letter-spacing: 0.5px;">PERPUSTAKAAN DIGITAL CAKRAWALA</div>
+    <div style="font-size: 6pt; color: #333;">LABEL STIKER INVENTARIS BUKU</div>
+  </div>
+  <!-- Wadah penampung gambar QR yang digambar khusus untuk kertas printer -->
+  <div id="printQrTargetCanvas" style="text-align: center; margin: 2mm 0;"></div>
+  <div style="text-align: center; line-height: 1.2;">
+    <div id="printBookId" style="font-size: 8pt; font-weight: 900; font-family: monospace;">BK-0000</div>
+    <div id="printBookTitle" style="font-size: 7.5pt; font-weight: bold; margin-top: 1mm;">Judul Buku</div>
+    <div id="printBookAuthor" style="font-size: 6.5pt; color: #444;">Penulis Buku</div>
+    <div
+      style="border-top: 1px dashed #666; margin-top: 2mm; padding-top: 1.5mm; font-size: 6pt; display: flex; justify-content: space-between;">
+      <span id="printBookCategory">Kategori</span>
+      <span id="printBookShelf">Lokasi Rak</span>
     </div>
   </div>
+</div>
 
-  <!-- MEJA 5: MODAL FORMULIR & HAPUS PENGUMUMAN -->
-  <include src="./modals/modal-pengumuman.html" />
-
+<!-- MEJA 5: MODAL FORMULIR & HAPUS PENGUMUMAN -->
+<include src="./modals/modal-pengumuman.html" />

@@ -85,14 +85,15 @@ export function renderBorrowerSearchResults(query = '') {
     const loanCount = b.loans.length;
     const initial = (b.nama || 'A').charAt(0).toUpperCase();
     const loanIds = b.loans.map(l => l.id_peminjaman).join(', ');
+    const avatarHtml = (b.foto && typeof b.foto === 'string' && b.foto.trim() !== '')
+      ? `<img src="${b.foto}" class="h-9 w-9 shrink-0 rounded-lg object-cover border border-slate-200/80 shadow-2xs" alt="${b.nama}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-navy/10 text-navy font-bold text-xs\\'>${initial}</div>';" />`
+      : `<div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-navy/10 text-navy font-bold text-xs group-hover:bg-navy group-hover:text-white transition">${initial}</div>`;
 
     html += `
       <button type="button" data-borrower-id="${b.id}"
         class="btn-select-borrower w-full text-left flex items-center justify-between p-2.5 rounded-lg hover:bg-blue-50/80 transition group">
         <div class="flex items-center gap-2.5">
-          <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-navy/10 text-navy font-bold text-xs group-hover:bg-navy group-hover:text-white transition">
-            ${initial}
-          </div>
+          ${avatarHtml}
           <div>
             <div class="flex items-center gap-1.5">
               <span class="text-xs font-bold text-slate-800 group-hover:text-navy transition">${b.nama}</span>
@@ -157,7 +158,15 @@ export function selectBorrowerForReturn(borrowerId, autoSelectLoanId = null) {
   const badgeEl = document.getElementById('badgeTipeBorrowerPengembalian');
   const detailEl = document.getElementById('detailBorrowerPengembalian');
 
-  if (avatarEl) avatarEl.textContent = (borrower.nama || 'A').charAt(0).toUpperCase();
+  if (avatarEl) {
+    if (borrower.foto && typeof borrower.foto === 'string' && borrower.foto.trim() !== '') {
+      avatarEl.innerHTML = `<img src="${borrower.foto}" class="h-full w-full object-cover rounded-xl" alt="${borrower.nama}" onerror="this.onerror=null; this.parentElement.textContent='${(borrower.nama || 'A').charAt(0).toUpperCase()}';" />`;
+      avatarEl.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl overflow-hidden border border-slate-200/80 shadow-xs bg-slate-100';
+    } else {
+      avatarEl.textContent = (borrower.nama || 'A').charAt(0).toUpperCase();
+      avatarEl.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-navy font-extrabold text-white text-base shadow-xs';
+    }
+  }
   if (namaEl) namaEl.textContent = borrower.nama;
   if (badgeEl) {
     badgeEl.textContent = borrower.badge;

@@ -6,21 +6,36 @@
 import { escapeHtml } from '../../assets/js/sharedUtils.js';
 import { state, TAB_CONFIGS, DOM } from './state.js';
 import { loadData } from './data.js';
-import { openAddModal, openEditModal, openDeleteModal } from './modal.js';
+import { loadKpiStats } from './0-overview/kpiMetrics.js';
+import { openAddModal, openEditModal } from './modalUser.js';
+import { openDeleteModal } from './modalKonfirmasi.js';
 
 /**
  * Memperbarui badge hitungan jumlah data pada menu tab sidebar
  */
 export function updateBadge(tab, count) {
-  if (tab === 'siswa' && DOM.badgeCountSiswa) DOM.badgeCountSiswa.textContent = count;
-  if (tab === 'guru' && DOM.badgeCountGuru) DOM.badgeCountGuru.textContent = count;
-  if (tab === 'petugas' && DOM.badgeCountPetugas) DOM.badgeCountPetugas.textContent = count;
+  if (tab === 'siswa') {
+    if (DOM.badgeCountSiswa) DOM.badgeCountSiswa.textContent = count;
+    const el = document.getElementById('totalSiswa') || document.querySelector('[data-stat="siswa"]');
+    if (el) el.textContent = count;
+  }
+  if (tab === 'guru') {
+    if (DOM.badgeCountGuru) DOM.badgeCountGuru.textContent = count;
+    const el = document.getElementById('totalGuru') || document.querySelector('[data-stat="guru"]');
+    if (el) el.textContent = count;
+  }
+  if (tab === 'petugas') {
+    if (DOM.badgeCountPetugas) DOM.badgeCountPetugas.textContent = count;
+    const el = document.getElementById('totalPetugas') || document.querySelector('[data-stat="petugas"]');
+    if (el) el.textContent = count;
+  }
 }
 
 /**
  * Render baris tabel sesuai data, status filter, atau state loading
  */
 export function renderTable() {
+  if (state.activeTab === 'beranda') return;
   const config = TAB_CONFIGS[state.activeTab];
   if (!config) return;
 
@@ -108,8 +123,8 @@ export function renderTable() {
               </h4>
               <p class="mt-1.5 text-xs text-slate-500 leading-relaxed">
                 ${isSearchActive
-                  ? `Pencarian kata kunci "${escapeHtml(query)}" tidak menemukan kecocokan pada daftar saat ini.`
-                  : `Mulai kelola sistem dengan menambahkan ${config.breadcrumb.toLowerCase()} baru melalui tombol di bawah.`}
+          ? `Pencarian kata kunci "${escapeHtml(query)}" tidak menemukan kecocokan pada daftar saat ini.`
+          : `Mulai kelola sistem dengan menambahkan ${config.breadcrumb.toLowerCase()} baru melalui tombol di bawah.`}
               </p>
               ${isSearchActive ? `
                 <button type="button" id="btnResetSearchInEmpty" class="mt-4 inline-flex items-center gap-1.5 rounded-xl border border-slate-200 px-3.5 py-2 text-xs font-bold text-navy hover:bg-slate-50 transition-colors">
@@ -355,7 +370,7 @@ export function renderTableError(errorMessage) {
  * Mengganti tampilan tab aktif
  */
 export function switchTab(newTab) {
-  if (state.activeTab === newTab && state.cache[newTab] && state.cache[newTab].length > 0) return;
+  if (state.activeTab === newTab && newTab !== 'beranda' && state.cache[newTab] && state.cache[newTab].length > 0) return;
 
   state.activeTab = newTab;
   const config = TAB_CONFIGS[newTab];
@@ -365,11 +380,21 @@ export function switchTab(newTab) {
   if (DOM.headerPageTitle) DOM.headerPageTitle.textContent = config.title;
   if (DOM.headerSubBreadcrumb) DOM.headerSubBreadcrumb.textContent = config.breadcrumb;
   if (DOM.headerPageDesc) DOM.headerPageDesc.textContent = config.desc;
-  if (DOM.tableTitle) DOM.tableTitle.textContent = config.tableTitle;
-  if (DOM.btnAddText) DOM.btnAddText.textContent = config.addBtnText;
+  if (DOM.tableTitle && config.tableTitle) DOM.tableTitle.textContent = config.tableTitle;
+  if (DOM.btnAddText && config.addBtnText) DOM.btnAddText.textContent = config.addBtnText;
+
+  // Toggle Tab Containers Visibility
+  const tabBeranda = document.getElementById('tabBeranda');
+  const tabSiswa = document.getElementById('tabSiswa');
+  const tabGuru = document.getElementById('tabGuru');
+  const tabPetugas = document.getElementById('tabPetugas');
+  if (tabBeranda) tabBeranda.classList.toggle('hidden', newTab !== 'beranda');
+  if (tabSiswa) tabSiswa.classList.toggle('hidden', newTab !== 'siswa');
+  if (tabGuru) tabGuru.classList.toggle('hidden', newTab !== 'guru');
+  if (tabPetugas) tabPetugas.classList.toggle('hidden', newTab !== 'petugas');
 
   // Update Sidebar Navigation Active States
-  [DOM.tabBtnSiswa, DOM.tabBtnGuru, DOM.tabBtnPetugas].forEach(btn => {
+  [DOM.tabBtnBeranda, DOM.tabBtnSiswa, DOM.tabBtnGuru, DOM.tabBtnPetugas].forEach(btn => {
     if (!btn) return;
     const isTarget = btn.dataset.tab === newTab;
     if (isTarget) {
@@ -389,5 +414,9 @@ export function switchTab(newTab) {
   if (DOM.btnClearSearch) DOM.btnClearSearch.classList.add('hidden');
 
   // Fetch data
-  loadData(newTab);
+  if (newTab === 'beranda') {
+    loadKpiStats().catch(err => console.warn('[SwitchTab] Refresh KPI error:', err));
+  } else {
+    loadData(newTab);
+  }
 }

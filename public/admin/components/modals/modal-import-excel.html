@@ -1,0 +1,156 @@
+<!--
+  =============================================================================================
+  CAKRAWALA DIGITAL LIBRARY - MODAL IMPORT MASSAL EXCEL / CSV
+  File: public/admin/components/modals/modal-import-excel.html
+  =============================================================================================
+-->
+
+<div id="modalImportExcel"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="dialog" aria-modal="true" aria-labelledby="modalImportTitle">
+  <div id="modalImportContent"
+    class="w-full max-w-2xl rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden transform scale-95 transition-transform duration-200 flex flex-col max-h-[90vh]">
+    
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/60 shrink-0">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 font-bold text-lg border border-emerald-100">
+          <i class="ph ph-file-arrow-up" aria-hidden="true"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h3 id="modalImportTitle" class="text-base font-extrabold tracking-tight text-slate-900">
+              Impor Massal Pengguna
+            </h3>
+            <span id="importTargetRoleBadge" class="rounded-full bg-emerald-100 px-2 py-0.5 text-2xs font-extrabold uppercase text-emerald-800 tracking-wide">
+              SISWA
+            </span>
+          </div>
+          <p id="modalImportSubtitle" class="text-xs text-slate-500">
+            Unggah file spreadsheet Excel (.xlsx, .xls) atau CSV untuk memasukkan banyak data sekaligus.
+          </p>
+        </div>
+      </div>
+      <button type="button" id="btnCancelImportModal" aria-label="Tutup modal import"
+        class="flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition-colors">
+        <i class="ph ph-x text-lg"></i>
+      </button>
+    </div>
+
+    <!-- Modal Body (Scrollable) -->
+    <div class="p-6 space-y-5 overflow-y-auto flex-1">
+
+      <!-- Action Card: Download Template -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl bg-emerald-50/50 border border-emerald-200/70">
+        <div class="flex items-start gap-3">
+          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-600 text-white shadow-2xs">
+            <i class="ph ph-microsoft-excel-logo text-base"></i>
+          </div>
+          <div>
+            <p class="text-xs font-bold text-slate-800">Gunakan Format Template Resmi</p>
+            <p class="text-2xs text-slate-500 leading-relaxed">
+              Pastikan nama kolom sesuai format template agar data dapat terpetakan dengan tepat ke Supabase.
+            </p>
+          </div>
+        </div>
+        <button type="button" id="btnDownloadTemplateExcel"
+          class="shrink-0 inline-flex items-center justify-center gap-1.5 rounded-lg bg-white border border-emerald-300 px-3 py-1.5 text-xs font-bold text-emerald-700 hover:bg-emerald-100 transition shadow-2xs">
+          <i class="ph ph-download-simple text-sm"></i>
+          <span>Unduh Template .xlsx</span>
+        </button>
+      </div>
+
+      <!-- Drag and Drop Upload Area -->
+      <div>
+        <label class="block text-xs font-bold text-slate-700 mb-2">Pilih File Spreadsheet</label>
+        <div id="importDropZone"
+          class="relative flex flex-col items-center justify-center p-6 border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl bg-slate-50/50 hover:bg-emerald-50/20 transition-all cursor-pointer group text-center">
+          <input type="file" id="inputImportFile" accept=".xlsx, .xls, .csv" class="hidden" />
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-500 group-hover:bg-emerald-100 group-hover:text-emerald-700 transition mb-3">
+            <i class="ph ph-cloud-arrow-up text-2xl"></i>
+          </div>
+          <p class="text-xs font-bold text-slate-700 group-hover:text-emerald-900 transition">
+            Klik untuk memilih file <span class="text-slate-400 font-normal">atau seret file ke area ini</span>
+          </p>
+          <p class="text-2xs text-slate-400 mt-1">
+            Mendukung file Microsoft Excel (.xlsx, .xls) dan CSV (Maks. 5 MB)
+          </p>
+        </div>
+      </div>
+
+      <!-- File Selected Info Box (Hidden by default) -->
+      <div id="importFileInfoBox" class="hidden flex items-center justify-between p-3.5 rounded-xl bg-slate-100/80 border border-slate-200">
+        <div class="flex items-center gap-3 min-w-0">
+          <i class="ph-fill ph-file-xls text-2xl text-emerald-600 shrink-0"></i>
+          <div class="truncate">
+            <p id="importFileName" class="text-xs font-bold text-slate-800 truncate">data_siswa.xlsx</p>
+            <p id="importFileSize" class="text-2xs text-slate-500">24.5 KB • 12 Baris terdeteksi</p>
+          </div>
+        </div>
+        <button type="button" id="btnRemoveImportFile" title="Hapus file"
+          class="h-7 w-7 flex items-center justify-center rounded-lg text-slate-400 hover:bg-slate-200 hover:text-rose-600 transition">
+          <i class="ph ph-trash text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Data Table Preview Section (Hidden by default) -->
+      <div id="importPreviewContainer" class="hidden space-y-2">
+        <div class="flex items-center justify-between">
+          <p class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+            <i class="ph ph-table text-sm text-slate-500"></i>
+            <span>Pratinjau Data (Maks. 5 Baris Pertama)</span>
+          </p>
+          <span id="importPreviewBadgeCount" class="text-2xs font-semibold px-2 py-0.5 rounded-md bg-slate-200 text-slate-700">
+            0 Baris
+          </span>
+        </div>
+        <div class="overflow-x-auto rounded-xl border border-slate-200 max-h-48">
+          <table class="w-full text-left text-2xs text-slate-700">
+            <thead id="importPreviewThead" class="bg-slate-100/90 text-slate-600 font-bold uppercase tracking-wider sticky top-0">
+              <!-- Rendered via JS -->
+            </thead>
+            <tbody id="importPreviewTbody" class="divide-y divide-slate-100 bg-white font-mono text-2xs">
+              <!-- Rendered via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Progress & Status Box (Hidden by default) -->
+      <div id="importProgressBox" class="hidden space-y-2 p-4 rounded-xl bg-slate-50 border border-slate-200">
+        <div class="flex items-center justify-between text-xs">
+          <span id="importProgressLabel" class="font-bold text-slate-700">Menyimpan data ke database...</span>
+          <span id="importProgressPercentage" class="font-mono font-bold text-navy">0%</span>
+        </div>
+        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+          <div id="importProgressBar" class="bg-emerald-600 h-2 rounded-full transition-all duration-300 w-0"></div>
+        </div>
+        <p id="importProgressDetail" class="text-2xs text-slate-500">Memproses baris 0 dari 0...</p>
+      </div>
+
+      <!-- Error / Warning Box (Hidden by default) -->
+      <div id="importErrorBox" class="hidden p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs flex items-start gap-2.5">
+        <i class="ph ph-warning-circle text-base text-rose-600 shrink-0 mt-0.5"></i>
+        <div class="flex-1">
+          <p class="font-bold">Gagal Memproses Data</p>
+          <p id="importErrorText" class="text-2xs leading-relaxed mt-0.5">Format file tidak sesuai atau kolom wajib tidak lengkap.</p>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="flex items-center justify-end gap-3 px-6 py-4 border-t border-slate-100 bg-slate-50/60 shrink-0">
+      <button type="button" id="btnCloseImportModal"
+        class="rounded-xl border border-slate-200 px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 transition">
+        Batal
+      </button>
+      <button type="button" id="btnConfirmImportExcel" disabled
+        class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-bold text-white shadow-sm shadow-emerald-600/20 hover:bg-emerald-700 transition disabled:opacity-50 disabled:cursor-not-allowed">
+        <i class="ph ph-check-circle text-base" id="iconConfirmImport"></i>
+        <span id="textBtnConfirmImport">Impor ke Database</span>
+      </button>
+    </div>
+
+  </div>
+</div>

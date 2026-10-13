@@ -6,6 +6,9 @@
 import { db } from '../../assets/js/supabaseClient.js';
 import { state, DOM } from './state.js';
 import { renderTable, renderTableError, updateBadge } from './table.js';
+import { loadKpiStats } from './0-overview/kpiMetrics.js';
+
+export { loadKpiStats };
 
 /**
  * Generate ID User unik yang muat dalam VARCHAR(10)
@@ -57,7 +60,7 @@ export async function enrichWithUserData(rows, fkColumn = 'id_user') {
 export async function fetchSiswa() {
   const { data, error } = await db
     .from('data_siswa')
-    .select('nisn_siswa, nama_siswa, kelas, email_siswa, kontak_siswa, id_user, data_user(id_user, username, role)')
+    .select('nisn_siswa, nama_siswa, kelas, email_siswa, kontak_siswa, foto_profil, id_user, data_user(id_user, username, role)')
     .order('nama_siswa', { ascending: true });
 
   if (error) throw error;
@@ -70,7 +73,7 @@ export async function fetchSiswa() {
 export async function fetchGuru() {
   const { data, error } = await db
     .from('data_guru')
-    .select('nip_guru, nama_guru, mata_pelajaran, email_guru, kontak_guru, id_user, data_user(id_user, username, role)')
+    .select('nip_guru, nama_guru, mata_pelajaran, email_guru, kontak_guru, foto_profil, id_user, data_user(id_user, username, role)')
     .order('nama_guru', { ascending: true });
 
   if (error) throw error;
@@ -83,7 +86,7 @@ export async function fetchGuru() {
 export async function fetchPetugas() {
   const { data, error } = await db
     .from('data_petugas')
-    .select('id_petugas, nama_petugas, email_petugas, kontak_petugas, id_user, data_user(id_user, username, role)')
+    .select('id_petugas, nama_petugas, email_petugas, kontak_petugas, foto_profil, id_user, data_user(id_user, username, role)')
     .order('nama_petugas', { ascending: true });
 
   if (error) throw error;
@@ -132,17 +135,5 @@ export async function loadData(tab = state.activeTab, isSilent = false) {
  * Refresh semua hitungan badge entitas di background
  */
 export async function refreshAllBadges() {
-  try {
-    const [siswaRes, guruRes, petugasRes] = await Promise.all([
-      db.from('data_siswa').select('nisn_siswa', { count: 'exact', head: true }),
-      db.from('data_guru').select('nip_guru', { count: 'exact', head: true }),
-      db.from('data_petugas').select('id_petugas', { count: 'exact', head: true })
-    ]);
-
-    if (siswaRes.count !== null && siswaRes.count !== undefined) updateBadge('siswa', siswaRes.count);
-    if (guruRes.count !== null && guruRes.count !== undefined) updateBadge('guru', guruRes.count);
-    if (petugasRes.count !== null && petugasRes.count !== undefined) updateBadge('petugas', petugasRes.count);
-  } catch (err) {
-    console.warn('Gagal memuat ringkasan badge:', err);
-  }
+  await loadKpiStats();
 }

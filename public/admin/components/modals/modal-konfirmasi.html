@@ -1,0 +1,70 @@
+<!--
+  =============================================================================================
+  CAKRAWALA DIGITAL LIBRARY - MODAL KONFIRMASI (HAPUS PENGGUNA & LOGOUT)
+  File: public/admin/components/modals/modal-konfirmasi.html
+  =============================================================================================
+-->
+
+<!-- 1. Modal Konfirmasi Hapus Pengguna (Cascade Delete) -->
+<div id="modalDeleteConfirm"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="alertdialog" aria-modal="true" aria-labelledby="modalDeleteTitle" aria-describedby="modalDeleteDesc">
+  <div id="modalDeleteContent"
+    class="w-full max-w-md rounded-2xl bg-white shadow-2xl border border-slate-100 p-6 transform scale-95 transition-transform duration-200">
+    <div class="flex items-start gap-4">
+      <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600">
+        <i class="ph ph-trash text-2xl" aria-hidden="true"></i>
+      </div>
+      <div class="flex-1">
+        <h3 id="modalDeleteTitle" class="text-lg font-extrabold tracking-tight text-slate-900">
+          Hapus Pengguna?
+        </h3>
+        <p id="modalDeleteDesc" class="mt-1.5 text-xs leading-relaxed text-slate-600">
+          Apakah Anda yakin ingin menghapus akun pengguna <strong id="deleteTargetName"
+            class="text-slate-900 font-bold">...</strong>? Tindakan ini akan menghapus akun login dan seluruh profil
+          terkait secara permanen melalui cascade database.
+        </p>
+      </div>
+    </div>
+
+    <div class="mt-6 flex items-center justify-end gap-3">
+      <button type="button" id="btnCancelDelete"
+        class="rounded-xl border border-slate-200 px-4 py-2 text-sm font-bold text-slate-600 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-slate-300">
+        Batal
+      </button>
+      <button type="button" id="btnConfirmDelete"
+        class="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-sm font-bold text-white shadow-sm shadow-rose-600/25 hover:bg-rose-700 transition-all focus:outline-none focus:ring-3 focus:ring-rose-400 disabled:opacity-60">
+        <i class="ph ph-trash-simple text-base" id="iconDeleteSpinner"></i>
+        <span id="textBtnDelete">Ya, Hapus Pengguna</span>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- 2. Modal Konfirmasi Logout Sesi Admin -->
+<div id="modalLogout"
+  class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm hidden opacity-0 transition-opacity duration-200"
+  role="dialog" aria-modal="true">
+  <div id="modalLogoutContent"
+    class="w-full max-w-sm rounded-2xl bg-white shadow-2xl border border-slate-100 p-6 text-center space-y-4 transform scale-95 transition-transform duration-200">
+    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-600 mx-auto">
+      <i class="ph-fill ph-sign-out text-2xl text-navy"></i>
+    </div>
+    <div>
+      <h3 class="text-base font-extrabold text-slate-900">Keluar dari Sesi Admin?</h3>
+      <p class="text-xs text-slate-500 mt-1">
+        Anda akan keluar dari pusat kendali administrator dan harus masuk kembali untuk mengelola pengguna.
+      </p>
+    </div>
+    <div class="grid grid-cols-2 gap-3 pt-2">
+      <button type="button" id="btnCancelLogout"
+        class="rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-600 hover:bg-slate-50 transition">
+        Batal
+      </button>
+      <button type="button" id="btnConfirmLogout"
+        class="rounded-xl bg-navy py-2.5 text-xs font-bold text-white hover:bg-navy-light transition shadow-sm">
+        Ya, Keluar
+      </button>
+    </div>
+  </div>
+</div>

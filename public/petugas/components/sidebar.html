@@ -1,141 +1,145 @@
-  <!-- ============================================================================================= -->
-  <!-- BAGIAN 1: BARIS ATAS KHUSUS TAMPILAN HP (MOBILE TOP BAR)                                      -->
-  <!-- APA GUNANYA?                                                                                  -->
-  <!-- Ketika petugas membuka aplikasi lewat layar HP yang kecil, menu di samping kiri (sidebar)     -->
-  <!-- akan disembunyikan agar layar tidak sesak. Baris atas ini menyediakan tombol hamburger        -->
-  <!-- (tiga garis) untuk memunculkan menu samping saat disentuh.                                     -->
-  <!-- ============================================================================================= -->
-  <header
-    class="md:hidden flex items-center justify-between bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-30 shadow-xs">
-    <!-- Logo dan Nama Sekolah / Perpustakaan -->
-    <div class="flex items-center gap-2.5">
-      <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-navy text-white shadow-sm">
-        <i class="ph ph-books text-xl" aria-hidden="true"></i>
-      </div>
-      <div>
-        <span class="text-base font-extrabold tracking-tight text-navy">CAKRAWALA</span>
-        <span class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Meja Sirkulasi Petugas</span>
-      </div>
+<!-- ============================================================================================= -->
+<!-- BAGIAN 1: BARIS ATAS KHUSUS TAMPILAN HP (MOBILE TOP BAR)                                      -->
+<!-- APA GUNANYA?                                                                                  -->
+<!-- Ketika petugas membuka aplikasi lewat layar HP yang kecil, menu di samping kiri (sidebar)     -->
+<!-- akan disembunyikan agar layar tidak sesak. Baris atas ini menyediakan tombol hamburger        -->
+<!-- (tiga garis) untuk memunculkan menu samping saat disentuh.                                     -->
+<!-- ============================================================================================= -->
+<header
+  class="md:hidden flex items-center justify-between bg-white border-b border-slate-200 px-4 py-3 sticky top-0 z-30 shadow-xs">
+  <!-- Logo dan Nama Sekolah / Perpustakaan -->
+  <div class="flex items-center gap-2.5">
+    <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-navy text-white shadow-sm">
+      <i class="ph ph-books text-xl" aria-hidden="true"></i>
     </div>
-    <!-- Tombol untuk membuka menu di layar HP (dihubungkan dengan JavaScript lewat id="btnToggleMobileSidebar") -->
-    <button id="btnToggleMobileSidebar" type="button" aria-label="Buka menu navigasi"
-      class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy">
-      <i class="ph ph-list text-2xl" id="iconMobileSidebar"></i>
-    </button>
-  </header>
-
-  <!-- Layar gelap semi-transparan (Backdrop) saat menu HP terbuka. Jika diklik, menu akan tertutup kembali -->
-  <div id="sidebarBackdrop"
-    class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs hidden md:hidden transition-opacity duration-300"></div>
-
-  <!-- ============================================================================================= -->
-  <aside id="petugasSidebar"
-    class="fixed inset-y-0 left-0 z-50 flex w-64 md:w-68 flex-col justify-between border-r border-slate-200 bg-white p-4 shadow-sm transition-transform duration-300 -translate-x-full md:translate-x-0 md:static md:z-auto">
-    <!-- Bagian Atas Sidebar: Logo & Tombol Menu -->
     <div>
-      <!-- Papan Nama Perpustakaan -->
-      <div class="flex items-center justify-between px-2 pb-6 pt-2 border-b border-slate-100">
-        <div class="flex items-center gap-3">
-          <div
-            class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy text-white shadow-md shadow-navy/20">
-            <i class="ph ph-books text-2xl" aria-hidden="true"></i>
-          </div>
-          <div>
-            <h1 class="text-lg font-extrabold tracking-tight text-navy">CAKRAWALA</h1>
-            <p class="text-xs font-semibold text-slate-500">Meja Petugas Sirkulasi</p>
-          </div>
-        </div>
-        <!-- Tombol silang (X) untuk menutup sidebar di layar HP -->
-        <button id="btnCloseMobileSidebar" type="button" aria-label="Tutup menu navigasi"
-          class="md:hidden flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700">
-          <i class="ph ph-x text-lg"></i>
-        </button>
-      </div>
-
-      <!-- Judul Bagian Menu -->
-      <div class="mt-6 px-2">
-        <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Menu Sirkulasi & Koleksi</p>
-      </div>
-
-      <!-- Daftar 4 Tombol Tab Navigasi -->
-      <nav class="mt-3 space-y-1.5" aria-label="Navigasi Petugas Sirkulasi">
-        <!-- 1. Tombol Meja Overview -->
-        <button type="button" id="tabBtnOverview" data-tab="overview"
-          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 bg-navy text-white shadow-sm shadow-navy/20">
-          <i class="ph ph-gauge text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
-          <span class="flex-1 text-left">Overview</span>
-        </button>
-
-        <!-- 2. Tombol Meja Sirkulasi (Ada angka badge merah jika ada siswa memesan online) -->
-        <button type="button" id="tabBtnSirkulasi" data-tab="sirkulasi"
-          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
-          <i class="ph ph-arrows-left-right text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
-          <span class="flex-1 text-left">Sirkulasi Peminjaman</span>
-          <!-- Angka notifikasi antrean yang menunggu verifikasi -->
-          
-        </button>
-
-        <!-- 3. Tombol Meja Pengembalian & Denda -->
-        <button type="button" id="tabBtnPengembalian" data-tab="pengembalian"
-          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
-          <i class="ph ph-hand-coins text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
-          <span class="flex-1 text-left">Pengembalian</span>
-          
-        </button>
-
-        <!-- 4. Tombol Meja Inventaris Buku -->
-        <button type="button" id="tabBtnInventaris" data-tab="inventaris"
-          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
-          <i class="ph ph-barcode text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
-          <span class="flex-1 text-left">Inventaris Buku</span>
-          
-        </button>
-
-        <!-- 5. Tombol Meja Kelola Pengumuman -->
-        <button type="button" id="tabBtnPengumuman" data-tab="pengumuman"
-          class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
-          <i class="ph ph-megaphone text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
-          <span class="flex-1 text-left">Kelola Pengumuman</span>
-         
-        </button>
-      </nav>
-
-      <!-- Tautan pintas membuka website umum perpustakaan di tab browser baru -->
-      <div class="mt-6 px-1">
-        <a href="../index.html" target="_blank"
-          class="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-navy transition">
-          <span class="flex items-center gap-2">
-            <i class="ph ph-arrow-square-out text-base text-navy"></i>
-            <span>Buka Katalog Publik</span>
-          </span>
-          <i class="ph ph-caret-right text-xs text-slate-400"></i>
-        </a>
-      </div>
+      <span class="text-base font-extrabold tracking-tight text-navy">CAKRAWALA</span>
+      <span class="block text-[10px] font-semibold text-slate-500 uppercase tracking-wider">Meja Sirkulasi
+        Petugas</span>
     </div>
+  </div>
+  <!-- Tombol untuk membuka menu di layar HP (dihubungkan dengan JavaScript lewat id="btnToggleMobileSidebar") -->
+  <button id="btnToggleMobileSidebar" type="button" aria-label="Buka menu navigasi"
+    class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy">
+    <i class="ph ph-list text-2xl" id="iconMobileSidebar"></i>
+  </button>
+</header>
 
-    <!-- Bagian Bawah Sidebar: Profil Petugas Sedang Login & Tombol Keluar Sistem -->
-    <div class="border-t border-slate-100 pt-4 space-y-2">
-      <!-- Kotak Identitas Petugas: Nama & Foto Inisial diisi otomatis oleh JavaScript -->
-      <div
-        class="group flex w-full items-center gap-3 rounded-xl bg-slate-50 p-2.5 border border-slate-200/70 shadow-2xs">
-        <div id="petugasAvatarInitials"
-          class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-navy text-white text-xs font-bold shadow-sm">
-          PT
+<!-- Layar gelap semi-transparan (Backdrop) saat menu HP terbuka. Jika diklik, menu akan tertutup kembali -->
+<div id="sidebarBackdrop"
+  class="fixed inset-0 z-40 bg-slate-900/50 backdrop-blur-xs hidden md:hidden transition-opacity duration-300"></div>
+
+<!-- ============================================================================================= -->
+<aside id="petugasSidebar"
+  class="fixed inset-y-0 left-0 z-50 flex w-64 md:w-68 flex-col justify-between border-r border-slate-200 bg-white p-4 shadow-sm transition-transform duration-300 -translate-x-full md:translate-x-0 md:static md:z-auto h-full md:h-screen shrink-0 overflow-y-auto">
+  <!-- Bagian Atas Sidebar: Logo & Tombol Menu -->
+  <div>
+    <!-- Papan Nama Perpustakaan -->
+    <div class="flex items-center justify-between px-2 pb-6 pt-2 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-navy text-white shadow-md shadow-navy/20">
+          <i class="ph ph-books text-2xl" aria-hidden="true"></i>
         </div>
-        <div class="min-w-0 flex-1">
-          <p id="petugasUserName" class="truncate text-xs font-bold text-slate-800">Petugas Sirkulasi</p>
-          <div class="flex items-center gap-1.5 mt-0.5">
-            <span class="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
-            <span class="text-[11px] font-medium text-slate-500">Petugas &bull; Online</span>
-          </div>
+        <div>
+          <h1 class="text-lg font-extrabold tracking-tight text-navy">CAKRAWALA</h1>
+          <p class="text-xs font-semibold text-slate-500">Meja Petugas Sirkulasi</p>
         </div>
       </div>
-
-      <!-- Tombol Keluar Sistem (Logout) -->
-      <button type="button" id="btnLogout"
-        class="group flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400">
-        <i class="ph ph-sign-out text-xl transition-transform group-hover:-translate-x-0.5" aria-hidden="true"></i>
-        <span>Keluar Sistem</span>
+      <!-- Tombol silang (X) untuk menutup sidebar di layar HP -->
+      <button id="btnCloseMobileSidebar" type="button" aria-label="Tutup menu navigasi"
+        class="md:hidden flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+        <i class="ph ph-x text-lg"></i>
       </button>
     </div>
-  </aside>
+
+    <!-- Judul Bagian Menu -->
+    <div class="mt-6 px-2">
+      <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400">Menu Sirkulasi & Koleksi</p>
+    </div>
+
+    <!-- Daftar 4 Tombol Tab Navigasi -->
+    <nav class="mt-3 space-y-1.5" aria-label="Navigasi Petugas Sirkulasi">
+      <!-- 1. Tombol Meja Overview -->
+      <button type="button" id="tabBtnOverview" data-tab="overview"
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 bg-navy text-white shadow-sm shadow-navy/20">
+        <i class="ph ph-gauge text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
+        <span class="flex-1 text-left">Overview</span>
+      </button>
+
+      <!-- 2. Tombol Meja Sirkulasi (Ada angka badge merah jika ada siswa memesan online) -->
+      <button type="button" id="tabBtnSirkulasi" data-tab="sirkulasi"
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+        <i class="ph ph-arrows-left-right text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
+        <span class="flex-1 text-left">Sirkulasi Peminjaman</span>
+        <!-- Angka notifikasi antrean yang menunggu verifikasi -->
+
+      </button>
+
+      <!-- 3. Tombol Meja Pengembalian & Denda -->
+      <button type="button" id="tabBtnPengembalian" data-tab="pengembalian"
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+        <i class="ph ph-hand-coins text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
+        <span class="flex-1 text-left">Pengembalian</span>
+
+      </button>
+
+      <!-- 4. Tombol Meja Inventaris Buku -->
+      <button type="button" id="tabBtnInventaris" data-tab="inventaris"
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+        <i class="ph ph-barcode text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
+        <span class="flex-1 text-left">Inventaris Buku</span>
+
+      </button>
+
+      <!-- 5. Tombol Meja Kelola Pengumuman -->
+      <button type="button" id="tabBtnPengumuman" data-tab="pengumuman"
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+        <i class="ph ph-megaphone text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
+        <span class="flex-1 text-left">Kelola Pengumuman</span>
+
+      </button>
+    </nav>
+
+    <!-- Tautan pintas membuka website umum perpustakaan di tab browser baru -->
+    <div class="mt-6 px-1">
+      <a href="../index.html" target="_blank"
+        class="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-navy transition">
+        <span class="flex items-center gap-2">
+          <i class="ph ph-arrow-square-out text-base text-navy"></i>
+          <span>Buka Katalog Publik</span>
+        </span>
+        <i class="ph ph-caret-right text-xs text-slate-400"></i>
+      </a>
+    </div>
+  </div>
+
+  <!-- Bagian Bawah Sidebar: Profil Petugas Sedang Login & Tombol Keluar Sistem -->
+  <div class="border-t border-slate-100 pt-4 space-y-2">
+    <!-- Kotak Identitas Petugas: Klik untuk Kelola Profil -->
+    <button type="button" id="btnOpenModalProfilPetugas"
+      title="Klik untuk melihat dan mengatur profil akun petugas"
+      class="group flex w-full items-center gap-3 rounded-xl bg-slate-50 p-2.5 border border-slate-200/70 shadow-2xs hover:bg-slate-100 hover:border-slate-300 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-navy/20 cursor-pointer">
+      <div id="petugasAvatarInitials"
+        class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-navy text-white text-xs font-bold shadow-sm overflow-hidden border border-slate-200/60">
+        PT
+      </div>
+      <div class="min-w-0 flex-1">
+        <div class="flex items-center justify-between gap-1">
+          <p id="petugasUserName" class="truncate text-xs font-bold text-slate-800 group-hover:text-navy transition">Petugas Sirkulasi</p>
+          <i class="ph ph-gear text-slate-400 group-hover:text-navy text-xs shrink-0 transition" title="Pengaturan Profil"></i>
+        </div>
+        <div class="flex items-center gap-1.5 mt-0.5">
+          <span class="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
+          <span class="text-[11px] font-medium text-slate-500">Petugas &bull; Online</span>
+        </div>
+      </div>
+    </button>
+
+    <!-- Tombol Keluar Sistem (Logout) -->
+    <button type="button" id="btnLogout"
+      class="group flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400">
+      <i class="ph ph-sign-out text-xl transition-transform group-hover:-translate-x-0.5" aria-hidden="true"></i>
+      <span>Keluar Sistem</span>
+    </button>
+  </div>
+</aside>

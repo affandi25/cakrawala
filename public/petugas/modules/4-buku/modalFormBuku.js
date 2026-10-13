@@ -218,6 +218,18 @@ export async function generateSequentialBookId() {
  * Membuka formulir modal untuk menambah atau mengedit buku
  */
 export async function openBookModal(mode = 'add', bookId = null) {
+  // Normalisasi cerdas jika argumen pertama adalah objek buku atau ID buku
+  let actualMode = mode;
+  let actualBookId = bookId;
+
+  if (typeof mode === 'object' && mode !== null && mode.id_buku) {
+    actualMode = 'edit';
+    actualBookId = mode.id_buku;
+  } else if (typeof mode === 'string' && mode !== 'add' && mode !== 'edit') {
+    actualMode = 'edit';
+    actualBookId = mode;
+  }
+
   const modal = document.getElementById('modalBookForm');
   const content = document.getElementById('modalBookContent');
   const titleEl = document.getElementById('modalBookTitle');
@@ -247,7 +259,7 @@ export async function openBookModal(mode = 'add', bookId = null) {
   if (previewImg) previewImg.src = '';
   if (finalUrlInput) finalUrlInput.value = '';
 
-  if (mode === 'add') {
+  if (actualMode === 'add') {
     if (formModeInput) formModeInput.value = 'add';
     if (editIdInput) editIdInput.value = '';
     if (titleEl) titleEl.textContent = 'Tambah Buku Baru';
@@ -279,7 +291,7 @@ export async function openBookModal(mode = 'add', bookId = null) {
     if (tahunInput) tahunInput.value = new Date().getFullYear();
   } else {
     // Mode Edit
-    const book = (state.cache.buku || []).find(b => b.id_buku === bookId);
+    const book = (state.cache.buku || []).find(b => b.id_buku === actualBookId);
     if (!book) {
       showToast('Data buku tidak ditemukan.', 'error');
       return;

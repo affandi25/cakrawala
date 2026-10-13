@@ -63,7 +63,8 @@ export function getBorrowerInfo(id) {
       sub: `Siswa &bull; Kelas ${siswa.kelas || '-'}`,
       badge: 'Siswa',
       kelas: siswa.kelas || '-',
-      kontak: siswa.kontak_siswa || '-'
+      kontak: siswa.kontak_siswa || '-',
+      foto: siswa.foto_profil || null
     };
   }
 
@@ -76,7 +77,8 @@ export function getBorrowerInfo(id) {
       sub: `Guru &bull; ${guru.mata_pelajaran || 'Pengajar'}`,
       badge: 'Guru',
       kelas: guru.mata_pelajaran || 'Guru Pengajar',
-      kontak: guru.kontak_guru || '-'
+      kontak: guru.kontak_guru || '-',
+      foto: guru.foto_profil || null
     };
   }
 
@@ -87,6 +89,41 @@ export function getBorrowerInfo(id) {
     sub: 'Anggota Perpustakaan',
     badge: 'Anggota',
     kelas: '-',
-    kontak: '-'
+    kontak: '-',
+    foto: null
   };
 }
+
+/**
+ * Merender elemen avatar peminjam: Menggunakan Foto Profil asli jika ada,
+ * atau fallback ke Inisial Huruf bergaya profesional.
+ * @param {Object} borrower Objek borrower dari getBorrowerInfo
+ * @param {string} sizeClass Ukuran Tailwind (default: 'h-10 w-10')
+ * @param {string} roundedClass Kelengkungan (default: 'rounded-xl')
+ * @param {string} textClass Tipografi inisial (default: 'text-xs font-bold')
+ * @returns {string} HTML string avatar
+ */
+export function renderBorrowerAvatarHtml(borrower, sizeClass = 'h-10 w-10', roundedClass = 'rounded-xl', textClass = 'text-xs font-bold') {
+  if (!borrower) {
+    return `<div class="flex ${sizeClass} shrink-0 items-center justify-center ${roundedClass} bg-slate-200 text-slate-500 ${textClass} shadow-2xs">?</div>`;
+  }
+
+  const initial = borrower.nama ? borrower.nama.substring(0, 2).toUpperCase() : 'AG';
+  const isGuru = borrower.type === 'guru';
+  const bgInitials = isGuru ? 'bg-amber-600' : 'bg-navy';
+
+  if (borrower.foto && typeof borrower.foto === 'string' && borrower.foto.trim() !== '') {
+    return `
+      <div class="relative ${sizeClass} shrink-0 overflow-hidden ${roundedClass} border border-slate-200/80 shadow-2xs bg-slate-100 flex items-center justify-center">
+        <img src="${borrower.foto}" class="h-full w-full object-cover" alt="${borrower.nama || 'Anggota'}" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'${textClass} text-white\\'>${initial}</span>'; this.parentElement.className='flex ${sizeClass} shrink-0 items-center justify-center ${roundedClass} ${bgInitials} text-white ${textClass} shadow-2xs';" />
+      </div>
+    `;
+  }
+
+  return `
+    <div class="flex ${sizeClass} shrink-0 items-center justify-center ${roundedClass} ${bgInitials} text-white ${textClass} shadow-2xs">
+      ${initial}
+    </div>
+  `;
+}
+

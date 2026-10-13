@@ -168,12 +168,19 @@ export function renderPrapinjamOnlyTable() {
           ${item.id_peminjaman}
         </td>
         <td class="px-5 py-3">
-          <div class="flex items-center gap-1.5">
-            <span class="font-bold text-slate-800 text-xs">${namaSiswa}</span>
-            <span class="rounded-full ${borrower.type === 'guru' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-navy'} px-1.5 py-0.2 text-[9px] font-bold">${borrower.badge}</span>
+          <div class="flex items-center gap-2.5">
+            ${borrower.foto && typeof borrower.foto === 'string' && borrower.foto.trim() !== ''
+              ? `<img src="${borrower.foto}" class="h-8 w-8 rounded-lg object-cover shrink-0 border border-slate-200/80 shadow-2xs" alt="${namaSiswa}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-[11px] font-bold\\'>${(borrower.nama || 'A').charAt(0).toUpperCase()}</div>';"/>`
+              : `<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-[11px] font-bold">${(borrower.nama || 'A').charAt(0).toUpperCase()}</div>`}
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-slate-800 text-xs">${namaSiswa}</span>
+                <span class="rounded-full ${borrower.type === 'guru' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-navy'} px-1.5 py-0.2 text-[9px] font-bold">${borrower.badge}</span>
+              </div>
+              <p class="text-[11px] text-slate-500">${kelasSiswa}</p>
+              <p class="text-[10px] text-slate-400">Kontak: ${kontakSiswa}</p>
+            </div>
           </div>
-          <p class="text-[11px] text-slate-500">${kelasSiswa}</p>
-          <p class="text-[10px] text-slate-400">Kontak: ${kontakSiswa}</p>
         </td>
         <td class="px-5 py-3">
           <div class="flex items-center gap-3">
@@ -446,6 +453,17 @@ export function openPrapinjamVerifyModal(loan, isBarcodeVerified = false) {
 
   if (ticketBadge) ticketBadge.textContent = loan.id_peminjaman;
   if (inputCode) inputCode.value = isBarcodeVerified ? loan.id_peminjaman : '';
+
+  const avatarContainer = document.getElementById('verifyBorrowerAvatarContainer');
+  if (avatarContainer) {
+    if (borrower.foto && typeof borrower.foto === 'string' && borrower.foto.trim() !== '') {
+      avatarContainer.innerHTML = `<img src="${borrower.foto}" class="h-full w-full object-cover" alt="${nama}" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'font-bold text-xs text-white\\'>${(borrower.nama || 'A').substring(0, 2).toUpperCase()}</span>'; this.parentElement.className='h-10 w-10 shrink-0 rounded-xl ${isGuru ? 'bg-amber-600' : 'bg-navy'} text-white flex items-center justify-center shadow-2xs';" />`;
+      avatarContainer.className = 'h-10 w-10 shrink-0 rounded-xl overflow-hidden border border-slate-200/80 bg-slate-100 flex items-center justify-center shadow-2xs';
+    } else {
+      avatarContainer.innerHTML = `<span class="font-bold text-xs text-white">${(borrower.nama || 'A').substring(0, 2).toUpperCase()}</span>`;
+      avatarContainer.className = `h-10 w-10 shrink-0 rounded-xl ${isGuru ? 'bg-amber-600' : 'bg-navy'} text-white flex items-center justify-center shadow-2xs`;
+    }
+  }
 
   if (borrowerName) borrowerName.textContent = nama;
   if (borrowerSub) borrowerSub.innerHTML = sub;

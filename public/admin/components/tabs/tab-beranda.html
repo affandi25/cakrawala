@@ -1,0 +1,146 @@
+<!--
+  =============================================================================================
+  CAKRAWALA DIGITAL LIBRARY - ADMIN TAB 0: BERANDA / RINGKASAN SISTEM
+  File: public/admin/components/tabs/tab-beranda.html
+  =============================================================================================
+-->
+
+<div id="tabBeranda" class="space-y-6">
+
+  <!-- 1. Hero / Welcome Banner Administrator -->
+  <section class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-navy via-navy to-navy-light p-6 sm:p-8 text-white shadow-md shadow-navy/20">
+    <div class="relative z-10 max-w-2xl">
+      <div class="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-2xs font-bold text-white/90 backdrop-blur-md mb-4 border border-white/15">
+        <span class="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+        <span>Pusat Kendali Utama • CAKRAWALA Digital Library</span>
+      </div>
+      <h2 class="text-2xl sm:text-3xl font-black tracking-tight text-white leading-tight">
+        Selamat Datang di Dashboard Admin
+      </h2>
+      <p class="mt-2 text-xs sm:text-sm text-white/80 leading-relaxed font-normal">
+        Kelola seluruh akses pengguna (Siswa, Guru, dan Petugas Perpustakaan), pantau ketersediaan sistem database Supabase, dan lakukan sinkronisasi data massal melalui satu pintu kendali terpadu.
+      </p>
+
+      <div class="mt-6 flex flex-wrap items-center gap-3">
+        <button type="button" id="btnQuickTabSiswa"
+          class="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-navy shadow-xs hover:bg-slate-100 transition active:scale-95">
+          <i class="ph ph-student text-base"></i>
+          <span>Kelola Siswa</span>
+        </button>
+        <button type="button" id="btnQuickTabGuru"
+          class="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 transition active:scale-95">
+          <i class="ph ph-chalkboard-teacher text-base"></i>
+          <span>Kelola Guru</span>
+        </button>
+        <button type="button" id="btnQuickTabPetugas"
+          class="inline-flex items-center gap-2 rounded-xl bg-white/15 px-4 py-2.5 text-xs font-bold text-white border border-white/20 hover:bg-white/25 transition active:scale-95">
+          <i class="ph ph-user-gear text-base"></i>
+          <span>Kelola Petugas</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Dekorasi Ikon Latar Belakang Hero -->
+    <div class="absolute -right-6 -bottom-8 text-white/5 pointer-events-none select-none">
+      <i class="ph-fill ph-shield-star text-9xl sm:text-[180px]"></i>
+    </div>
+  </section>
+
+  <!-- 2. Kontainer Grid Responsif Kartu Ringkasan KPI -->
+  <section aria-label="Statistik Metrik Utama">
+    <div class="flex items-center justify-between mb-4">
+      <div>
+        <h3 class="text-sm font-extrabold text-slate-800 tracking-tight">Ringkasan Pengguna & Sistem</h3>
+        <p class="text-2xs text-slate-500">Metrik jumlah akun pengguna aktif dan status infrastruktur database</p>
+      </div>
+      <button type="button" id="btnRefreshKpiStats" title="Segarkan data ringkasan"
+        class="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-navy transition shadow-2xs">
+        <i class="ph ph-arrows-clockwise text-sm" id="iconKpiRefresh"></i>
+        <span>Segarkan</span>
+      </button>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-5">
+      <!-- Card 1: Total Siswa -->
+      <div class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:border-navy/20">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Siswa</span>
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-blue-50 text-navy group-hover:scale-105 transition-transform">
+            <i class="ph ph-student text-2xl" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span id="totalSiswa" data-stat="siswa" class="text-3xl font-black tracking-tight text-slate-900">0</span>
+          <span class="text-xs font-medium text-slate-500">Anggota</span>
+        </div>
+        <div class="mt-2 flex items-center justify-between text-2xs text-slate-500 pt-2 border-t border-slate-100">
+          <span class="flex items-center gap-1.5">
+            <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span>Terintegrasi Siswa</span>
+          </span>
+          <span class="font-bold text-navy group-hover:underline cursor-pointer" onclick="document.getElementById('tabBtnSiswa')?.click()">Buka &rarr;</span>
+        </div>
+      </div>
+
+      <!-- Card 2: Total Guru -->
+      <div class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:border-emerald-700/20">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Guru</span>
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-emerald-50 text-emerald-800 group-hover:scale-105 transition-transform">
+            <i class="ph ph-chalkboard-teacher text-2xl" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span id="totalGuru" data-stat="guru" class="text-3xl font-black tracking-tight text-slate-900">0</span>
+          <span class="text-xs font-medium text-slate-500">Pengajar</span>
+        </div>
+        <div class="mt-2 flex items-center justify-between text-2xs text-slate-500 pt-2 border-t border-slate-100">
+          <span class="flex items-center gap-1.5">
+            <span class="inline-block h-2 w-2 rounded-full bg-emerald-500"></span>
+            <span>Pendidik Terdaftar</span>
+          </span>
+          <span class="font-bold text-emerald-800 group-hover:underline cursor-pointer" onclick="document.getElementById('tabBtnGuru')?.click()">Buka &rarr;</span>
+        </div>
+      </div>
+
+      <!-- Card 3: Total Petugas -->
+      <div class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md hover:border-indigo-700/20">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Petugas</span>
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-indigo-50 text-indigo-700 group-hover:scale-105 transition-transform">
+            <i class="ph ph-user-gear text-2xl" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span id="totalPetugas" data-stat="petugas" class="text-3xl font-black tracking-tight text-slate-900">0</span>
+          <span class="text-xs font-medium text-slate-500">Pustakawan</span>
+        </div>
+        <div class="mt-2 flex items-center justify-between text-2xs text-slate-500 pt-2 border-t border-slate-100">
+          <span class="flex items-center gap-1.5">
+            <span class="inline-block h-2 w-2 rounded-full bg-indigo-500"></span>
+            <span>Operator Sirkulasi</span>
+          </span>
+          <span class="font-bold text-indigo-700 group-hover:underline cursor-pointer" onclick="document.getElementById('tabBtnPetugas')?.click()">Buka &rarr;</span>
+        </div>
+      </div>
+
+      <!-- Card 4: Status Database Supabase -->
+      <div class="group rounded-2xl border border-slate-200 bg-white p-5 shadow-xs transition-all duration-200 hover:shadow-md">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Status Database</span>
+          <div class="flex h-11 w-11 items-center justify-center rounded-xl bg-slate-100 text-slate-700 group-hover:scale-105 transition-transform">
+            <i class="ph ph-database text-2xl" aria-hidden="true"></i>
+          </div>
+        </div>
+        <div class="mt-4 flex items-baseline gap-2">
+          <span id="statusKoneksi" class="text-3xl font-black tracking-tight text-emerald-600">Online</span>
+        </div>
+        <div class="mt-2 flex items-center gap-1.5 text-2xs text-slate-500 pt-2 border-t border-slate-100">
+          <span class="inline-block h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span id="dbStatus">Supabase Cloud Aktif</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>

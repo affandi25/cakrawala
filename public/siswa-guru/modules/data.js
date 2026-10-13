@@ -6,18 +6,17 @@
 import { db } from '../../assets/js/supabaseClient.js';
 import { state } from './state.js';
 import { showToast } from './siswaHelper.js';
-import { renderOverview } from './overview.js';
-import { renderKatalogGrid, renderKategoriOptions } from './katalog/index.js';
-import { renderPinjamanTables } from './pinjaman/index.js';
-import { renderRiwayatTable } from './riwayat.js';
-import { renderProfil } from './profil/index.js';
+import { renderBeranda } from './0-beranda/index.js';
+import { renderKatalogGrid, renderKategoriOptions } from './1-katalog/index.js';
+import { renderPinjamanTables, renderRiwayatTable } from './3-riwayat/index.js';
+import { renderProfil } from './4-profil/index.js';
 
 /**
  * Menjalankan render ke seluruh modul tampilan secara serentak
  */
 export function renderAllMemberModules() {
   renderKategoriOptions();
-  renderOverview();
+  renderBeranda();
   renderKatalogGrid();
   renderPinjamanTables();
   renderRiwayatTable();
@@ -74,7 +73,10 @@ export async function fetchAllMemberData() {
         state.cache.pengembalian = [];
       }
 
-      // 5. Filter denda yang belum lunas
+      // 5. Bersihkan riwayat selesai yang lunas/bebas denda jika >= 1 minggu (Opsi B)
+      await cleanupExpiredFinishedLoans();
+
+      // 6. Filter denda yang belum lunas
       state.unpaidFines = (state.cache.pengembalian || []).filter(r => r.status_denda === 'Belum Lunas');
     }
 
@@ -82,6 +84,57 @@ export async function fetchAllMemberData() {
   } catch (err) {
     console.error('Terjadi gangguan saat mengambil data anggota:', err);
     showToast('Gagal memuat data dari database. Silakan refresh halaman.', 'error');
+  }
+}
+
+/**
+ * Membersihkan riwayat pengembalian yang sudah Lunas atau Bebas Denda jika >= 7 hari (Opsi B)
+ */
+export async function cleanupExpiredFinishedLoans() {
+  const allLoans = state.cache.peminjaman || [];
+  const allReturns = state.cache.pengembalian || [];
+  if (!allLoans || allLoans.length === 0) return;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const expiredReturnIds = [];
+  const expiredLoanIds = [];
+
+  for (const loan of allLoans) {
+    if (loan.status === 'Selesai' || loan.status === 'Kembali') {
+      const returnRecord = (allReturns || []).find(r => r.id_peminjaman === loan.id_peminjaman);
+      const isLunasOrBebas = !returnRecord || returnRecord.status_denda === 'Lunas' || returnRecord.status_denda === 'Tidak Ada';
+
+      if (isLunasOrBebas) {
+        const dateStr = returnRecord?.tanggal_kembali || loan.batas_kembali || loan.tanggal_pinjam;
+        if (dateStr) {
+          const returnDate = new Date(dateStr);
+          returnDate.setHours(0, 0, 0, 0);
+          const diffDays = Math.round((today.getTime() - returnDate.getTime()) / (1000 * 60 * 60 * 24));
+
+          if (diffDays >= 7) {
+            expiredLoanIds.push(loan.id_peminjaman);
+            if (returnRecord?.id_pengembalian) {
+              expiredReturnIds.push(returnRecord.id_pengembalian);
+            }
+          }
+        }
+      }
+    }
+  }
+
+  if (expiredLoanIds.length > 0 && db) {
+    try {
+      if (expiredReturnIds.length > 0) {
+        await db.from('data_pengembalian').delete().in('id_pengembalian', expiredReturnIds);
+      }
+      await db.from('data_peminjaman').delete().in('id_peminjaman', expiredLoanIds);
+    } catch (err) {
+      console.warn('[data] Gagal membersihkan riwayat kadaluarsa di Supabase:', err);
+    }
+    state.cache.peminjaman = allLoans.filter(l => !expiredLoanIds.includes(l.id_peminjaman));
+    state.cache.pengembalian = allReturns.filter(r => !expiredReturnIds.includes(r.id_pengembalian));
   }
 }
 

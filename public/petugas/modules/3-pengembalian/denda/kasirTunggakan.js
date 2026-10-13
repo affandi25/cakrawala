@@ -13,6 +13,7 @@ import { db } from '../../../../assets/js/supabaseClient.js';
 import { state } from '../../core/state.js';
 import {
   formatRupiah,
+  formatTanggalIndo,
   showModal,
   hideModal,
   showToast,
@@ -97,7 +98,82 @@ export function setupKasirTunggakanHandlers() {
 export const setupKasirTunggakanListeners = setupKasirTunggakanHandlers;
 
 /**
- * Merender daftar khusus tunggakan denda (status 'Belum Lunas')
+ * Membersihkan dan menstandarisasi nomor telepon ke format internasional WhatsApp (628xxx)
+ * @param {string} phone
+ * @returns {string|null}
+ */
+export function formatWhatsAppNumber(phone) {
+  if (!phone || phone === '-') return null;
+  let clean = String(phone).replace(/\D/g, '');
+  if (!clean) return null;
+
+  if (clean.startsWith('08')) {
+    clean = '62' + clean.slice(1);
+  } else if (clean.startsWith('8')) {
+    clean = '62' + clean;
+  } else if (clean.startsWith('0')) {
+    clean = '62' + clean.slice(1);
+  }
+
+  if (clean.length < 10) return null;
+  return clean;
+}
+
+/**
+ * Mengirimkan pesan pengingat denda resmi melalui WhatsApp ke nomor siswa/guru
+ * @param {string} idPengembalian
+ */
+export function sendWhatsAppReminder(idPengembalian) {
+  const allPengembalian = state.cache.pengembalian || [];
+  const item = allPengembalian.find(i => i.id_pengembalian === idPengembalian);
+  if (!item) {
+    showToast('Data tagihan denda tidak ditemukan.', 'error');
+    return;
+  }
+
+  const loan = (state.cache.peminjaman || []).find(p => p.id_peminjaman === item.id_peminjaman);
+  const borrower = getBorrowerInfo(loan ? loan.nisn_siswa : '');
+  const buku = loan ? (state.cache.buku || []).find(b => b.id_buku === loan.id_buku) : null;
+
+  const rawPhone = borrower.kontak;
+  const waNumber = formatWhatsAppNumber(rawPhone);
+
+  if (!waNumber) {
+    showToast(`Nomor WhatsApp untuk ${borrower.nama} belum terdaftar atau tidak valid (${rawPhone || '-'}).`, 'warning');
+    return;
+  }
+
+  const judulBuku = buku ? buku.judul_buku : (loan ? loan.id_buku : 'Buku Perpustakaan');
+  const nominalDenda = formatRupiah(item.denda);
+
+  let rincian = [];
+  if (item.keterlambatan > 0) rincian.push(`Terlambat ${item.keterlambatan} Hari`);
+  if (item.kondisi_buku && item.kondisi_buku !== 'Baik') rincian.push(`Kondisi: ${item.kondisi_buku}`);
+  const rincianText = rincian.join(', ') || 'Keterlambatan Pengembalian';
+  const tglKembali = formatTanggalIndo(item.tanggal_kembali);
+
+  const pesan = 
+`Halo *${borrower.nama}*, kami dari *Perpustakaan Digital CAKRAWALA*.
+
+Menginformasikan bahwa Anda memiliki tanggungan denda pengembalian buku yang berstatus *BELUM LUNAS*:
+📌 *No. Resi:* ${item.id_pengembalian}
+📚 *Judul Buku:* ${judulBuku}
+⚠️ *Rincian:* ${rincianText}
+💰 *Total Denda:* ${nominalDenda}
+📅 *Tgl Pengembalian:* ${tglKembali}
+
+Mohon untuk segera datang ke Meja Sirkulasi Perpustakaan guna menyelesaikan pelunasan denda ini agar catatan akun Anda kembali bersih dan kuota peminjaman dapat digunakan normal kembali.
+
+Terima kasih atas perhatian dan kerja samanya. 🙏
+_Layanan Sirkulasi Perpustakaan Digital CAKRAWALA_`;
+
+  const waUrl = `https://wa.me/${waNumber}?text=${encodeURIComponent(pesan)}`;
+  window.open(waUrl, '_blank');
+  showToast(`Membuka WhatsApp untuk mengirim peringatan denda ke ${borrower.nama}...`, 'success');
+}
+
+/**
+ * Merender daftar khusus tunggakan denda (status 'Belum Lunas') dengan UI modern & tombol WhatsApp
  */
 export function renderTunggakanDendaList() {
   const container = document.getElementById('listTunggakanDenda');
@@ -130,10 +206,12 @@ export function renderTunggakanDendaList() {
   if (tunggakanList.length === 0) {
     const isSearching = searchQueryTunggakan.length > 0;
     container.innerHTML = `
-      <div class="py-12 text-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
-        <i class="ph ph-check-circle text-3xl inline-block mb-1 text-emerald-500"></i>
-        <h5 class="text-xs font-bold text-slate-700">${isSearching ? 'Tunggakan denda tidak ditemukan' : 'Tidak ada tagihan tunggakan denda!'}</h5>
-        <p class="text-[11px] text-slate-400 mt-0.5">${isSearching ? 'Coba ubah kata kunci pencarian.' : 'Semua peminjam tertib atau denda telah lunas.'}</p>
+      <div class="py-12 text-center text-slate-400 bg-slate-50/70 rounded-2xl border-2 border-dashed border-slate-200 p-6">
+        <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-600 text-2xl mx-auto mb-2.5">
+          <i class="ph-fill ph-check-circle"></i>
+        </div>
+        <h5 class="text-xs font-bold text-slate-800">${isSearching ? 'Tunggakan denda tidak ditemukan' : 'Tidak ada tagihan tunggakan denda!'}</h5>
+        <p class="text-[11px] text-slate-400 mt-0.5 max-w-xs mx-auto">${isSearching ? 'Coba ubah kata kunci pencarian nama atau ID.' : 'Seluruh peminjam tertib atau denda telah diselesaikan di meja sirkulasi.'}</p>
       </div>
     `;
     return;
@@ -145,41 +223,89 @@ export function renderTunggakanDendaList() {
     const borrower = getBorrowerInfo(loan ? loan.nisn_siswa : '');
     const buku = loan ? (state.cache.buku || []).find(b => b.id_buku === loan.id_buku) : null;
 
-    const namaSiswa = borrower.nama !== '-' ? `${borrower.nama} (${borrower.badge})` : (loan ? loan.nisn_siswa : '-');
+    const namaSiswa = borrower.nama !== '-' ? borrower.nama : (loan ? loan.nisn_siswa : '-');
     const judulBuku = buku ? buku.judul_buku : (loan ? loan.id_buku : '-');
+    const waNumber = formatWhatsAppNumber(borrower.kontak);
+    const hasWa = Boolean(waNumber);
 
     let rincianPelanggaran = [];
     if (item.keterlambatan > 0) rincianPelanggaran.push(`Terlambat ${item.keterlambatan} Hari`);
     if (item.kondisi_buku && item.kondisi_buku !== 'Baik') rincianPelanggaran.push(`Kondisi: ${item.kondisi_buku}`);
     const rincianText = rincianPelanggaran.join(' &bull; ') || 'Denda Operasional';
+    const initials = (borrower.nama || 'A').substring(0, 2).toUpperCase();
 
     html += `
-      <div class="rounded-xl border border-rose-200 bg-gradient-to-r from-rose-50/60 to-white p-3.5 transition hover:shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div class="space-y-1">
+      <div class="rounded-2xl border border-rose-200/90 bg-white p-4 shadow-xs hover:border-rose-300 hover:shadow-md transition-all duration-200 space-y-3">
+        <!-- Baris Atas: Resi, Role, & Status Belum Lunas -->
+        <div class="flex items-center justify-between flex-wrap gap-2 pb-2.5 border-b border-slate-100">
           <div class="flex items-center gap-2">
-            <span class="font-mono text-[10px] font-bold text-rose-800 bg-rose-100 px-1.5 py-0.5 rounded">${item.id_pengembalian}</span>
-            <span class="text-xs font-extrabold text-slate-900">${namaSiswa}</span>
-            <span class="text-[10px] text-slate-500">${borrower.sub}</span>
+            <span class="font-mono text-[11px] font-extrabold text-rose-800 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-lg shadow-2xs">${item.id_pengembalian}</span>
+            <span class="rounded-full ${borrower.type === 'guru' ? 'bg-amber-100 text-amber-800 border border-amber-200' : 'bg-blue-100 text-navy border border-blue-200'} px-2 py-0.2 text-[9px] font-bold">${borrower.badge}</span>
+            <span class="text-[11px] text-slate-400 font-medium">&bull; ${formatTanggalIndo(item.tanggal_kembali)}</span>
           </div>
-          <p class="text-xs font-medium text-slate-700 line-clamp-1">
-            <i class="ph ph-book-open text-slate-400 mr-1"></i>${judulBuku}
-          </p>
-          <div class="flex items-center gap-2 text-[10px] text-rose-600 font-semibold">
-            <i class="ph ph-warning-circle"></i>
-            <span>${rincianText}</span>
+          <span class="inline-flex items-center gap-1 rounded-full bg-rose-100 text-rose-800 border border-rose-200 px-2.5 py-0.5 text-[10px] font-bold">
+            <span class="h-1.5 w-1.5 rounded-full bg-rose-600 animate-pulse"></span>
+            <span>Belum Lunas</span>
+          </span>
+        </div>
+
+        <!-- Baris Tengah: Info Peminjam & Buku -->
+        <div class="flex items-start gap-3">
+          ${(borrower.foto && typeof borrower.foto === 'string' && borrower.foto.trim() !== '')
+            ? `<div class="h-10 w-10 shrink-0 rounded-xl overflow-hidden border border-slate-200/80 shadow-xs bg-slate-100 flex items-center justify-center">
+                 <img src="${borrower.foto}" class="h-full w-full object-cover" alt="${namaSiswa}" onerror="this.onerror=null; this.parentElement.outerHTML='<div class=\\'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white font-black text-xs shadow-xs\\'>${initials}</div>';"/>
+               </div>`
+            : `<div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white font-black text-xs shadow-xs">${initials}</div>`}
+          <div class="min-w-0 flex-1 space-y-1">
+            <div class="flex items-baseline justify-between gap-2 flex-wrap">
+              <h4 class="text-xs font-extrabold text-slate-900 leading-tight">${namaSiswa}</h4>
+              <span class="text-[11px] font-bold text-slate-500 font-mono">${borrower.id}</span>
+            </div>
+            <p class="text-[11px] text-slate-500">${borrower.sub}</p>
+
+            <div class="pt-1 flex flex-col gap-1">
+              <div class="flex items-center gap-1.5 text-xs font-bold text-slate-800">
+                <i class="ph-fill ph-book-open text-navy text-sm shrink-0"></i>
+                <span class="line-clamp-1">${judulBuku}</span>
+              </div>
+              <div class="flex items-center gap-2 flex-wrap text-[11px]">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-rose-50 text-rose-700 border border-rose-200/80 font-semibold text-[10px]">
+                  <i class="ph ph-warning-circle text-xs"></i>
+                  <span>${rincianText}</span>
+                </span>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md ${hasWa ? 'bg-emerald-50 text-emerald-800 border border-emerald-200' : 'bg-slate-100 text-slate-500'} font-semibold text-[10px]">
+                  <i class="ph ${hasWa ? 'ph-whatsapp-logo text-emerald-600 text-xs' : 'ph-phone text-slate-400 text-xs'}"></i>
+                  <span>${borrower.kontak && borrower.kontak !== '-' ? borrower.kontak : 'No HP Belum Ada'}</span>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="flex items-center justify-between sm:justify-end gap-3 pt-2 sm:pt-0 border-t sm:border-t-0 border-rose-100">
-          <div class="text-left sm:text-right">
-            <span class="text-[10px] text-slate-400 block font-medium">Tagihan Denda</span>
-            <span class="text-base font-black text-rose-600">${formatRupiah(item.denda)}</span>
+        <!-- Baris Bawah: Total Denda & Aksi Tombol -->
+        <div class="flex items-center justify-between flex-wrap gap-2.5 pt-2.5 border-t border-slate-100 bg-slate-50/80 -mx-4 -mb-4 px-4 py-3 rounded-b-2xl">
+          <div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Tagihan Denda</span>
+            <span class="text-base font-black text-rose-600 leading-none">${formatRupiah(item.denda)}</span>
           </div>
-          <button type="button" data-id="${item.id_pengembalian}"
-            class="btn-trigger-lunasi-tunggakan inline-flex items-center gap-1.5 rounded-xl bg-emerald-600 px-3.5 py-2 text-xs font-bold text-white hover:bg-emerald-700 transition shadow-xs">
-            <i class="ph ph-hand-coins text-sm"></i>
-            <span>Lunasi Tunai</span>
-          </button>
+
+          <div class="flex items-center gap-2">
+            <!-- Tombol WhatsApp Peringatan -->
+            <button type="button" data-action="wa-reminder" data-id="${item.id_pengembalian}"
+              title="${hasWa ? 'Kirim peringatan denda langsung via WhatsApp' : 'Nomor WhatsApp belum tercatat'}"
+              class="btn-wa-reminder inline-flex items-center gap-1.5 rounded-xl ${hasWa ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-slate-200 text-slate-500 cursor-not-allowed'} px-3 py-2 text-xs font-bold transition shadow-2xs">
+              <i class="ph-fill ph-whatsapp-logo text-sm"></i>
+              <span>Peringatkan WA</span>
+            </button>
+
+            <!-- Tombol Lunasi Tunai -->
+            <button type="button" data-action="lunasi" data-id="${item.id_pengembalian}"
+              title="Buka konfirmasi pelunasan uang kas tunai di meja sirkulasi"
+              class="btn-trigger-lunasi-tunggakan inline-flex items-center gap-1.5 rounded-xl bg-navy hover:bg-navy-light text-white px-3 py-2 text-xs font-bold transition shadow-sm">
+              <i class="ph ph-hand-coins text-sm"></i>
+              <span>Lunasi Tunai</span>
+            </button>
+          </div>
         </div>
       </div>
     `;
@@ -187,7 +313,14 @@ export function renderTunggakanDendaList() {
 
   container.innerHTML = html;
 
-  // Pasang listener pada tombol Lunasi
+  // Pasang listener pada tombol WhatsApp dan tombol Lunasi
+  container.querySelectorAll('.btn-wa-reminder').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const idPengembalian = btn.getAttribute('data-id');
+      sendWhatsAppReminder(idPengembalian);
+    });
+  });
+
   container.querySelectorAll('.btn-trigger-lunasi-tunggakan').forEach(btn => {
     btn.addEventListener('click', () => {
       const idPengembalian = btn.getAttribute('data-id');
@@ -307,4 +440,5 @@ if (typeof window !== 'undefined') {
   window.executePelunasanDenda = executePelunasanDenda;
   window.handleBatalkanLunasDenda = handleBatalkanLunasDenda;
   window.renderTunggakanDendaList = renderTunggakanDendaList;
+  window.sendWhatsAppReminder = sendWhatsAppReminder;
 }

@@ -26,6 +26,7 @@ export function getCombinedMembersList() {
         nama: s.nama_siswa,
         detail: `NISN: ${s.nisn_siswa} &bull; Kelas ${s.kelas || '-'}`,
         badge: 'Siswa',
+        foto: s.foto_profil || null,
         searchStr: `${s.nama_siswa} ${s.nisn_siswa} ${s.kelas || ''}`.toLowerCase()
       });
     });
@@ -39,6 +40,7 @@ export function getCombinedMembersList() {
         nama: g.nama_guru,
         detail: `NIP: ${g.nip_guru} &bull; ${g.mata_pelajaran || 'Pengajar'}`,
         badge: 'Guru',
+        foto: g.foto_profil || null,
         searchStr: `${g.nama_guru} ${g.nip_guru} ${g.mata_pelajaran || ''}`.toLowerCase()
       });
     });
@@ -163,13 +165,14 @@ export function renderMemberDropdownResults() {
       ? 'bg-amber-100 text-amber-800' 
       : 'bg-blue-100 text-navy';
     const avatarBg = item.type === 'guru' ? 'bg-amber-600' : 'bg-navy';
+    const avatarContent = (item.foto && typeof item.foto === 'string' && item.foto.trim() !== '')
+      ? `<img src="${item.foto}" class="h-8 w-8 shrink-0 rounded-lg object-cover border border-slate-200/80 shadow-2xs" alt="${item.nama}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${avatarBg} text-white text-[11px] font-bold\\'>${initials}</div>';"/>`
+      : `<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${avatarBg} text-white text-[11px] font-bold">${initials}</div>`;
 
     return `
       <div data-id="${item.id}" class="item-hasil-peminjam flex items-center justify-between p-2.5 rounded-lg hover:bg-slate-50 cursor-pointer transition border border-transparent hover:border-slate-200">
         <div class="flex items-center gap-2.5 min-w-0">
-          <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${avatarBg} text-white text-[11px] font-bold">
-            ${initials}
-          </div>
+          ${avatarContent}
           <div class="min-w-0">
             <div class="flex items-center gap-2">
               <span class="text-xs font-bold text-slate-800 truncate">${item.nama}</span>
@@ -225,8 +228,13 @@ export function selectMember(member) {
       : 'rounded-full bg-blue-100 px-2 py-0.2 text-[10px] font-bold text-navy';
   }
   if (elAvatar) {
-    elAvatar.textContent = member.nama ? member.nama.substring(0, 2).toUpperCase() : 'AG';
-    elAvatar.className = `flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${member.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-xs font-bold shadow-xs`;
+    if (member.foto && typeof member.foto === 'string' && member.foto.trim() !== '') {
+      elAvatar.innerHTML = `<img src="${member.foto}" class="h-full w-full object-cover rounded-xl" alt="${member.nama}" onerror="this.onerror=null; this.parentElement.textContent='${member.nama ? member.nama.substring(0, 2).toUpperCase() : 'AG'}';" />`;
+      elAvatar.className = 'flex h-10 w-10 shrink-0 items-center justify-center rounded-xl overflow-hidden border border-slate-200/80 shadow-xs bg-slate-100';
+    } else {
+      elAvatar.textContent = member.nama ? member.nama.substring(0, 2).toUpperCase() : 'AG';
+      elAvatar.className = `flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${member.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-xs font-bold shadow-xs`;
+    }
   }
 
   if (dropdown) dropdown.classList.add('hidden');

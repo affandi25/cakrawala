@@ -44,8 +44,8 @@ export function clearSession() {
  */
 function redirectToLogin() {
   const isNested = window.location.pathname.includes('/siswa-guru/') ||
-                   window.location.pathname.includes('/petugas/') ||
-                   window.location.pathname.includes('/admin/');
+    window.location.pathname.includes('/petugas/') ||
+    window.location.pathname.includes('/admin/');
   window.location.replace(isNested ? '../login.html' : 'login.html');
 }
 
@@ -223,10 +223,10 @@ function initLoginForm() {
         // Jika user ditemukan dan password cocok
         if (userMatch && userMatch.password === passwordValue) {
           const roleClean = (userMatch.role || 'Siswa').trim();
-          const payload = JSON.stringify({ 
-            id_user: userMatch.id_user, 
-            username: userMatch.username, 
-            role: roleClean 
+          const payload = JSON.stringify({
+            id_user: userMatch.id_user,
+            username: userMatch.username,
+            role: roleClean
           });
           sessionStorage.setItem('cakrawala_logged_in', 'true');
           sessionStorage.setItem('cakrawala_role', roleClean);
@@ -376,8 +376,8 @@ export function updateMemberProfileDisplay(targetState = {}) {
   const isGuru = targetState.memberType === 'guru';
 
   const nama = isGuru ? (profile.nama_guru || 'Guru') : (profile.nama_siswa || 'Siswa');
-  const sub = isGuru 
-    ? `Guru &bull; ${profile.mata_pelajaran || 'Pengajar'}` 
+  const sub = isGuru
+    ? `Guru &bull; ${profile.mata_pelajaran || 'Pengajar'}`
     : `Siswa &bull; Kelas ${profile.kelas || '-'}`;
 
   const nameEl = document.getElementById('memberUserName');

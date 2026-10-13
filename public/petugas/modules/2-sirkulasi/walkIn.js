@@ -17,8 +17,6 @@ import {
   getTodayDateString,
   addDaysToDate,
   generateRandomId,
-  showModal,
-  hideModal,
   showToast,
   getBorrowerInfo
 } from '../core/petugasHelper.js';
@@ -331,6 +329,15 @@ export function setupWalkInForm(onSwitchSubtab, onOpenVerifyModal) {
   const batasKembaliInput = document.getElementById('inputMejaBatasKembali');
   if (tglPinjamInput && !tglPinjamInput.value) tglPinjamInput.value = today;
   if (batasKembaliInput && !batasKembaliInput.value) batasKembaliInput.value = addDaysToDate(today, 7);
+
+  // Sinkronisasi otomatis batas kembali saat tanggal pinjam diubah
+  if (tglPinjamInput && batasKembaliInput) {
+    tglPinjamInput.addEventListener('change', () => {
+      if (tglPinjamInput.value) {
+        batasKembaliInput.value = addDaysToDate(tglPinjamInput.value, 7);
+      }
+    });
+  }
 
   // Fungsi memproses input teks barcode / ID buku
   function handleAddInputBook() {

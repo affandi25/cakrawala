@@ -32,13 +32,17 @@
 
                 <!-- 1. Kolom Pencarian Siswa / Guru Peminjam -->
                 <div class="relative">
-                  <div class="flex items-center justify-between mb-1.5">
+                  <div class="flex items-center justify-between mb-1.5 flex-wrap gap-2">
                     <label for="inputSearchPeminjamPengembalian" class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
                       <span class="flex h-5 w-5 items-center justify-center rounded-full bg-navy text-[10px] font-extrabold text-white">1</span>
                       <span>Ketik Nama Siswa / Guru Peminjam</span>
                       <span class="text-rose-500">*</span>
                     </label>
-                    <span class="text-[11px] text-slate-400 font-medium">Ketik nama untuk menampilkan buku yang dipinjam</span>
+                    <button type="button" id="btnScanCameraPengembalian" data-action="open-scanner" data-scanner-mode="pengembalian"
+                      class="inline-flex items-center gap-1.5 rounded-xl bg-navy/10 px-3.5 py-1.5 text-xs font-bold text-navy hover:bg-navy hover:text-white transition shadow-2xs cursor-pointer">
+                      <i class="ph ph-camera text-base"></i>
+                      <span>Scan Barcode / QR</span>
+                    </button>
                   </div>
 
                   <div class="relative">

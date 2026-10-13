@@ -1,12 +1,19 @@
+
 <!doctype html>
+<!--
+  =============================================================================================
+  CAKRAWALA DIGITAL LIBRARY - PORTAL ANGGOTA SISWA & GURU (MODULAR MASTER LAYOUT)
+  File: public/siswa-guru/dashboard.html
+  =============================================================================================
+-->
 <html lang="id">
 
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Dashboard Anggota | CAKRAWALA Digital Library</title>
+  <title>Portal Siswa & Guru | CAKRAWALA Digital Library</title>
 
-  <!-- Tailwind CSS CDN & Custom Configuration -->
+  <!-- Tailwind CSS CDN & Konfigurasi Tema Navy Cakrawala -->
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -31,7 +38,7 @@
 
   <!-- Google Fonts: Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.gstatic.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
 
   <!-- Phosphor Icons -->
@@ -44,49 +51,50 @@
   <link rel="stylesheet" href="../assets/css/dashboard-siswa-guru.css" />
 </head>
 
-<body class="bg-slate-50 font-sans text-slate-800 antialiased min-h-screen flex flex-col md:flex-row selection:bg-navy selection:text-white">
+<body class="bg-slate-50 font-sans text-slate-800 antialiased h-screen overflow-hidden flex flex-col md:flex-row selection:bg-navy selection:text-white">
 
-  <!-- Navigasi Sidebar & Header Mobile -->
-  <include src="./components/sidebar.html" />
+  <!-- 1. Navigasi Sidebar & Header Mobile -->
+  <include src="./components/layout/navbar.html"></include>
 
-  <!-- Area Utama (Main Viewport) -->
-  <div class="flex-1 flex flex-col min-w-0 overflow-y-auto">
+  <!-- 2. Area Utama (Independent Scroll Viewport) -->
+  <div class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
 
     <!-- Header Atas: Breadcrumb & Judul Halaman -->
-    <include src="./components/header.html" />
+    <include src="./components/layout/header.html"></include>
 
-    <!-- Konten Utama Dashboard -->
+    <!-- Konten Utama Dashboard (Membungkus ke-5 Tab) -->
     <main class="flex-1 p-5 sm:p-7 max-w-7xl w-full mx-auto space-y-6">
-      <!-- Peringatan Denda Belum Lunas -->
-      <include src="./components/banner-denda.html" />
+      <!-- Tab 1: Beranda / Overview (Aktif Default) -->
+      <include src="./components/tabs/tab-beranda.html"></include>
 
-      <!-- Tab 1: Beranda / Overview -->
-      <include src="./components/tab-beranda.html" />
+      <!-- Tab 2: Katalog Koleksi & Pra-Pinjam (Hidden Default) -->
+      <include src="./components/tabs/tab-katalog.html"></include>
 
-      <!-- Tab 2: Katalog Koleksi & Pra-Pinjam -->
-      <include src="./components/tab-katalog.html" />
+      <!-- Tab 3: Peminjaman Saya (Buku Aktif & Antrean) (Hidden Default) -->
+      <include src="./components/tabs/tab-peminjaman.html"></include>
 
-      <!-- Tab 3: Peminjaman Saya (Buku Aktif & Antrean) -->
-      <include src="./components/tab-pinjaman.html" />
+      <!-- Tab 4: Riwayat Pengembalian & Catatan Denda (Hidden Default) -->
+      <include src="./components/tabs/tab-riwayat.html"></include>
 
-      <!-- Tab 4: Riwayat Pengembalian & Catatan Denda -->
-      <include src="./components/tab-riwayat.html" />
-
-      <!-- Tab 5: Kartu Anggota Digital & Pengaturan Profil -->
-      <include src="./components/tab-profil.html" />
+      <!-- Tab 5: Kartu Anggota Digital & Pengaturan Profil (Hidden Default) -->
+      <include src="./components/tabs/tab-profil.html"></include>
     </main>
+
+    <!-- Footer Perpustakaan -->
+    <include src="./components/layout/footer.html"></include>
   </div>
 
-  <!-- Dialog Modals & Pop-ups -->
-  <include src="./components/modals.html" />
+  <!-- 3. Dialog Modals & Pop-ups Terpusat -->
+  <include src="./components/modals/modal-detail-buku.html"></include>
+  <include src="./components/modals/modal-tiket-prapinjam.html"></include>
 
-  <!-- Wadah Toast Notifikasi -->
+  <!-- 4. Wadah Toast Notifikasi -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full" aria-live="polite"></div>
 
-  <!-- Scripts Koneksi & Logika Utama -->
+  <!-- 5. Scripts Koneksi & Logika Utama yang Aktif Berjalan -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script type="module" src="../assets/js/supabaseClient.js"></script>
-  <script type="module" src="siswa-guru.js"></script>
+  <script type="module" src="siswaGuru.js"></script>
 </body>
 
 </html>

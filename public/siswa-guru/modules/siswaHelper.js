@@ -3,6 +3,8 @@
  * File: public/siswa-guru/modules/siswaHelper.js
  */
 
+import { state } from './state.js';
+
 export {
   formatRupiah,
   formatTanggalIndo,
@@ -14,6 +16,38 @@ export {
   hideModal,
   showToast
 } from '../../assets/js/sharedUtils.js';
+
+/**
+ * Batas maksimal kuota peminjaman aktif per anggota (dipinjam + tiket antrean)
+ */
+export const MAX_ACTIVE_LOANS = 2;
+
+/**
+ * Menghitung total peminjaman aktif pengguna saat ini (buku yang sedang dipinjam + antrean booking)
+ * @returns {number}
+ */
+export function getUserActiveLoansCount() {
+  const memberId = state.memberId;
+  const loans = state.cache.peminjaman || [];
+  return loans.filter(p => {
+    const isUser = !memberId || p.nisn_siswa === memberId;
+    return isUser && (p.status === 'Menunggu' || p.status === 'Dipinjam');
+  }).length;
+}
+
+/**
+ * Memeriksa apakah pengguna saat ini sedang memiliki transaksi aktif untuk buku tertentu
+ * @param {string} bookId 
+ * @returns {object|null}
+ */
+export function getActiveUserLoanForBook(bookId) {
+  const memberId = state.memberId;
+  const loans = state.cache.peminjaman || [];
+  return loans.find(p => {
+    const isUser = !memberId || p.nisn_siswa === memberId;
+    return isUser && p.id_buku === bookId && (p.status === 'Menunggu' || p.status === 'Dipinjam');
+  }) || null;
+}
 
 /**
  * Menghitung sisa hari sebelum batas waktu pengembalian

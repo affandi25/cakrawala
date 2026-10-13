@@ -1,0 +1,70 @@
+<!--
+  =============================================================================================
+  CAKRAWALA DIGITAL LIBRARY - ADMIN TAB 2: DATA GURU
+  File: public/admin/components/tabs/tab-guru.html
+  =============================================================================================
+-->
+
+<div id="tabGuru" class="space-y-6 hidden">
+  <!-- Control Bar: Quick Search & Tambah Baru Button -->
+  <section
+    class="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-slate-200 shadow-xs">
+    <!-- Quick Search Bar -->
+    <div class="relative flex-1 max-w-md">
+      <i class="ph ph-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-lg text-slate-400"
+        aria-hidden="true"></i>
+      <input type="search" id="searchInputGuru" placeholder="Cari guru berdasarkan nama, NIP, atau mata pelajaran..."
+        class="admin-search-input w-full rounded-xl border border-slate-200 bg-slate-50/60 py-2.5 pl-10 pr-10 text-sm text-slate-900 placeholder:text-slate-400 outline-none transition-all duration-200 focus:border-navy focus:bg-white focus:ring-3 focus:ring-navy/10" />
+      <button type="button" id="btnClearSearchGuru" aria-label="Bersihkan pencarian"
+        class="btn-clear-search absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 hidden text-base">
+        <i class="ph ph-x-circle-fill"></i>
+      </button>
+    </div>
+
+    <!-- Action Button: Tambah Baru & Import Excel -->
+    <div class="flex items-center gap-3">
+      <button type="button" id="btnRefreshDataGuru" title="Muat ulang data dari database" aria-label="Muat ulang data"
+        class="btn-refresh-data flex items-center justify-center h-10 w-10 rounded-xl border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy transition-colors">
+        <i class="ph ph-arrows-clockwise text-lg"></i>
+      </button>
+      <button type="button" id="btnOpenImportModalGuru" data-role="guru"
+        class="btn-open-import-modal inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-600 px-3.5 py-2.5 text-sm font-bold text-white shadow-sm shadow-emerald-600/20 transition-all duration-200 hover:bg-emerald-700 focus:outline-none focus:ring-3 focus:ring-emerald-500/30">
+        <i class="ph ph-file-xls text-lg" aria-hidden="true"></i>
+        <span>Import Excel</span>
+      </button>
+      <button type="button" id="btnOpenAddModalGuru"
+        class="btn-open-add-modal inline-flex items-center justify-center gap-2 rounded-xl bg-navy px-4 py-2.5 text-sm font-bold text-white shadow-sm shadow-navy/25 transition-all duration-200 hover:bg-navy-light focus:outline-none focus:ring-3 focus:ring-navy/30">
+        <i class="ph ph-plus-circle text-lg" aria-hidden="true"></i>
+        <span id="btnAddTextGuru">Tambah Guru Baru</span>
+      </button>
+    </div>
+  </section>
+
+  <!-- Panel Konten Tabel Data Guru -->
+  <section class="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden">
+    <!-- Table Header Info Bar -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+      <div class="flex items-center gap-2">
+        <h3 class="table-title text-sm font-bold text-slate-800" id="tableTitleGuru">Daftar Guru Terdaftar</h3>
+        <span id="tableRecordCountGuru"
+          class="table-record-count rounded-md bg-slate-200/80 px-2 py-0.5 text-xs font-bold text-slate-700">0
+          Data</span>
+      </div>
+      <span class="text-xs text-slate-400">Sinkronisasi Realtime dengan Supabase</span>
+    </div>
+
+    <!-- Table Responsive Container -->
+    <div class="overflow-x-auto min-h-[320px]">
+      <table class="w-full text-left text-sm border-collapse" id="dataTableGuru">
+        <thead class="bg-slate-50 text-xs font-bold uppercase tracking-wider text-slate-500 border-b border-slate-200">
+          <tr id="tableHeadRowGuru">
+            <!-- Injected dynamically based on active tab -->
+          </tr>
+        </thead>
+        <tbody id="tableBodyGuru" class="divide-y divide-slate-100">
+          <!-- Content rendered via admin.js (Loading, Empty, Error, or Data Rows) -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

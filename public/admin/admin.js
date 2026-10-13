@@ -7,23 +7,34 @@
  * 1. modules/state.js       - Sentral state, tab configs, dan DOM getters
  * 2. modules/data.js        - Sinkronisasi data Siswa, Guru, Petugas via Supabase
  * 3. modules/table.js       - Rendering tabel, skeleton, filtering, dan tab switcher
- * 4. modules/modal.js       - Modal form tambah/edit pengguna, reset password, & konfirmasi hapus
- * 5. ../assets/js/auth.js   - Verifikasi sesi admin terpusat & kontroler modal logout
- * 6. ../assets/js/sharedUtils.js  - Shared helper toast & format utilities
+ * 4. modules/modalUser.js   - Form tambah/edit pengguna, reset password, dan upload foto
+ * 5. modules/modalKonfirmasi.js - Konfirmasi cascade delete pengguna
+ * 6. modules/import/        - Import massal Excel/CSV terstandarisasi
+ * 7. ../assets/js/auth.js   - Verifikasi sesi admin terpusat & kontroler modal logout
+ * 8. ../assets/js/sharedUtils.js  - Shared helper toast & format utilities
  */
 
 import { initSessionAndAdmin, setupLogout } from '../assets/js/auth.js';
 import { showToast } from '../assets/js/sharedUtils.js';
 import { state, TAB_CONFIGS, DOM } from './modules/state.js';
-import { loadData, refreshAllBadges } from './modules/data.js';
+import { loadData, refreshAllBadges, loadKpiStats } from './modules/data.js';
 import { renderTable, switchTab } from './modules/table.js';
 import {
   openAddModal,
   closeAddModal,
   handleAddUserSubmit,
+  initModalUser
+} from './modules/modalUser.js';
+import {
   closeDeleteModal,
-  handleConfirmDelete
-} from './modules/modal.js';
+  handleConfirmDelete,
+  initModalKonfirmasi
+} from './modules/modalKonfirmasi.js';
+import { initKpiMetrics } from './modules/0-overview/index.js';
+import { initModulSiswa } from './modules/1-siswa/index.js';
+import { initModulGuru } from './modules/2-guru/index.js';
+import { initModulPetugas } from './modules/3-petugas/index.js';
+import { initImportExcel, closeImportModal } from './modules/import/index.js';
 
 // ========================================================
 // 1. MOBILE SIDEBAR CONTROLLER
@@ -43,46 +54,75 @@ function closeMobileSidebar() {
 // ========================================================
 function initEventListeners() {
   // 1. Tab Navigation Events
+  if (DOM.tabBtnBeranda) DOM.tabBtnBeranda.addEventListener('click', () => switchTab('beranda'));
   if (DOM.tabBtnSiswa) DOM.tabBtnSiswa.addEventListener('click', () => switchTab('siswa'));
   if (DOM.tabBtnGuru) DOM.tabBtnGuru.addEventListener('click', () => switchTab('guru'));
   if (DOM.tabBtnPetugas) DOM.tabBtnPetugas.addEventListener('click', () => switchTab('petugas'));
 
-  // 2. Real-time Search Input
-  if (DOM.searchInput) {
-    DOM.searchInput.addEventListener('input', (e) => {
+  // Quick Action Buttons dari Tab Beranda
+  const quickSiswa = document.getElementById('btnQuickTabSiswa');
+  const quickGuru = document.getElementById('btnQuickTabGuru');
+  const quickPetugas = document.getElementById('btnQuickTabPetugas');
+  const btnRefreshKpi = document.getElementById('btnRefreshKpiStats');
+
+  if (quickSiswa) quickSiswa.addEventListener('click', () => switchTab('siswa'));
+  if (quickGuru) quickGuru.addEventListener('click', () => switchTab('guru'));
+  if (quickPetugas) quickPetugas.addEventListener('click', () => switchTab('petugas'));
+
+  if (btnRefreshKpi) {
+    btnRefreshKpi.addEventListener('click', async () => {
+      const icon = btnRefreshKpi.querySelector('i');
+      if (icon) icon.classList.add('animate-spin');
+      try {
+        await loadKpiStats();
+        showToast('Ringkasan metrik berhasil diperbarui!', 'success');
+      } finally {
+        if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 300);
+      }
+    });
+  }
+
+  // 2. Real-time Search Input (Dukungan seluruh tab)
+  document.querySelectorAll('.admin-search-input').forEach(input => {
+    input.addEventListener('input', (e) => {
       state.searchQuery = e.target.value;
-      if (DOM.btnClearSearch) {
+      const clearBtn = e.target.parentElement ? e.target.parentElement.querySelector('.btn-clear-search') : null;
+      if (clearBtn) {
         if (state.searchQuery.length > 0) {
-          DOM.btnClearSearch.classList.remove('hidden');
+          clearBtn.classList.remove('hidden');
         } else {
-          DOM.btnClearSearch.classList.add('hidden');
+          clearBtn.classList.add('hidden');
         }
       }
       renderTable();
     });
-  }
+  });
 
-  if (DOM.btnClearSearch) {
-    DOM.btnClearSearch.addEventListener('click', () => {
-      if (DOM.searchInput) DOM.searchInput.value = '';
+  document.querySelectorAll('.btn-clear-search').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+      const container = btn.closest('div');
+      const input = container ? container.querySelector('.admin-search-input') : null;
+      if (input) input.value = '';
       state.searchQuery = '';
-      DOM.btnClearSearch.classList.add('hidden');
-      if (DOM.searchInput) DOM.searchInput.focus();
+      btn.classList.add('hidden');
+      if (input) input.focus();
       renderTable();
     });
-  }
+  });
 
-  // 3. Refresh Data Button
-  if (DOM.btnRefreshData) {
-    DOM.btnRefreshData.addEventListener('click', () => {
+  // 3. Refresh Data Buttons (Dukungan seluruh tab)
+  document.querySelectorAll('.btn-refresh-data').forEach(btn => {
+    btn.addEventListener('click', () => {
       loadData(state.activeTab, false);
       refreshAllBadges();
       showToast('Memperbarui data dari database...', 'info');
     });
-  }
+  });
 
-  // 4. Modal Add User Events
-  if (DOM.btnOpenAddModal) DOM.btnOpenAddModal.addEventListener('click', openAddModal);
+  // 4. Modal Add User Events (Dukungan seluruh tab)
+  document.querySelectorAll('.btn-open-add-modal').forEach(btn => {
+    btn.addEventListener('click', openAddModal);
+  });
   if (DOM.btnCancelAddModal) DOM.btnCancelAddModal.addEventListener('click', closeAddModal);
   if (DOM.btnCloseAddModal) DOM.btnCloseAddModal.addEventListener('click', closeAddModal);
 
@@ -118,6 +158,10 @@ function initEventListeners() {
       }
       if (DOM.modalDeleteConfirm && !DOM.modalDeleteConfirm.classList.contains('hidden')) {
         closeDeleteModal();
+      }
+      const modalImport = document.getElementById('modalImportExcel');
+      if (modalImport && !modalImport.classList.contains('hidden')) {
+        closeImportModal();
       }
       if (DOM.adminSidebar && !DOM.adminSidebar.classList.contains('-translate-x-full')) {
         closeMobileSidebar();
@@ -161,7 +205,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
   }
 
-  // 4. Muat Data Tab Awal & Sinkronkan Ringkasan Badge
-  loadData(state.activeTab);
-  refreshAllBadges();
+  // 4. Inisialisasi Modul Modular (0-Overview KPI, 1-Siswa, 2-Guru, 3-Petugas)
+  initKpiMetrics();
+  initModulSiswa();
+  initModulGuru();
+  initModulPetugas();
+
+  // 5. Inisialisasi Modul Interaktif (Form User, Konfirmasi Hapus, & Import Excel)
+  initModalUser();
+  initModalKonfirmasi();
+  initImportExcel();
+
+  // 6. Sinkronisasi tampilan awal tab
+  switchTab(state.activeTab);
 });

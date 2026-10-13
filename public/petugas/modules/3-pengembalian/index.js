@@ -25,6 +25,8 @@ export {
   openModalKonfirmasiLunasiDenda,
   executePelunasanDenda,
   handleBatalkanLunasDenda,
+  formatWhatsAppNumber,
+  sendWhatsAppReminder,
   setupKasirTunggakanListeners,
   arsipRiwayatState,
   renderSemuaRiwayatList,
@@ -74,6 +76,7 @@ import {
   openModalKonfirmasiLunasiDenda,
   executePelunasanDenda,
   handleBatalkanLunasDenda,
+  sendWhatsAppReminder,
   setupSubtabDendaListeners
 } from './denda/index.js';
 
@@ -118,6 +121,7 @@ if (typeof window !== 'undefined') {
   window.openModalKonfirmasiLunasiDenda = openModalKonfirmasiLunasiDenda;
   window.executePelunasanDenda = executePelunasanDenda;
   window.handleBatalkanLunasDenda = handleBatalkanLunasDenda;
+  window.sendWhatsAppReminder = sendWhatsAppReminder;
   window.showReceiptModal = showReceiptModal;
   window.printReceipt = printReceipt;
 }

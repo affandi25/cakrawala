@@ -12,7 +12,9 @@ export {
   renderTunggakanDendaList,
   openModalKonfirmasiLunasiDenda,
   executePelunasanDenda,
-  handleBatalkanLunasDenda
+  handleBatalkanLunasDenda,
+  formatWhatsAppNumber,
+  sendWhatsAppReminder
 } from './kasirTunggakan.js';
 
 export {

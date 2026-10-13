@@ -86,11 +86,18 @@ export function renderDipinjamOnlyTable() {
           ${item.id_peminjaman}
         </td>
         <td class="px-5 py-3">
-          <div class="flex items-center gap-1.5">
-            <span class="font-bold text-slate-800 text-xs">${namaSiswa}</span>
-            <span class="rounded-full ${borrower.type === 'guru' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-navy'} px-1.5 py-0.2 text-[9px] font-bold">${borrower.badge}</span>
+          <div class="flex items-center gap-2.5">
+            ${borrower.foto && typeof borrower.foto === 'string' && borrower.foto.trim() !== ''
+              ? `<img src="${borrower.foto}" class="h-8 w-8 rounded-lg object-cover shrink-0 border border-slate-200/80 shadow-2xs" alt="${namaSiswa}" onerror="this.onerror=null; this.parentElement.innerHTML='<div class=\\'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-[11px] font-bold\\'>${(borrower.nama || 'A').charAt(0).toUpperCase()}</div>';"/>`
+              : `<div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${borrower.type === 'guru' ? 'bg-amber-600' : 'bg-navy'} text-white text-[11px] font-bold">${(borrower.nama || 'A').charAt(0).toUpperCase()}</div>`}
+            <div class="min-w-0">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold text-slate-800 text-xs">${namaSiswa}</span>
+                <span class="rounded-full ${borrower.type === 'guru' ? 'bg-amber-100 text-amber-800' : 'bg-blue-100 text-navy'} px-1.5 py-0.2 text-[9px] font-bold">${borrower.badge}</span>
+              </div>
+              <p class="text-[11px] text-slate-500">${kelasSiswa}</p>
+            </div>
           </div>
-          <p class="text-[11px] text-slate-500">${kelasSiswa}</p>
         </td>
         <td class="px-5 py-3">
           <div class="flex items-center gap-3">
