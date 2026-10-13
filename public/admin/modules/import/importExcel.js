@@ -17,8 +17,8 @@
 import * as XLSX from 'xlsx';
 import { db } from '../../../assets/js/supabaseClient.js';
 import { showToast, escapeHtml } from '../../../assets/js/sharedUtils.js';
-import { state, DOM } from '../state.js';
-import { loadData, refreshAllBadges, generateUserId } from '../data.js';
+import { state, DOM } from '../core/state.js';
+import { loadData, refreshAllBadges, generateUserId } from '../core/data.js';
 import { loadKpiStats } from '../0-overview/kpiMetrics.js';
 
 let currentParsedRows = [];

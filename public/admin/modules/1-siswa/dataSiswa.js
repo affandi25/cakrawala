@@ -11,28 +11,27 @@
 
 import { db } from '../../../assets/js/supabaseClient.js';
 import { escapeHtml } from '../../../assets/js/sharedUtils.js';
-import { state, DOM } from '../state.js';
-import { openAddModal, openEditModal } from '../modalUser.js';
-import { openDeleteModal } from '../modalKonfirmasi.js';
-import { updateBadge } from '../table.js';
+import { state, DOM } from '../core/state.js';
+import { openAddModal, openEditModal } from '../modals/modalUser.js';
+import { openDeleteModal } from '../modals/modalKonfirmasi.js';
+import { updateBadge } from '../core/table.js';
 
 let searchListenerAttached = false;
 
 /**
- * Render thumbnail pasfoto resmi siswa dengan inisial fallback
+ * Render thumbnail pasfoto siswa (Foto Profil Asli jika ada, atau Ikon Default WhatsApp)
  */
 function renderSiswaAvatarThumb(fotoUrl, name) {
-  const initials = name ? name.substring(0, 2).toUpperCase() : 'SW';
   if (fotoUrl && typeof fotoUrl === 'string' && fotoUrl.trim() !== '') {
     return `
-      <div class="h-8 w-8 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-2xs">
-        <img src="${fotoUrl}" alt="${escapeHtml(name)}" class="h-full w-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'text-[11px] font-bold text-white\\'>${initials}</span>'; this.parentElement.className='h-8 w-8 shrink-0 rounded-xl bg-navy text-white flex items-center justify-center font-bold text-[11px] shadow-2xs';" />
+      <div class="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-slate-100 border border-slate-200/80 shadow-2xs">
+        <img src="${fotoUrl}" alt="${escapeHtml(name || '')}" class="h-full w-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'ph-fill ph-user text-base text-slate-400\\'></i>'; this.parentElement.className='h-8 w-8 shrink-0 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center shadow-2xs';" />
       </div>
     `;
   }
   return `
-    <div class="h-8 w-8 shrink-0 rounded-xl bg-navy text-white flex items-center justify-center font-bold text-[11px] shadow-2xs">
-      ${initials}
+    <div class="h-8 w-8 shrink-0 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center shadow-2xs" title="${escapeHtml(name || '')}">
+      <i class="ph-fill ph-user text-base text-slate-400"></i>
     </div>
   `;
 }

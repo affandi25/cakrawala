@@ -3,33 +3,39 @@
  * File: public/admin/admin.js
  * 
  * FUNGSI UTAMA:
- * Sebagai entry point utama yang mengorkestrasi modul-modul terpisah:
- * 1. modules/state.js       - Sentral state, tab configs, dan DOM getters
- * 2. modules/data.js        - Sinkronisasi data Siswa, Guru, Petugas via Supabase
- * 3. modules/table.js       - Rendering tabel, skeleton, filtering, dan tab switcher
- * 4. modules/modalUser.js   - Form tambah/edit pengguna, reset password, dan upload foto
- * 5. modules/modalKonfirmasi.js - Konfirmasi cascade delete pengguna
- * 6. modules/import/        - Import massal Excel/CSV terstandarisasi
- * 7. ../assets/js/auth.js   - Verifikasi sesi admin terpusat & kontroler modal logout
- * 8. ../assets/js/sharedUtils.js  - Shared helper toast & format utilities
+ * Sebagai entry point utama yang mengorkestrasi modul-modul modular:
+ * 1. modules/core/          - Sentral state, data sync, dan table engine
+ * 2. modules/modals/        - Form tambah/edit pengguna, upload foto, & konfirmasi hapus
+ * 3. modules/0-overview/    - Metrik KPI & koneksi Supabase
+ * 4. modules/1-siswa/       - Dataset & table renderer Siswa
+ * 5. modules/2-guru/        - Dataset & table renderer Guru
+ * 6. modules/3-petugas/     - Dataset & table renderer Petugas
+ * 7. modules/import/        - Import massal Excel/CSV terstandarisasi
+ * 8. ../assets/js/auth.js   - Verifikasi sesi admin terpusat & kontroler modal logout
+ * 9. ../assets/js/sharedUtils.js  - Shared helper toast & format utilities
  */
 
 import { initSessionAndAdmin, setupLogout } from '../assets/js/auth.js';
 import { showToast } from '../assets/js/sharedUtils.js';
-import { state, TAB_CONFIGS, DOM } from './modules/state.js';
-import { loadData, refreshAllBadges, loadKpiStats } from './modules/data.js';
-import { renderTable, switchTab } from './modules/table.js';
+import {
+  state,
+  TAB_CONFIGS,
+  DOM,
+  loadData,
+  refreshAllBadges,
+  loadKpiStats,
+  renderTable,
+  switchTab
+} from './modules/core/index.js';
 import {
   openAddModal,
   closeAddModal,
   handleAddUserSubmit,
-  initModalUser
-} from './modules/modalUser.js';
-import {
+  initModalUser,
   closeDeleteModal,
   handleConfirmDelete,
   initModalKonfirmasi
-} from './modules/modalKonfirmasi.js';
+} from './modules/modals/index.js';
 import { initKpiMetrics } from './modules/0-overview/index.js';
 import { initModulSiswa } from './modules/1-siswa/index.js';
 import { initModulGuru } from './modules/2-guru/index.js';

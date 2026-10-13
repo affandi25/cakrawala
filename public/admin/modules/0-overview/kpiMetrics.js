@@ -9,7 +9,7 @@
  */
 
 import { db } from '../../../assets/js/supabaseClient.js';
-import { state, DOM } from '../state.js';
+import { state, DOM } from '../core/state.js';
 
 /**
  * Menghitung dan menampilkan total jumlah pengguna ke kartu ringkasan KPI

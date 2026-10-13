@@ -466,8 +466,10 @@ export async function initSessionAndOfficer(targetState = {}) {
 export function updateOfficerProfileDisplay(name) {
   const nameEl = document.getElementById('petugasUserName');
   const avatarEl = document.getElementById('petugasAvatarInitials');
+  const welcomeEl = document.getElementById('welcomeOfficerName');
 
   if (nameEl) nameEl.textContent = name;
+  if (welcomeEl) welcomeEl.textContent = name;
   if (avatarEl) {
     const parts = (name || '').trim().split(' ');
     const initials = parts.length > 1
