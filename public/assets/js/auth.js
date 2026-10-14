@@ -394,11 +394,11 @@ export function updateMemberProfileDisplay(targetState = {}) {
 
   if (avatarEl) {
     if (profile.foto_profil) {
-      avatarEl.innerHTML = `<img src="${profile.foto_profil}" class="h-full w-full object-cover rounded-xl" alt="Foto Profil" />`;
-      avatarEl.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 shadow-xs overflow-hidden border border-slate-200/60';
+      avatarEl.innerHTML = `<img src="${profile.foto_profil}" class="h-full w-full object-cover rounded-full" alt="Foto Profil" />`;
+      avatarEl.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 shadow-xs overflow-hidden border border-slate-200/60';
     } else {
-      avatarEl.innerHTML = `<i class="ph-fill ph-user text-2xl text-white"></i>`;
-      avatarEl.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-300 text-white shadow-xs overflow-hidden';
+      avatarEl.innerHTML = `<i class="ph-fill ph-user text-2xl text-slate-400"></i>`;
+      avatarEl.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-xs overflow-hidden border border-slate-200/80';
     }
   }
 
@@ -460,10 +460,11 @@ export async function initSessionAndOfficer(targetState = {}) {
 }
 
 /**
- * Menampilkan nama dan inisial avatar petugas pada sidebar
+ * Menampilkan nama dan avatar default petugas pada sidebar
  * @param {string} name Nama petugas
+ * @param {string} [fotoUrl] URL foto profil petugas (opsional)
  */
-export function updateOfficerProfileDisplay(name) {
+export function updateOfficerProfileDisplay(name, fotoUrl = null) {
   const nameEl = document.getElementById('petugasUserName');
   const avatarEl = document.getElementById('petugasAvatarInitials');
   const welcomeEl = document.getElementById('welcomeOfficerName');
@@ -471,11 +472,13 @@ export function updateOfficerProfileDisplay(name) {
   if (nameEl) nameEl.textContent = name;
   if (welcomeEl) welcomeEl.textContent = name;
   if (avatarEl) {
-    const parts = (name || '').trim().split(' ');
-    const initials = parts.length > 1
-      ? (parts[0][0] + parts[1][0]).toUpperCase()
-      : (name || 'PT').substring(0, 2).toUpperCase();
-    avatarEl.textContent = initials;
+    if (fotoUrl) {
+      avatarEl.innerHTML = `<img src="${fotoUrl}" class="h-full w-full object-cover rounded-full" alt="${name || 'Petugas'}" />`;
+      avatarEl.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 shadow-2xs overflow-hidden border border-slate-200/60';
+    } else {
+      avatarEl.innerHTML = '<i class="ph-fill ph-user text-base text-slate-400"></i>';
+      avatarEl.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-2xs border border-slate-200/80';
+    }
   }
 }
 
@@ -507,20 +510,23 @@ export async function initSessionAndAdmin(targetState = {}) {
 }
 
 /**
- * Menampilkan nama dan inisial avatar admin pada sidebar
+ * Menampilkan nama dan avatar default admin pada sidebar
  * @param {string} name Nama pengguna admin
+ * @param {string} [fotoUrl] URL foto profil admin (opsional)
  */
-export function updateAdminProfileDisplay(name) {
+export function updateAdminProfileDisplay(name, fotoUrl = null) {
   const nameEl = document.getElementById('adminUserName');
   const avatarEl = document.getElementById('adminAvatarInitials');
 
   if (nameEl) nameEl.textContent = name;
   if (avatarEl) {
-    const parts = (name || '').trim().split(/\s+/);
-    const initials = parts.length > 1
-      ? (parts[0][0] + parts[1][0]).toUpperCase()
-      : (name || 'AD').substring(0, 2).toUpperCase();
-    avatarEl.textContent = initials;
+    if (fotoUrl) {
+      avatarEl.innerHTML = `<img src="${fotoUrl}" class="h-full w-full object-cover rounded-full" alt="${name || 'Admin'}" />`;
+      avatarEl.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 shadow-2xs overflow-hidden border border-slate-200/60';
+    } else {
+      avatarEl.innerHTML = '<i class="ph-fill ph-user text-base text-slate-400"></i>';
+      avatarEl.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-2xs border border-slate-200/80';
+    }
   }
 }
 

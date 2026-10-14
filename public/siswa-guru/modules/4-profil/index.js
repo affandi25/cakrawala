@@ -15,8 +15,7 @@ import {
     renderFormProfil,
     setupProfileModule,
     handleLogout,
-    compressImage,
-    getInitials
+    compressImage
 } from './profilUser.js';
 
 export {
@@ -26,8 +25,7 @@ export {
     renderFormProfil,
     setupProfileModule,
     handleLogout,
-    compressImage,
-    getInitials
+    compressImage
 };
 
 // Bind fungsi ke window dengan null-safety checking

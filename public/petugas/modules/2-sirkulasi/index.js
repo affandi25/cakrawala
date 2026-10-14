@@ -60,7 +60,6 @@ export {
 import { setupMemberPicker } from './memberPicker.js';
 import { 
   setupWalkInForm, 
-  setupWalkInModal, 
   openWalkInModal,
   addBookToCart,
   addBookToWalkInCart,

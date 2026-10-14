@@ -1,6 +1,6 @@
 /**
  * CAKRAWALA Digital Library - State Management Dashboard Siswa & Guru
- * File: public/siswa-guru/modules/state.js
+ * File: public/siswa-guru/modules/core/state.js
  * 
  * FUNGSI:
  * Menyimpan memori lokal sentral dashboard siswa & guru:

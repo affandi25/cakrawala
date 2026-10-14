@@ -11,7 +11,7 @@
 
 import { db } from '../../../assets/js/supabaseClient.js';
 import { escapeHtml } from '../../../assets/js/sharedUtils.js';
-import { state, DOM } from '../core/state.js';
+import { state } from '../core/state.js';
 import { openAddModal, openEditModal } from '../modals/modalUser.js';
 import { openDeleteModal } from '../modals/modalKonfirmasi.js';
 import { updateBadge } from '../core/table.js';

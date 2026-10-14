@@ -15,12 +15,10 @@
  */
 
 import { db } from '../../../assets/js/supabaseClient.js';
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import {
   formatRupiah,
   formatTanggalIndo,
-  getTodayDateString,
-  calculateDateDiffInDays,
   escapeHtml,
   showToast
 } from '../../../assets/js/sharedUtils.js';

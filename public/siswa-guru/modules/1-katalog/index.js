@@ -39,7 +39,6 @@ export {
 export function setupKatalogModule(onNavigateToBooking) {
   setupKatalogFilters();
   setupDetailModal(onNavigateToBooking);
-  checkUrlRedirectBooking();
 }
 
 // Buka akses global ke window untuk kemudahan pemanggilan antar-modul

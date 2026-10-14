@@ -11,7 +11,7 @@
  */
 
 import { db } from '../../../assets/js/supabaseClient.js';
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import { showToast, escapeHtml } from '../../../assets/js/sharedUtils.js';
 import { getCurrentUser, clearSession, updateMemberProfileDisplay } from '../../../assets/js/auth.js';
 
@@ -24,20 +24,6 @@ export function getTempPhotoBase64() {
 
 export function setTempPhotoBase64(val) {
   tempPhotoBase64 = val;
-}
-
-/**
- * Mengambil inisial 2 huruf dari nama pengguna
- * @param {string} name 
- * @returns {string}
- */
-export function getInitials(name) {
-  if (!name || !name.trim()) return 'SW';
-  const parts = name.trim().split(/\s+/);
-  if (parts.length > 1) {
-    return (parts[0][0] + parts[1][0]).toUpperCase();
-  }
-  return name.trim().substring(0, 2).toUpperCase();
 }
 
 /**
@@ -206,8 +192,8 @@ export function renderFormProfil(profile, isGuru, foto) {
       previewAvatarEl.innerHTML = `<img src="${escapeHtml(foto)}" class="h-full w-full object-cover rounded-2xl" alt="Foto Profil" />`;
       if (btnRemovePhoto) btnRemovePhoto.classList.remove('hidden');
     } else {
-      previewAvatarEl.innerHTML = `<i class="ph-fill ph-user text-4xl text-white"></i>`;
-      previewAvatarEl.className = 'flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-300 text-white shadow-md overflow-hidden border-2 border-white';
+      previewAvatarEl.innerHTML = `<i class="ph-fill ph-user text-4xl text-slate-400"></i>`;
+      previewAvatarEl.className = 'flex h-16 w-16 items-center justify-center rounded-2xl bg-slate-200 text-slate-400 shadow-md overflow-hidden border-2 border-white';
       if (btnRemovePhoto) btnRemovePhoto.classList.add('hidden');
     }
   }
@@ -305,8 +291,8 @@ export function setupProfileModule() {
         // Perbarui pratinjau avatar sidebar juga
         const sidebarAvatar = document.getElementById('memberAvatarInitials');
         if (sidebarAvatar && tempPhotoBase64) {
-          sidebarAvatar.innerHTML = `<img src="${tempPhotoBase64}" class="h-full w-full object-cover rounded-xl" alt="Foto Profil" />`;
-          sidebarAvatar.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100 shadow-xs overflow-hidden border border-slate-200/60';
+          sidebarAvatar.innerHTML = `<img src="${tempPhotoBase64}" class="h-full w-full object-cover rounded-full" alt="Foto Profil" />`;
+          sidebarAvatar.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-100 shadow-xs overflow-hidden border border-slate-200/60';
         }
 
         showToast('Foto profil dipilih! Klik "Simpan Perubahan Profil" untuk menerapkan.', 'info');
@@ -325,8 +311,8 @@ export function setupProfileModule() {
 
       const sidebarAvatar = document.getElementById('memberAvatarInitials');
       if (sidebarAvatar) {
-        sidebarAvatar.innerHTML = '<i class="ph-fill ph-user text-2xl text-white"></i>';
-        sidebarAvatar.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-300 text-white shadow-xs overflow-hidden';
+        sidebarAvatar.innerHTML = '<i class="ph-fill ph-user text-2xl text-slate-400"></i>';
+        sidebarAvatar.className = 'flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-xs overflow-hidden border border-slate-200/80';
       }
 
       showToast('Foto profil dihapus dari pratinjau. Klik "Simpan Perubahan Profil" untuk menerapkan.', 'info');

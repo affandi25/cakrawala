@@ -57,7 +57,7 @@ function openPinjamModal(bukuId) {
   if (!book || !book.available) return;
   activeBookId = bukuId;
 
-  var userSessionRaw = sessionStorage.getItem('cakrawala_user') || sessionStorage.getItem('cakrawala_logged_in');
+  var userSessionRaw = sessionStorage.getItem('cakrawala_user') || localStorage.getItem('cakrawala_user') || sessionStorage.getItem('cakrawala_logged_in');
   if (!userSessionRaw) {
     window.location.href = 'login.html?buku_id=' + encodeURIComponent(bukuId);
     return;

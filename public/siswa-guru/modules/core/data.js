@@ -1,15 +1,15 @@
 /**
  * CAKRAWALA Digital Library - Data Synchronization Siswa & Guru
- * File: public/siswa-guru/modules/data.js
+ * File: public/siswa-guru/modules/core/data.js
  */
 
-import { db } from '../../assets/js/supabaseClient.js';
+import { db } from '../../../assets/js/supabaseClient.js';
 import { state } from './state.js';
 import { showToast } from './siswaHelper.js';
-import { renderBeranda } from './0-beranda/index.js';
-import { renderKatalogGrid, renderKategoriOptions } from './1-katalog/index.js';
-import { renderPinjamanTables, renderRiwayatTable } from './3-riwayat/index.js';
-import { renderProfil } from './4-profil/index.js';
+import { renderBeranda } from '../0-beranda/index.js';
+import { renderKatalogGrid, renderKategoriOptions } from '../1-katalog/index.js';
+import { renderPinjamanTables, renderRiwayatTable } from '../3-riwayat/index.js';
+import { renderProfil } from '../4-profil/index.js';
 
 /**
  * Menjalankan render ke seluruh modul tampilan secara serentak

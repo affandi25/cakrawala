@@ -56,15 +56,12 @@ export {
 import { setupReceiptModal, showReceiptModal, printReceipt } from './modalStruk.js';
 import {
   setupPengembalianForm,
-  renderBorrowerSearchResults,
   filterPengembalianByName,
   selectBorrowerForReturn,
-  renderActiveLoansCards,
   selectLoanForReturn,
   resetPengembalianSelection,
   filterPengembalianByBook,
   renderPengembalianFormOptions,
-  updatePreviewPeminjamanBox,
   recalculateDenda,
   handleSubmitPengembalian
 } from './formPengembalian.js';

@@ -12,7 +12,6 @@
 import { db } from '../../../assets/js/supabaseClient.js';
 import { state } from '../core/state.js';
 import {
-  generateRandomId,
   fileToDataUrl,
   showModal,
   hideModal,

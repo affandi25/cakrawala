@@ -11,14 +11,14 @@
  */
 
 import { db } from '../../../assets/js/supabaseClient.js';
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import { showToast } from '../../../assets/js/sharedUtils.js';
 
 import {
   MAX_ACTIVE_LOANS,
   getUserActiveLoansCount,
   getActiveUserLoanForBook
-} from '../siswaHelper.js';
+} from '../core/siswaHelper.js';
 
 export { MAX_ACTIVE_LOANS, getUserActiveLoansCount, getActiveUserLoanForBook };
 
@@ -303,17 +303,28 @@ export function renderKatalogGrid() {
 
 /**
  * Pengecekan otomatis parameter URL: ?action=pinjam&buku_id=BK-xxx
+ * Menunggu hingga data buku siap di cache sebelum membuka modal booking.
  */
-export function checkUrlRedirectBooking() {
+export async function checkUrlRedirectBooking() {
   if (typeof window === 'undefined' || !window.location) return;
   const params = new URLSearchParams(window.location.search);
   const action = params.get('action');
   const bukuId = params.get('buku_id');
 
   if (action === 'pinjam' && bukuId) {
-    setTimeout(() => {
-      if (window.openBookingModal) window.openBookingModal(bukuId);
-      window.history.replaceState({}, document.title, window.location.pathname);
-    }, 600);
+    const cleanBukuId = decodeURIComponent(bukuId).trim();
+    // Bersihkan parameter dari URL agar tidak ter-trigger berulang saat refresh
+    window.history.replaceState({}, document.title, window.location.pathname);
+
+    // Tunggu hingga cache buku siap diunduh (maksimal 25 x 150ms = 3.75 detik)
+    let attempts = 0;
+    while ((!state.cache.buku || state.cache.buku.length === 0) && attempts < 25) {
+      await new Promise(resolve => setTimeout(resolve, 150));
+      attempts++;
+    }
+
+    if (window.openBookingModal) {
+      window.openBookingModal(cleanBukuId);
+    }
   }
 }

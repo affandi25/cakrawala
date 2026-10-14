@@ -38,9 +38,9 @@ import {
   renderBooksInventory,
   setupBooksHandlers
 } from './katalogBuku.js';
-import { openBookModal, setupBookFormModal, generateSequentialBookId } from './modalFormBuku.js';
-import { openQrCodeModal, setupQrCodeModal, printQrLabel, downloadQrPng } from './modalQrBuku.js';
-import { openDeleteBookModal, setupDeleteBookModal } from './modalHapusBuku.js';
+import { openBookModal, generateSequentialBookId } from './modalFormBuku.js';
+import { openQrCodeModal, printQrLabel, downloadQrPng } from './modalQrBuku.js';
+import { openDeleteBookModal } from './modalHapusBuku.js';
 
 /**
  * Render seluruh tampilan Meja 4 (Inventaris Buku & Kategori)

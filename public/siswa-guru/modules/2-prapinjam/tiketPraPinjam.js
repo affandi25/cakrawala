@@ -13,9 +13,8 @@
  */
 
 import { db } from '../../../assets/js/supabaseClient.js';
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import {
-  formatTanggalIndo,
   getTodayDateString,
   addDaysToDate,
   generateRandomId,
@@ -25,7 +24,7 @@ import {
   MAX_ACTIVE_LOANS,
   getUserActiveLoansCount,
   getActiveUserLoanForBook
-} from '../siswaHelper.js';
+} from '../core/siswaHelper.js';
 import { removeFromCart } from './keranjang.js';
 
 export { MAX_ACTIVE_LOANS, getUserActiveLoansCount, getActiveUserLoanForBook };
@@ -76,9 +75,35 @@ export function closeBookingModal() {
  * Membuka formulir modal booking pra-pinjam untuk buku yang dipilih
  * @param {string} bookId ID Buku yang hendak dipinjam
  */
-export function openBookingModal(bookId) {
+export async function openBookingModal(bookId) {
   const { modal, content } = getBookingModalElements();
-  const book = (state.cache.buku || []).find(b => b.id_buku === bookId);
+  const cleanId = String(bookId || '').trim();
+
+  let book = (state.cache.buku || []).find(b => 
+    String(b.id_buku || '').trim().toLowerCase() === cleanId.toLowerCase()
+  );
+
+  // Fallback cepat: Jika buku belum tersedia di cache, ambil langsung dari tabel Supabase
+  if (!book && db) {
+    try {
+      const { data } = await db
+        .from('data_buku')
+        .select('*')
+        .ilike('id_buku', cleanId)
+        .maybeSingle();
+
+      if (data) {
+        book = data;
+        state.cache.buku = state.cache.buku || [];
+        if (!state.cache.buku.some(b => b.id_buku === data.id_buku)) {
+          state.cache.buku.push(data);
+        }
+      }
+    } catch (err) {
+      console.warn('[openBookingModal] Gagal fallback fetch data buku:', err);
+    }
+  }
+
   if (!book) {
     showToast('Buku tidak ditemukan di katalog perpustakaan.', 'error');
     return;
@@ -95,7 +120,7 @@ export function openBookingModal(bookId) {
   }
 
   // 2. Validasi Transaksi Aktif untuk Buku yang Sama
-  const activeLoan = getActiveUserLoanForBook(bookId);
+  const activeLoan = getActiveUserLoanForBook(cleanId);
   if (activeLoan) {
     if (activeLoan.status === 'Menunggu') {
       showToast(`Anda sudah memiliki tiket booking [${activeLoan.id_peminjaman}] untuk buku ini yang belum diambil di meja perpustakaan.`, 'warning');
