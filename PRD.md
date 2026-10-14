@@ -2,7 +2,7 @@
 
 > **Dokumen Spesifikasi Kebutuhan Perangkat Lunak, Arsitektur Modular, & Panduan Vibe Coding AI Agent (Updated & Modularized Architecture)**
 > Proyek: **CAKRAWALA** (*“Cerdas Akses Koleksi Referensi, Wujudkan Aspirasi Literasi Aksara”*)
-> Arsitektur: Modern Client-Side Web Architecture (Vite Multi-Page App (MPA) with HTML Component Includer, Environment Variables (.env), HTML5, Tailwind CSS, Vanilla JavaScript ES6+ Feature-Driven Modules, Supabase PostgreSQL, `html5-qrcode`, JsBarcode, QRCode.js, GSAP, & AOS)
+> Arsitektur: Modern Client-Side Web Architecture (Vite Multi-Page App (MPA) with HTML Component Includer, Environment Variables (.env), HTML5, Tailwind CSS, Vanilla JavaScript ES6+ Feature-Driven Modules, Supabase PostgreSQL, `html5-qrcode`, QRCode.js, GSAP, & AOS)
 
 ---
 
@@ -11,8 +11,8 @@
 **CAKRAWALA** adalah sistem otomasi perpustakaan terintegrasi yang menjembatani layanan digital daring dan operasional meja sirkulasi fisik. Sistem ini dibangun untuk memenuhi 4 pilar utama:
 
 1. **Katalog Publik & Kiosk Anjungan Mandiri (`public/index.html`):** Memfasilitasi pengunjung/siswa mencari buku, mengecek ketersediaan stok, melihat nomor rak fisik, dan membaca pengumuman kampus secara transparan tanpa kewajiban login.
-2. **Portal Anggota Siswa & Guru (`public/siswa-guru/`):** Pemesanan buku mandiri (pra-pinjam), pemantauan buku aktif, cek sisa hari jatuh tempo, tiket bukti booking (Barcode Code-128 & QR Code 2D), kartu anggota digital resmi, dan rekap denda mandiri.
-3. **Meja Operasional Petugas (`public/petugas/`):** Pemrosesan sirkulasi cepat (penyortiran antrean pra-pinjam dengan status kesiapan rak *"Perlu Diambil"* vs *"Buku Siap di Meja"*, verifikasi barcode tiket, peminjaman langsung *walk-in*, pengembalian cerdas berbasis nama peminjam, pemisahan meja tunggakan denda + verifikasi 2 lapis pelunasan tunai), modul **CRUD Buku (dengan cetak stiker QR)**, **Master Kategori Koleksi**, dan **CRUD Pengumuman**.
+2. **Portal Anggota Siswa & Guru (`public/siswa-guru/`):** Pemesanan buku mandiri (pra-pinjam), pemantauan buku aktif, cek sisa hari jatuh tempo, tiket bukti booking resmi (QR Code 2D), kartu anggota digital resmi, dan rekap denda mandiri.
+3. **Meja Operasional Petugas (`public/petugas/`):** Pemrosesan sirkulasi cepat (penyortiran antrean pra-pinjam dengan status kesiapan rak *"Perlu Diambil"* vs *"Buku Siap di Meja"*, verifikasi QR tiket, peminjaman langsung *walk-in*, pengembalian cerdas berbasis nama peminjam, pemisahan meja tunggakan denda + verifikasi 2 lapis pelunasan tunai), modul **CRUD Buku (dengan cetak stiker QR)**, **Master Kategori Koleksi**, dan **CRUD Pengumuman**.
 4. **Pusat Kendali Admin (`public/admin/`):** Pengelolaan hak akses pengguna (*Role-Based Access Control*) dan **CRUD Manajemen Pengguna** murni untuk entitas Siswa, Guru, dan Petugas perpustakaan.
 
 ---
@@ -29,8 +29,8 @@ Untuk mencegah file kode raksasa (*monolithic files* > 1.000 baris) yang sulit d
 | **Environment Secrets** | Vite Env (`.env` & `.env.example`) | Menyimpan kredensial `VITE_SUPABASE_URL` dan `VITE_SUPABASE_ANON_KEY` via `import.meta.env`. |
 | **Database & Client** | Supabase Cloud via JS Client | Menggunakan instance client tersentralisasi dari `public/assets/js/supabaseClient.js`. |
 | **Styling & Tema** | Tailwind CSS (CDN / Config) | Palet utama: Navy (`#000C4F`), Slate-50 (`#F8FAFC`), Putih (`#FFFFFF`), Emerald-600 (Tersedia), Amber-500 (Booking/Tempo), dan Rose-600 (Denda/Terlambat). |
-| **Barcode & QR Engine** | `JsBarcode` & `QRCode.js` | Menghasilkan Barcode 1D (Code 128) dan QR Code 2D untuk tiket booking daring serta kartu anggota digital. |
-| **Pemindai Kamera** | Library `html5-qrcode` | Membaca stiker QR fisik buku langsung melalui webcam/kamera laptop di meja sirkulasi. |
+| **QR Code Engine** | `QRCode.js` | Menghasilkan QR Code 2D resolusi tinggi untuk tiket booking daring, kartu anggota digital, dan stiker label fisik buku. |
+| **Pemindai Kamera** | Library `html5-qrcode` | Membaca stiker QR fisik buku dan QR tiket langsung melalui webcam/kamera laptop di meja sirkulasi. |
 
 ---
 
@@ -301,17 +301,16 @@ Sistem secara otomatis menganalisis status transaksi peminjam setiap kali halama
    - Kuota peminjaman aktif anggota seketika terpakai.
    - Sistem langsung menampilkan **Modal Tiket Pra-Pinjam Digital**.
 
-#### B. Tiket Pra-Pinjam Digital Barcode & QR Code (`modalTiket.js`)
+#### B. Tiket Pra-Pinjam Digital QR Code (`modalTiket.js`)
 1. **Format Identitas Unik Tiket:**
    - Memiliki nomor transaksi unik berformat `PJ-[TANGGAL]-[KODE]`.
-2. **Dual-Rendering Simultan (1D Barcode & 2D QR Code):**
-   - Merender **Barcode 1D Code-128** menggunakan pustaka `JsBarcode` (mudah dipindai menggunakan barcode gun / scanner laser meja petugas).
-   - Merender **QR Code 2D** menggunakan pustaka `QRCode.js` (mudah dipindai menggunakan kamera webcam / smartphone petugas).
+2. **Rendering QR Code 2D Resolusi Tinggi (`QRCode.js`):**
+   - Merender **QR Code 2D** menggunakan pustaka `QRCode.js` (mudah dipindai menggunakan pemindai kamera webcam laptop / smartphone meja petugas).
 3. **Indikator Kesiapan Rak Real-Time:**
    - **Badge Oranye (*"Menunggu Diambil Petugas dari Rak"*):** Menandakan pesanan baru masuk dan petugas belum mengambil buku dari rak koleksi.
    - **Badge Hijau (*"Buku Siap Diambil di Meja Sirkulasi"*):** Menandakan petugas Meja 2 telah mengambil buku dari rak dan menyiapkannya di meja serah terima. Anggota dapat langsung mendatangi meja sirkulasi.
 4. **Fitur Ekspor Tiket Menjadi Gambar (Download PNG via Canvas):**
-   - Disediakan tombol **"Unduh Tiket (PNG)"** yang menggabungkan seluruh elemen visual tiket, barcode, nama buku, dan identitas anggota ke dalam berkas grafis PNG menggunakan HTML5 Canvas.
+   - Disediakan tombol **"Unduh Tiket (PNG)"** yang menggabungkan seluruh elemen visual tiket, QR code, nama buku, dan identitas anggota ke dalam berkas grafis PNG menggunakan HTML5 Canvas.
    - Memungkinkan siswa/guru menyimpan tiket secara luring (*offline*) di galeri handphone atau mencetaknya tanpa bergantung pada koneksi internet sekolah.
 
 #### C. Pembatalan Reservasi Mandiri (`modalBatalBooking.js`)
