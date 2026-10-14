@@ -28,12 +28,7 @@ import {
   switchTab
 } from './modules/core/index.js';
 import {
-  openAddModal,
-  closeAddModal,
-  handleAddUserSubmit,
   initModalUser,
-  closeDeleteModal,
-  handleConfirmDelete,
   initModalKonfirmasi
 } from './modules/modals/index.js';
 import { initKpiMetrics } from './modules/0-overview/index.js';
@@ -125,28 +120,8 @@ function initEventListeners() {
     });
   });
 
-  // 4. Modal Add User Events (Dukungan seluruh tab)
-  document.querySelectorAll('.btn-open-add-modal').forEach(btn => {
-    btn.addEventListener('click', openAddModal);
-  });
-  if (DOM.btnCancelAddModal) DOM.btnCancelAddModal.addEventListener('click', closeAddModal);
-  if (DOM.btnCloseAddModal) DOM.btnCloseAddModal.addEventListener('click', closeAddModal);
-
-  // Toggle Password Visibility in Modal
-  if (DOM.btnToggleModalPassword && DOM.inputPassword && DOM.iconToggleModalPassword) {
-    DOM.btnToggleModalPassword.addEventListener('click', () => {
-      const isPassword = DOM.inputPassword.type === 'password';
-      DOM.inputPassword.type = isPassword ? 'text' : 'password';
-      DOM.iconToggleModalPassword.className = isPassword ? 'ph ph-eye-slash' : 'ph ph-eye';
-    });
-  }
-
-  // Submit User Form
-  if (DOM.formAddUser) DOM.formAddUser.addEventListener('submit', handleAddUserSubmit);
-
-  // 5. Modal Delete Confirm Actions
-  if (DOM.btnCancelDelete) DOM.btnCancelDelete.addEventListener('click', closeDeleteModal);
-  if (DOM.btnConfirmDelete) DOM.btnConfirmDelete.addEventListener('click', handleConfirmDelete);
+  // 4. Catatan: Seluruh event modal (User, Konfirmasi Hapus, Import)
+  // diinisialisasi secara modular via initModalUser, initModalKonfirmasi, & initImportExcel.
 
   // 6. Mobile Sidebar Events
   if (DOM.btnToggleMobileSidebar) DOM.btnToggleMobileSidebar.addEventListener('click', openMobileSidebar);

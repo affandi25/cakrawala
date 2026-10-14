@@ -71,11 +71,14 @@ export function openAddModal() {
   if (starPassword) starPassword.classList.remove('hidden');
   if (inputPass) {
     inputPass.required = true;
-    inputPass.value = '123456';
-    inputPass.placeholder = 'Default: 123456';
+    inputPass.value = 'Password123';
+    inputPass.placeholder = 'Default: password123';
+    inputPass.type = 'password';
   }
+  const iconTogglePass = DOM.iconToggleModalPassword || document.getElementById('iconToggleModalPassword');
+  if (iconTogglePass) iconTogglePass.className = 'ph ph-eye';
   if (passHelp) {
-    passHelp.textContent = 'Password default diset: 123456 (Pengguna dapat mengubahnya saat login).';
+    passHelp.textContent = 'Password default diset: password123 (Pengguna dapat mengubahnya saat login).';
   }
   if (btnSubmitText) {
     btnSubmitText.textContent = 'Simpan Pengguna';
@@ -370,7 +373,10 @@ export function openEditModal(item) {
     inputPass.required = false;
     inputPass.value = '';
     inputPass.placeholder = 'Kosongkan jika tidak ingin mengubah password';
+    inputPass.type = 'password';
   }
+  const iconTogglePassEdit = DOM.iconToggleModalPassword || document.getElementById('iconToggleModalPassword');
+  if (iconTogglePassEdit) iconTogglePassEdit.className = 'ph ph-eye';
   if (passHelp) {
     passHelp.textContent = 'Biarkan kosong untuk mempertahankan password lama.';
   }
@@ -651,6 +657,10 @@ export function closeAddModal() {
   setTimeout(() => {
     if (modalEl) modalEl.classList.add('hidden');
     if (formEl) formEl.reset();
+    const inputPass = DOM.inputPassword || document.getElementById('inputPassword');
+    const iconTogglePass = DOM.iconToggleModalPassword || document.getElementById('iconToggleModalPassword');
+    if (inputPass) inputPass.type = 'password';
+    if (iconTogglePass) iconTogglePass.className = 'ph ph-eye';
     state.modalMode = 'add';
     state.editingRecord = null;
   }, 200);
@@ -787,7 +797,7 @@ export async function handleAddUserSubmit(event) {
     return;
   }
 
-  const effectivePassword = (password && password.trim() !== '') ? password.trim() : '123456';
+  const effectivePassword = (password && password.trim() !== '') ? password.trim() : 'Password123';
 
   if (effectivePassword.length < 6) {
     showModalFormError('Password minimal harus 6 karakter.');
