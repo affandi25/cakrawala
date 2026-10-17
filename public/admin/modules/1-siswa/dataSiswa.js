@@ -14,62 +14,10 @@ import { escapeHtml } from '../../../assets/js/sharedUtils.js';
 import { state } from '../core/state.js';
 import { openAddModal, openEditModal } from '../modals/modalUser.js';
 import { openDeleteModal } from '../modals/modalKonfirmasi.js';
-import { updateBadge } from '../core/table.js';
+import { updateBadge, renderAvatarThumb } from '../core/table.js';
+import { enrichWithUserData } from '../core/data.js';
 
 let searchListenerAttached = false;
-
-/**
- * Render thumbnail pasfoto siswa (Foto Profil Asli jika ada, atau Ikon Default WhatsApp)
- */
-function renderSiswaAvatarThumb(fotoUrl, name) {
-  if (fotoUrl && typeof fotoUrl === 'string' && fotoUrl.trim() !== '') {
-    return `
-      <div class="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-slate-100 border border-slate-200/80 shadow-2xs">
-        <img src="${fotoUrl}" alt="${escapeHtml(name || '')}" class="h-full w-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'ph-fill ph-user text-base text-slate-400\\'></i>'; this.parentElement.className='h-8 w-8 shrink-0 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center shadow-2xs';" />
-      </div>
-    `;
-  }
-  return `
-    <div class="h-8 w-8 shrink-0 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center shadow-2xs" title="${escapeHtml(name || '')}">
-      <i class="ph-fill ph-user text-base text-slate-400"></i>
-    </div>
-  `;
-}
-
-/**
- * Helper untuk memastikan relasi data_user terhubung dengan aman
- */
-async function enrichSiswaWithUserData(rows) {
-  if (!rows || rows.length === 0) return rows;
-
-  const needsFallback = rows.some(r => r.id_user && (!r.data_user || typeof r.data_user !== 'object'));
-  if (!needsFallback) return rows;
-
-  try {
-    const userIds = rows.map(r => r.id_user).filter(Boolean);
-    if (userIds.length === 0) return rows;
-
-    const { data: users, error } = await db
-      .from('data_user')
-      .select('id_user, username, role')
-      .in('id_user', userIds);
-
-    if (!error && users) {
-      const userMap = {};
-      users.forEach(u => { userMap[u.id_user] = u; });
-
-      rows.forEach(r => {
-        if (!r.data_user && r.id_user && userMap[r.id_user]) {
-          r.data_user = userMap[r.id_user];
-        }
-      });
-    }
-  } catch (err) {
-    console.warn('[DataSiswa] Fallback query data_user error:', err);
-  }
-
-  return rows;
-}
 
 /**
  * Mengambil data siswa dari Supabase
@@ -86,7 +34,7 @@ export async function fetchSiswa() {
     throw error;
   }
 
-  const enriched = await enrichSiswaWithUserData(data || []);
+  const enriched = await enrichWithUserData(data || []);
   state.cache.siswa = enriched;
   updateBadge('siswa', enriched.length);
   return enriched;
@@ -195,7 +143,7 @@ export function renderTableSiswa(customData = null) {
         <td class="px-6 py-4 font-mono text-xs font-bold text-navy">${escapeHtml(row.nisn_siswa)}</td>
         <td class="px-6 py-4">
           <div class="flex items-center gap-3">
-            ${renderSiswaAvatarThumb(row.foto_profil, row.nama_siswa)}
+            ${renderAvatarThumb(row.foto_profil, row.nama_siswa)}
             <span class="font-bold text-slate-800">${escapeHtml(row.nama_siswa)}</span>
           </div>
         </td>

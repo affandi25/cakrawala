@@ -29,12 +29,14 @@ import {
 } from './modules/core/index.js';
 import {
   initModalUser,
-  initModalKonfirmasi
+  initModalKonfirmasi,
+  closeAddModal,
+  closeDeleteModal
 } from './modules/modals/index.js';
 import { initKpiMetrics } from './modules/0-overview/index.js';
-import { initModulSiswa } from './modules/1-siswa/index.js';
-import { initModulGuru } from './modules/2-guru/index.js';
-import { initModulPetugas } from './modules/3-petugas/index.js';
+import { setupSiswaEventListeners } from './modules/1-siswa/index.js';
+import { setupGuruEventListeners } from './modules/2-guru/index.js';
+import { setupPetugasEventListeners } from './modules/3-petugas/index.js';
 import { initImportExcel, closeImportModal } from './modules/import/index.js';
 
 // ========================================================
@@ -150,18 +152,6 @@ function initEventListeners() {
     }
   });
 
-  // Close modals on clicking backdrop area outside the content box
-  if (DOM.modalAddUser) {
-    DOM.modalAddUser.addEventListener('click', (e) => {
-      if (e.target === DOM.modalAddUser) closeAddModal();
-    });
-  }
-
-  if (DOM.modalDeleteConfirm) {
-    DOM.modalDeleteConfirm.addEventListener('click', (e) => {
-      if (e.target === DOM.modalDeleteConfirm) closeDeleteModal();
-    });
-  }
 }
 
 // ========================================================
@@ -186,11 +176,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
   }
 
-  // 4. Inisialisasi Modul Modular (0-Overview KPI, 1-Siswa, 2-Guru, 3-Petugas)
+  // 4. Inisialisasi Modul Modular (0-Overview KPI, Event Listener Siswa, Guru, Petugas)
   initKpiMetrics();
-  initModulSiswa();
-  initModulGuru();
-  initModulPetugas();
+  setupSiswaEventListeners();
+  setupGuruEventListeners();
+  setupPetugasEventListeners();
 
   // 5. Inisialisasi Modul Interaktif (Form User, Konfirmasi Hapus, & Import Excel)
   initModalUser();
