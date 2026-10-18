@@ -6,13 +6,10 @@
  * Setup Vercel : Tambahkan VITE_SUPABASE_URL & VITE_SUPABASE_ANON_KEY di Settings → Environment Variables
  */
 
-const DEFAULT_URL = 'https://agmeuhytgkcbiovgzhwd.supabase.co';
-const DEFAULT_ANON_KEY = 'sb_publishable_iTgU8oOpLPSKf7AYhOSL4A_Y1TZu8mg';
-
 const env = (typeof import.meta !== 'undefined' && import.meta.env) ? import.meta.env : {};
 
-const SUPABASE_URL = env.VITE_SUPABASE_URL || DEFAULT_URL;
-const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY || DEFAULT_ANON_KEY;
+const SUPABASE_URL = env.VITE_SUPABASE_URL || '';
+const SUPABASE_ANON_KEY = env.VITE_SUPABASE_ANON_KEY || '';
 
 let client = null;
 if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.createClient === 'function') {
