@@ -3,10 +3,11 @@
  * File: public/assets/js/auth.js
  * 
  * Satu file terpusat untuk mengelola seluruh siklus autentikasi:
- * 1. Login Form & Kredensial (halaman login.html)
+ * 1. Login Form & Kredensial Multi-Identitas (halaman login.html)
  * 2. Proteksi Sesi & Profil Anggota (Siswa & Guru di siswa-guru/dashboard.html)
  * 3. Proteksi Sesi & Profil Petugas (Petugas di petugas/dashboard.html)
- * 4. Pengendali Logout Universal
+ * 4. Proteksi Sesi & Profil Admin (Admin di admin/dashboard.html)
+ * 5. Pengendali Logout Universal
  */
 
 import { db } from './supabaseClient.js';
@@ -28,19 +29,36 @@ export function getCurrentUser() {
 }
 
 /**
- * Membersihkan seluruh data sesi autentikasi
+ * Menyimpan data sesi ke sessionStorage dan localStorage sekaligus
  */
-export function clearSession() {
-  sessionStorage.removeItem('cakrawala_user');
-  sessionStorage.removeItem('cakrawala_logged_in');
-  sessionStorage.removeItem('cakrawala_role');
-  localStorage.removeItem('cakrawala_user');
-  localStorage.removeItem('cakrawala_logged_in');
-  localStorage.removeItem('cakrawala_role');
+export function saveSession(user, role) {
+  const roleClean = (role || 'Siswa').trim();
+  const payload = JSON.stringify({
+    id_user: user.id_user,
+    username: user.username,
+    role: roleClean
+  });
+
+  ['sessionStorage', 'localStorage'].forEach(storage => {
+    window[storage].setItem('cakrawala_logged_in', 'true');
+    window[storage].setItem('cakrawala_role', roleClean);
+    window[storage].setItem('cakrawala_user', payload);
+  });
 }
 
 /**
- * Helper mengarahkan pengguna ke halaman login berdasarkan lokasi URL saat ini
+ * Membersihkan seluruh data sesi autentikasi
+ */
+export function clearSession() {
+  ['sessionStorage', 'localStorage'].forEach(storage => {
+    ['cakrawala_user', 'cakrawala_logged_in', 'cakrawala_role'].forEach(key => {
+      window[storage].removeItem(key);
+    });
+  });
+}
+
+/**
+ * Mengarahkan pengguna ke halaman login berdasarkan kedalaman URL saat ini
  */
 function redirectToLogin() {
   const isNested = window.location.pathname.includes('/siswa-guru/') ||
@@ -49,9 +67,61 @@ function redirectToLogin() {
   window.location.replace(isNested ? '../login.html' : 'login.html');
 }
 
+/**
+ * Helper perender foto avatar / ikon default petugas & admin
+ */
+function renderAvatar(el, fotoUrl, altName = 'Pengguna') {
+  if (!el) return;
+  if (fotoUrl) {
+    el.innerHTML = `<img src="${fotoUrl}" class="h-full w-full object-cover rounded-full" alt="${altName}" />`;
+    el.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 shadow-2xs overflow-hidden border border-slate-200/60';
+  } else {
+    el.innerHTML = '<i class="ph-fill ph-user text-base text-slate-400"></i>';
+    el.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-2xs border border-slate-200/80';
+  }
+}
+
 /* ==========================================================================
    2. KONTROLER HALAMAN LOGIN (login.html)
    ========================================================================== */
+
+/**
+ * Pencarian akun pengguna fleksibel di Supabase:
+ * Mencari via username, NIP/Email Guru, NISN/Email Siswa, atau ID/Email Petugas
+ */
+async function findUserByIdentifier(identifier) {
+  if (!db) return null;
+
+  // 1. Cari langsung di tabel data_user via username
+  const { data: userByUsername } = await db
+    .from('data_user')
+    .select('id_user, username, password, role')
+    .ilike('username', identifier)
+    .maybeSingle();
+
+  if (userByUsername) return userByUsername;
+
+  // 2. Jika bukan username, cari ID user di tabel profil terkait
+  const lookups = [
+    { table: 'data_guru', query: `nip_guru.eq.${identifier},email_guru.ilike.${identifier}` },
+    { table: 'data_siswa', query: `nisn_siswa.eq.${identifier},email_siswa.ilike.${identifier}` },
+    { table: 'data_petugas', query: `id_petugas.eq.${identifier},email_petugas.ilike.${identifier}` }
+  ];
+
+  for (const { table, query } of lookups) {
+    const { data: profile } = await db.from(table).select('id_user').or(query).maybeSingle();
+    if (profile?.id_user) {
+      const { data: userMatch } = await db
+        .from('data_user')
+        .select('id_user, username, password, role')
+        .eq('id_user', profile.id_user)
+        .maybeSingle();
+      if (userMatch) return userMatch;
+    }
+  }
+
+  return null;
+}
 
 function initLoginForm() {
   const loginForm = document.querySelector('#loginForm');
@@ -76,20 +146,15 @@ function initLoginForm() {
     errorMessage.classList.remove('hidden');
   }
 
-  function resolveBukuId() {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('buku_id');
-  }
-
   function redirectByRole(role) {
     const r = (role || '').trim().toLowerCase();
-    const bukuId = resolveBukuId();
+    const params = new URLSearchParams(window.location.search);
+    const bukuId = params.get('buku_id');
+
     if (r === 'siswa' || r === 'guru') {
-      if (bukuId) {
-        window.location.href = 'siswa-guru/dashboard.html?action=pinjam&buku_id=' + encodeURIComponent(bukuId);
-      } else {
-        window.location.href = 'siswa-guru/dashboard.html';
-      }
+      window.location.href = bukuId
+        ? `siswa-guru/dashboard.html?action=pinjam&buku_id=${encodeURIComponent(bukuId)}`
+        : 'siswa-guru/dashboard.html';
     } else if (r === 'petugas') {
       window.location.href = 'petugas/dashboard.html';
     } else if (r === 'admin') {
@@ -99,52 +164,38 @@ function initLoginForm() {
     }
   }
 
-  // Event Toggle Intip Password
+  // Toggle Lihat Password
   if (toggleButton && passwordInput && toggleIcon) {
-    toggleButton.addEventListener('click', function () {
-      const show = passwordInput.type === 'password';
-      passwordInput.type = show ? 'text' : 'password';
-      toggleIcon.className = show ? 'ph ph-eye-slash' : 'ph ph-eye';
+    toggleButton.addEventListener('click', () => {
+      const isPassword = passwordInput.type === 'password';
+      passwordInput.type = isPassword ? 'text' : 'password';
+      toggleIcon.className = isPassword ? 'ph ph-eye-slash' : 'ph ph-eye';
     });
   }
 
-  // Event Modal Lupa Password
-  function openForgotModal() {
-    if (modalForgotPassword) {
-      modalForgotPassword.classList.remove('hidden');
-      modalForgotPassword.classList.add('flex');
-    }
-  }
+  // Pengendali Modal Lupa Password
+  const setForgotModal = (show) => {
+    if (!modalForgotPassword) return;
+    modalForgotPassword.classList.toggle('hidden', !show);
+    modalForgotPassword.classList.toggle('flex', show);
+  };
 
-  function hideForgotModal() {
-    if (modalForgotPassword) {
-      modalForgotPassword.classList.add('hidden');
-      modalForgotPassword.classList.remove('flex');
-    }
-  }
-
-  if (btnForgotPassword) {
-    btnForgotPassword.addEventListener('click', function (e) {
-      e.preventDefault();
-      openForgotModal();
-    });
-  }
-
-  if (closeForgotModal) closeForgotModal.addEventListener('click', hideForgotModal);
-  if (btnOkForgot) btnOkForgot.addEventListener('click', hideForgotModal);
+  if (btnForgotPassword) btnForgotPassword.addEventListener('click', (e) => { e.preventDefault(); setForgotModal(true); });
+  if (closeForgotModal) closeForgotModal.addEventListener('click', () => setForgotModal(false));
+  if (btnOkForgot) btnOkForgot.addEventListener('click', () => setForgotModal(false));
   if (modalForgotPassword) {
-    modalForgotPassword.addEventListener('click', function (e) {
-      if (e.target === modalForgotPassword) hideForgotModal();
+    modalForgotPassword.addEventListener('click', (e) => {
+      if (e.target === modalForgotPassword) setForgotModal(false);
     });
   }
 
-  // Proses Submit Form Login
-  loginForm.addEventListener('submit', async function (event) {
+  // Eksekusi Submit Form Login
+  loginForm.addEventListener('submit', async (event) => {
     event.preventDefault();
     if (errorMessage) errorMessage.classList.add('hidden');
 
-    const identifier = usernameInput ? usernameInput.value.trim() : '';
-    const passwordValue = passwordInput ? passwordInput.value : '';
+    const identifier = usernameInput?.value.trim() || '';
+    const passwordValue = passwordInput?.value || '';
 
     if (!identifier || !passwordValue) {
       showError('Semua field wajib diisi.');
@@ -157,86 +208,12 @@ function initLoginForm() {
     }
 
     try {
-      // 1. Cek langsung ke database Supabase
-      if (db) {
-        // Cari akun di data_user via username (case-insensitive)
-        let { data: userMatch } = await db
-          .from('data_user')
-          .select('id_user, username, password, role')
-          .ilike('username', identifier)
-          .maybeSingle();
+      const userMatch = await findUserByIdentifier(identifier);
 
-        // Jika tidak ditemukan via username, cari via NIP / Email Guru
-        if (!userMatch) {
-          const { data: guruMatch } = await db
-            .from('data_guru')
-            .select('id_user')
-            .or('nip_guru.eq.' + identifier + ',email_guru.ilike.' + identifier)
-            .maybeSingle();
-
-          if (guruMatch && guruMatch.id_user) {
-            const { data: userFromGuru } = await db
-              .from('data_user')
-              .select('id_user, username, password, role')
-              .eq('id_user', guruMatch.id_user)
-              .maybeSingle();
-            if (userFromGuru) userMatch = userFromGuru;
-          }
-        }
-
-        // Jika belum ditemukan, cari via NISN / Email Siswa
-        if (!userMatch) {
-          const { data: siswaMatch } = await db
-            .from('data_siswa')
-            .select('id_user')
-            .or('nisn_siswa.eq.' + identifier + ',email_siswa.ilike.' + identifier)
-            .maybeSingle();
-
-          if (siswaMatch && siswaMatch.id_user) {
-            const { data: userFromSiswa } = await db
-              .from('data_user')
-              .select('id_user, username, password, role')
-              .eq('id_user', siswaMatch.id_user)
-              .maybeSingle();
-            if (userFromSiswa) userMatch = userFromSiswa;
-          }
-        }
-
-        // Jika belum ditemukan, cari via ID Petugas / Email Petugas
-        if (!userMatch) {
-          const { data: petugasMatch } = await db
-            .from('data_petugas')
-            .select('id_user')
-            .or('id_petugas.eq.' + identifier + ',email_petugas.ilike.' + identifier)
-            .maybeSingle();
-
-          if (petugasMatch && petugasMatch.id_user) {
-            const { data: userFromPetugas } = await db
-              .from('data_user')
-              .select('id_user, username, password, role')
-              .eq('id_user', petugasMatch.id_user)
-              .maybeSingle();
-            if (userFromPetugas) userMatch = userFromPetugas;
-          }
-        }
-
-        // Jika user ditemukan dan password cocok
-        if (userMatch && userMatch.password === passwordValue) {
-          const roleClean = (userMatch.role || 'Siswa').trim();
-          const payload = JSON.stringify({
-            id_user: userMatch.id_user,
-            username: userMatch.username,
-            role: roleClean
-          });
-          sessionStorage.setItem('cakrawala_logged_in', 'true');
-          sessionStorage.setItem('cakrawala_role', roleClean);
-          sessionStorage.setItem('cakrawala_user', payload);
-          localStorage.setItem('cakrawala_logged_in', 'true');
-          localStorage.setItem('cakrawala_role', roleClean);
-          localStorage.setItem('cakrawala_user', payload);
-          redirectByRole(roleClean);
-          return;
-        }
+      if (userMatch && userMatch.password === passwordValue) {
+        saveSession(userMatch, userMatch.role);
+        redirectByRole(userMatch.role);
+        return;
       }
 
       showError('NISN, NIP, Email, atau password salah.');
@@ -252,7 +229,7 @@ function initLoginForm() {
   });
 }
 
-// Jalankan form login otomatis jika ada form di halaman aktif
+// Inisialisasi form login otomatis jika ada di DOM
 initLoginForm();
 
 /* ==========================================================================
@@ -261,7 +238,6 @@ initLoginForm();
 
 /**
  * Memvalidasi sesi login anggota (Siswa atau Guru) dan memuat profil data terkait
- * @param {Object} targetState Objek state dashboard siswa-guru
  */
 export async function initSessionAndMember(targetState = {}) {
   const user = getCurrentUser();
@@ -280,83 +256,38 @@ export async function initSessionAndMember(targetState = {}) {
     targetState.currentUser = user;
     targetState.memberType = role;
 
-    // 1. Ambil data profil dari database Supabase
     if (db && user.id_user) {
-      if (targetState.memberType === 'siswa') {
-        const { data: siswaData, error: errSiswa } = await db
-          .from('data_siswa')
-          .select('*')
-          .eq('id_user', user.id_user)
-          .maybeSingle();
+      const isSiswa = targetState.memberType === 'siswa';
+      const table = isSiswa ? 'data_siswa' : 'data_guru';
+      const keyCol = isSiswa ? 'nisn_siswa' : 'nip_guru';
 
-        if (!errSiswa && siswaData) {
-          targetState.memberProfile = siswaData;
-          targetState.memberId = siswaData.nisn_siswa;
-        } else {
-          // Fallback cari via username NISN
-          const { data: fallbackSiswa } = await db
-            .from('data_siswa')
-            .select('*')
-            .eq('nisn_siswa', user.username)
-            .maybeSingle();
-          if (fallbackSiswa) {
-            targetState.memberProfile = fallbackSiswa;
-            targetState.memberId = fallbackSiswa.nisn_siswa;
-          } else {
-            targetState.memberId = user.username || 'SISWA001';
-            targetState.memberProfile = {
-              nama_siswa: user.username || 'Siswa Cakrawala',
-              nisn_siswa: targetState.memberId,
-              kelas: 'Siswa',
-              email_siswa: '-',
-              kontak_siswa: '-'
-            };
-          }
-        }
+      // 1. Ambil data profil dari database Supabase
+      const { data: profileData } = await db
+        .from(table)
+        .select('*')
+        .eq('id_user', user.id_user)
+        .maybeSingle();
+
+      if (profileData) {
+        targetState.memberProfile = profileData;
+        targetState.memberId = profileData[keyCol];
       } else {
-        // Profil Guru
-        const { data: guruData, error: errGuru } = await db
-          .from('data_guru')
+        // Fallback cari via ID/Username
+        const { data: fallbackData } = await db
+          .from(table)
           .select('*')
-          .eq('id_user', user.id_user)
+          .eq(keyCol, user.username)
           .maybeSingle();
 
-        if (!errGuru && guruData) {
-          targetState.memberProfile = guruData;
-          targetState.memberId = guruData.nip_guru;
-        } else {
-          // Fallback cari via NIP
-          const { data: fallbackGuru } = await db
-            .from('data_guru')
-            .select('*')
-            .eq('nip_guru', user.username)
-            .maybeSingle();
-          if (fallbackGuru) {
-            targetState.memberProfile = fallbackGuru;
-            targetState.memberId = fallbackGuru.nip_guru;
-          } else {
-            targetState.memberId = user.username || 'GURU001';
-            targetState.memberProfile = {
-              nama_guru: user.username || 'Guru Pengajar',
-              nip_guru: targetState.memberId,
-              mata_pelajaran: 'Pengajar',
-              email_guru: '-',
-              kontak_guru: '-'
-            };
-          }
-        }
+        targetState.memberProfile = fallbackData || {
+          [isSiswa ? 'nama_siswa' : 'nama_guru']: user.username || (isSiswa ? 'Siswa Cakrawala' : 'Guru Pengajar'),
+          [keyCol]: user.username || (isSiswa ? 'SISWA001' : 'GURU001'),
+          [isSiswa ? 'kelas' : 'mata_pelajaran']: isSiswa ? 'Siswa' : 'Pengajar',
+          [isSiswa ? 'email_siswa' : 'email_guru']: '-',
+          [isSiswa ? 'kontak_siswa' : 'kontak_guru']: '-'
+        };
+        targetState.memberId = targetState.memberProfile[keyCol];
       }
-    } else {
-      // Fallback offline testing
-      targetState.memberId = user.username || (targetState.memberType === 'guru' ? 'GURU001' : 'SISWA001');
-      targetState.memberProfile = {
-        nama_siswa: user.username || 'Pengguna',
-        nama_guru: user.username || 'Pengguna Guru',
-        nisn_siswa: targetState.memberId,
-        nip_guru: targetState.memberId,
-        kelas: 'Aktif',
-        mata_pelajaran: 'Pengajar'
-      };
     }
 
     updateMemberProfileDisplay(targetState);
@@ -369,7 +300,6 @@ export async function initSessionAndMember(targetState = {}) {
 
 /**
  * Menampilkan nama, subteks, inisial avatar, dan badge peran pada sidebar & header dashboard siswa-guru
- * @param {Object} targetState Objek state dashboard siswa-guru
  */
 export function updateMemberProfileDisplay(targetState = {}) {
   const profile = targetState.memberProfile || {};
@@ -416,7 +346,6 @@ export function updateMemberProfileDisplay(targetState = {}) {
 
 /**
  * Memeriksa sesi login petugas dan mengambil data profil dari tabel 'data_petugas'
- * @param {Object} targetState Objek state dashboard petugas
  */
 export async function initSessionAndOfficer(targetState = {}) {
   const user = getCurrentUser();
@@ -434,17 +363,16 @@ export async function initSessionAndOfficer(targetState = {}) {
 
     targetState.currentUser = user;
 
-    // Ambil data profil petugas dari tabel 'data_petugas'
     if (user.id_user && db) {
-      const { data, error } = await db
+      const { data } = await db
         .from('data_petugas')
         .select('*')
         .eq('id_user', user.id_user)
         .maybeSingle();
 
-      if (!error && data) {
+      if (data) {
         targetState.officerProfile = data;
-        updateOfficerProfileDisplay(data.nama_petugas);
+        updateOfficerProfileDisplay(data.nama_petugas, data.foto_profil);
       } else {
         updateOfficerProfileDisplay(user.username || 'Petugas');
       }
@@ -459,11 +387,6 @@ export async function initSessionAndOfficer(targetState = {}) {
   }
 }
 
-/**
- * Menampilkan nama dan avatar default petugas pada sidebar
- * @param {string} name Nama petugas
- * @param {string} [fotoUrl] URL foto profil petugas (opsional)
- */
 export function updateOfficerProfileDisplay(name, fotoUrl = null) {
   const nameEl = document.getElementById('petugasUserName');
   const avatarEl = document.getElementById('petugasAvatarInitials');
@@ -471,15 +394,7 @@ export function updateOfficerProfileDisplay(name, fotoUrl = null) {
 
   if (nameEl) nameEl.textContent = name;
   if (welcomeEl) welcomeEl.textContent = name;
-  if (avatarEl) {
-    if (fotoUrl) {
-      avatarEl.innerHTML = `<img src="${fotoUrl}" class="h-full w-full object-cover rounded-full" alt="${name || 'Petugas'}" />`;
-      avatarEl.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 shadow-2xs overflow-hidden border border-slate-200/60';
-    } else {
-      avatarEl.innerHTML = '<i class="ph-fill ph-user text-base text-slate-400"></i>';
-      avatarEl.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-2xs border border-slate-200/80';
-    }
-  }
+  renderAvatar(avatarEl, fotoUrl, name);
 }
 
 /* ==========================================================================
@@ -488,7 +403,6 @@ export function updateOfficerProfileDisplay(name, fotoUrl = null) {
 
 /**
  * Memeriksa sesi login admin dan menginisialisasi tampilan profil
- * @param {Object} targetState Objek state dashboard admin
  */
 export async function initSessionAndAdmin(targetState = {}) {
   const user = getCurrentUser();
@@ -509,25 +423,12 @@ export async function initSessionAndAdmin(targetState = {}) {
   return true;
 }
 
-/**
- * Menampilkan nama dan avatar default admin pada sidebar
- * @param {string} name Nama pengguna admin
- * @param {string} [fotoUrl] URL foto profil admin (opsional)
- */
 export function updateAdminProfileDisplay(name, fotoUrl = null) {
   const nameEl = document.getElementById('adminUserName');
   const avatarEl = document.getElementById('adminAvatarInitials');
 
   if (nameEl) nameEl.textContent = name;
-  if (avatarEl) {
-    if (fotoUrl) {
-      avatarEl.innerHTML = `<img src="${fotoUrl}" class="h-full w-full object-cover rounded-full" alt="${name || 'Admin'}" />`;
-      avatarEl.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-100 shadow-2xs overflow-hidden border border-slate-200/60';
-    } else {
-      avatarEl.innerHTML = '<i class="ph-fill ph-user text-base text-slate-400"></i>';
-      avatarEl.className = 'flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-2xs border border-slate-200/80';
-    }
-  }
+  renderAvatar(avatarEl, fotoUrl, name);
 }
 
 /* ==========================================================================
@@ -580,7 +481,6 @@ export function setupLogout() {
     confirmBtn.addEventListener('click', () => {
       clearSession();
 
-      // Buat feedback toast jika kontainer toast tersedia
       const toastContainer = document.getElementById('toastContainer');
       if (toastContainer) {
         const toast = document.createElement('div');
