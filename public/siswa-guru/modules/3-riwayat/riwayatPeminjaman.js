@@ -20,7 +20,8 @@ import {
   formatRupiah,
   formatTanggalIndo,
   escapeHtml,
-  showToast
+  showToast,
+  getTarifDendaHarian
 } from '../../../assets/js/sharedUtils.js';
 
 let isRiwayatModuleSetup = false;
@@ -118,7 +119,8 @@ export function calculateDendaEstimasi(batasKembaliStr, hargaBuku = 50000) {
     const lateDays = Math.abs(diffDays);
     const isMonthOverdue = lateDays >= 30;
     const nominalHarga = Number(hargaBuku) || 50000;
-    const denda = isMonthOverdue ? nominalHarga : (lateDays * 1000);
+    const tarifHarian = getTarifDendaHarian();
+    const denda = isMonthOverdue ? nominalHarga : (lateDays * tarifHarian);
     return {
       denda,
       lateDays,

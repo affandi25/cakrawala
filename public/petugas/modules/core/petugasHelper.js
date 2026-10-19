@@ -13,7 +13,9 @@ export {
   escapeHtml,
   showModal,
   hideModal,
-  showToast
+  showToast,
+  getTarifDendaHarian,
+  setTarifDendaHarian
 } from '../../../assets/js/sharedUtils.js';
 
 /**

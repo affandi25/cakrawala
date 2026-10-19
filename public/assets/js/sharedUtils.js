@@ -188,3 +188,44 @@ export function showToast(message, type = 'info', duration = 3500) {
     }
   }, duration);
 }
+
+/**
+ * Kunci penyimpanan konfigurasi tarif denda harian perpustakaan
+ */
+export const STORAGE_KEY_TARIF_DENDA = 'cakrawala_tarif_denda_harian';
+export const DEFAULT_TARIF_DENDA = 1000;
+
+/**
+ * Mengambil tarif denda harian yang tersimpan di sistem / localStorage (default Rp 1.000)
+ * @returns {number}
+ */
+export function getTarifDendaHarian() {
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_TARIF_DENDA);
+    if (saved !== null && saved !== undefined && saved !== '') {
+      const parsed = parseInt(saved, 10);
+      if (!isNaN(parsed) && parsed >= 0) {
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('[sharedUtils] Gagal membaca tarif denda dari localStorage:', e);
+  }
+  return DEFAULT_TARIF_DENDA;
+}
+
+/**
+ * Menyimpan kebijakan tarif denda harian ke sistem / localStorage
+ * @param {number|string} amount
+ * @returns {number}
+ */
+export function setTarifDendaHarian(amount) {
+  const val = Math.max(0, parseInt(amount, 10) || 0);
+  try {
+    localStorage.setItem(STORAGE_KEY_TARIF_DENDA, String(val));
+  } catch (e) {
+    console.warn('[sharedUtils] Gagal menyimpan tarif denda ke localStorage:', e);
+  }
+  return val;
+}
+

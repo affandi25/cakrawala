@@ -9,16 +9,17 @@
  * - Menampilkan pop-up struk bukti pengembalian resmi
  */
 
-import { db } from '../../../assets/js/supabaseClient.js';
-import { state } from '../core/state.js';
+import { db } from '../../../../assets/js/supabaseClient.js';
+import { state } from '../../core/state.js';
 import {
   formatRupiah,
   getTodayDateString,
   generateRandomId,
   showToast,
-  getBorrowerInfo
-} from '../core/petugasHelper.js';
-import { syncAllData } from '../core/syncData.js';
+  getBorrowerInfo,
+  getTarifDendaHarian
+} from '../../core/petugasHelper.js';
+import { syncAllData } from '../../core/syncData.js';
 import { showReceiptModal } from './modalStruk.js';
 import { resetPengembalianSelection } from './seleksiPeminjam.js';
 
@@ -43,9 +44,8 @@ export async function handleSubmitPengembalian() {
   const diffDays = Math.ceil((dKembali.getTime() - dBatas.getTime()) / (1000 * 60 * 60 * 24));
   const hariTerlambat = diffDays > 0 ? diffDays : 0;
 
-  // Baca Tarif Harian Kustom Petugas
-  const inputTarifDenda = document.getElementById('inputTarifDendaPerHari');
-  const tarifPerHari = inputTarifDenda ? Math.max(0, parseInt(inputTarifDenda.value, 10) || 0) : 1000;
+  // Baca Tarif Harian dari Kebijakan Resmi Sistem
+  const tarifPerHari = getTarifDendaHarian();
 
   const buku = (state.cache.buku || []).find(b => b.id_buku === loan.id_buku);
   const hargaBuku = buku ? (Number(buku.harga_buku) || 50000) : 50000;

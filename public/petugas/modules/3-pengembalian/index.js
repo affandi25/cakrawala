@@ -2,21 +2,31 @@
  * CAKRAWALA Digital Library - Modul Meja 3: Pengembalian Buku & Denda (Koordinator Fitur)
  * Path: public/petugas/modules/3-pengembalian/index.js
  * 
- * Struktur Modular:
- * - denda/                 : Sub-folder operasional kasir tunggakan denda, arsip riwayat, dan sub-tab switcher
- * - seleksiPeminjam.js     : Seleksi peminjam & kartu pinjaman aktif
- * - kalkulatorDenda.js     : Kalkulator denda harian dinamis & aturan >= 1 bulan
- * - eksekusiPengembalian.js: Transaksi pengembalian buku & update stok Supabase
- * - formPengembalian.js    : Formulir koordinator meja pengembalian
- * - modalStruk.js          : Cetak bukti struk resmi pengembalian
+ * Struktur Modular Bersih (2 Sub-meja Terintegrasi):
+ * - pengembalian/ : Sub-folder operasional formulir pengembalian, seleksi peminjam, kalkulator denda, dan struk
+ * - denda/        : Sub-folder operasional kasir tunggakan denda, arsip riwayat, dan kebijakan tarif denda
  */
 
+// 1. Re-export modul Pengembalian Buku
 export {
   setupReceiptModal,
   showReceiptModal,
-  printReceipt
-} from './modalStruk.js';
+  printReceipt,
+  setupPengembalianForm,
+  renderBorrowerSearchResults,
+  filterPengembalianByName,
+  selectBorrowerForReturn,
+  renderActiveLoansCards,
+  selectLoanForReturn,
+  resetPengembalianSelection,
+  filterPengembalianByBook,
+  renderPengembalianFormOptions,
+  updatePreviewPeminjamanBox,
+  recalculateDenda,
+  handleSubmitPengembalian
+} from './pengembalian/index.js';
 
+// 2. Re-export modul Operasional Denda & Riwayat
 export {
   kasirTunggakanState,
   getSearchQueryTunggakan,
@@ -35,26 +45,15 @@ export {
   subtabDendaState,
   renderRiwayatPengembalian,
   switchFineSubtab,
-  setupSubtabDendaListeners
+  setupSubtabDendaListeners,
+  syncTarifDendaUI,
+  setupTarifDendaListeners
 } from './denda/index.js';
 
-export {
-  setupPengembalianForm,
-  renderBorrowerSearchResults,
-  filterPengembalianByName,
-  selectBorrowerForReturn,
-  renderActiveLoansCards,
-  selectLoanForReturn,
-  resetPengembalianSelection,
-  filterPengembalianByBook,
-  renderPengembalianFormOptions,
-  updatePreviewPeminjamanBox,
-  recalculateDenda,
-  handleSubmitPengembalian
-} from './formPengembalian.js';
-
-import { setupReceiptModal, showReceiptModal, printReceipt } from './modalStruk.js';
 import {
+  setupReceiptModal,
+  showReceiptModal,
+  printReceipt,
   setupPengembalianForm,
   filterPengembalianByName,
   selectBorrowerForReturn,
@@ -64,7 +63,8 @@ import {
   renderPengembalianFormOptions,
   recalculateDenda,
   handleSubmitPengembalian
-} from './formPengembalian.js';
+} from './pengembalian/index.js';
+
 import {
   renderRiwayatPengembalian,
   renderTunggakanDendaList,

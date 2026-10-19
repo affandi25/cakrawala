@@ -212,13 +212,10 @@
                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2.5">
                   <div class="flex items-center justify-between pb-2 border-b border-slate-200">
                     <span class="text-xs font-bold uppercase tracking-wider text-slate-500 block">Rincian Perhitungan Denda:</span>
-                    <!-- Pengaturan Tarif Denda Per Hari oleh Petugas -->
-                    <div class="flex items-center gap-1.5" title="Petugas dapat mengubah nominal denda per hari sesuai kebijakan">
-                      <label for="inputTarifDendaPerHari" class="text-[11px] font-bold text-slate-600">Tarif:</label>
-                      <span class="text-[11px] font-bold text-slate-400">Rp</span>
-                      <input type="number" id="inputTarifDendaPerHari" value="1000" min="0" step="500"
-                        class="w-20 rounded-md border border-slate-300 bg-white px-2 py-0.5 text-xs font-bold text-navy text-right outline-none focus:border-navy focus:ring-1 focus:ring-navy transition" />
-                      <span class="text-[10px] text-slate-400">/hari</span>
+                    <!-- Tampilan Tarif Aktif (Kebijakan Resmi Sekolah) -->
+                    <div class="flex items-center gap-1.5 text-[11px] text-slate-500" title="Tarif resmi perpustakaan yang diatur di panel Operasional Denda">
+                      <span class="font-medium">Tarif Aktif:</span>
+                      <span id="displayTarifAktifForm" class="font-extrabold text-navy bg-white border border-slate-200 px-2 py-0.5 rounded-md shadow-2xs">Rp 1.000 / hari</span>
                     </div>
                   </div>
 
@@ -296,6 +293,37 @@
                   class="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-white hover:text-navy transition shadow-2xs">
                   <i class="ph ph-arrows-clockwise text-base"></i>
                 </button>
+              </div>
+
+              <!-- Widget Pengaturan Kebijakan Tarif Denda Resmi Perpustakaan -->
+              <div class="p-4 bg-gradient-to-r from-blue-50/60 to-slate-50 border-b border-slate-200/80">
+                <div class="flex items-center justify-between mb-2">
+                  <div class="flex items-center gap-2">
+                    <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-navy text-white shadow-2xs">
+                      <i class="ph-bold ph-scales text-sm"></i>
+                    </div>
+                    <div>
+                      <h4 class="text-xs font-bold text-slate-800">Kebijakan Tarif Denda</h4>
+                      <p class="text-[10px] text-slate-500">Tarif resmi denda keterlambatan per hari</p>
+                    </div>
+                  </div>
+                  <span id="badgeTarifAktif" class="text-[10px] font-extrabold text-navy bg-white border border-blue-200 px-2.5 py-1 rounded-full shadow-2xs">
+                    Rp 1.000 / hari
+                  </span>
+                </div>
+                <div class="flex items-center gap-2 mt-2.5">
+                  <div class="relative flex-1">
+                    <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400">Rp</span>
+                    <input type="number" id="inputTarifDendaGlobal" min="0" step="500" value="1000"
+                      class="w-full rounded-xl border border-slate-300 bg-white pl-8 pr-3 py-1.5 text-xs font-bold text-navy outline-none focus:border-navy focus:ring-1 focus:ring-navy transition shadow-2xs"
+                      placeholder="Contoh: 2000" />
+                  </div>
+                  <button type="button" id="btnSimpanTarifDenda"
+                    class="inline-flex items-center gap-1.5 rounded-xl bg-navy px-4 py-1.5 text-xs font-bold text-white shadow-sm hover:bg-navy-light transition active:scale-95 shrink-0">
+                    <i class="ph ph-floppy-disk text-sm"></i>
+                    <span>Simpan</span>
+                  </button>
+                </div>
               </div>
 
               <!-- Sub-tab Switcher: Tunggakan Denda vs Semua Riwayat -->

@@ -7,7 +7,7 @@
  * - Menangani tombol tutup dan cetak struk (window.print())
  */
 
-import { showModal, hideModal } from '../core/petugasHelper.js';
+import { showModal, hideModal } from '../../core/petugasHelper.js';
 
 let isReceiptModalSetup = false;
 

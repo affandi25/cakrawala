@@ -328,3 +328,26 @@
     </div>
   </div>
 </div>
+
+<!-- ============================================================================================= -->
+<!-- ELEMEN KHUSUS CETAK PRINTER FISIK (ISOLASI CSS @MEDIA PRINT)                                  -->
+<!-- Wadah penampung gambar QR yang digambar khusus untuk kertas printer stiker mini               -->
+<!-- ============================================================================================= -->
+<div id="printStickerTarget">
+  <div style="text-align: center; border-bottom: 1.5px solid #000; padding-bottom: 2mm; margin-bottom: 2mm;">
+    <div style="font-size: 8pt; font-weight: 900; letter-spacing: 0.5px;">PERPUSTAKAAN DIGITAL CAKRAWALA</div>
+    <div style="font-size: 6pt; color: #333;">LABEL STIKER INVENTARIS BUKU</div>
+  </div>
+  <div id="printQrTargetCanvas" style="text-align: center; margin: 2mm 0;"></div>
+  <div style="text-align: center; line-height: 1.2;">
+    <div id="printBookId" style="font-size: 8pt; font-weight: 900; font-family: monospace;">BK-0000</div>
+    <div id="printBookTitle" style="font-size: 7.5pt; font-weight: bold; margin-top: 1mm;">Judul Buku</div>
+    <div id="printBookAuthor" style="font-size: 6.5pt; color: #444;">Penulis Buku</div>
+    <div
+      style="border-top: 1px dashed #666; margin-top: 2mm; padding-top: 1.5mm; font-size: 6pt; display: flex; justify-content: space-between;">
+      <span id="printBookCategory">Kategori</span>
+      <span id="printBookShelf">Lokasi Rak</span>
+    </div>
+  </div>
+</div>
+

@@ -28,5 +28,7 @@ export {
   subtabDendaState,
   renderRiwayatPengembalian,
   switchFineSubtab,
-  setupSubtabDendaListeners
+  setupSubtabDendaListeners,
+  syncTarifDendaUI,
+  setupTarifDendaListeners
 } from './subtabDenda.js';
