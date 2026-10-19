@@ -7,11 +7,14 @@
  * - denda/        : Sub-folder operasional kasir tunggakan denda, arsip riwayat, dan kebijakan tarif denda
  */
 
-// 1. Re-export modul Pengembalian Buku
+// 1. Re-export modul Pengembalian Buku langsung dari sumbernya
 export {
   setupReceiptModal,
   showReceiptModal,
-  printReceipt,
+  printReceipt
+} from './pengembalian/modalStruk.js';
+
+export {
   setupPengembalianForm,
   renderBorrowerSearchResults,
   filterPengembalianByName,
@@ -24,9 +27,9 @@ export {
   updatePreviewPeminjamanBox,
   recalculateDenda,
   handleSubmitPengembalian
-} from './pengembalian/index.js';
+} from './pengembalian/formPengembalian.js';
 
-// 2. Re-export modul Operasional Denda & Riwayat
+// 2. Re-export modul Operasional Denda & Riwayat langsung dari sumbernya
 export {
   kasirTunggakanState,
   getSearchQueryTunggakan,
@@ -37,23 +40,32 @@ export {
   handleBatalkanLunasDenda,
   formatWhatsAppNumber,
   sendWhatsAppReminder,
-  setupKasirTunggakanListeners,
+  setupKasirTunggakanListeners
+} from './denda/kasirTunggakan.js';
+
+export {
   arsipRiwayatState,
   renderSemuaRiwayatList,
   filterRiwayatPengembalian,
-  setupArsipRiwayatListeners,
+  setupArsipRiwayatListeners
+} from './denda/arsipRiwayat.js';
+
+export {
   subtabDendaState,
   renderRiwayatPengembalian,
   switchFineSubtab,
   setupSubtabDendaListeners,
   syncTarifDendaUI,
   setupTarifDendaListeners
-} from './denda/index.js';
+} from './denda/subtabDenda.js';
 
 import {
   setupReceiptModal,
   showReceiptModal,
-  printReceipt,
+  printReceipt
+} from './pengembalian/modalStruk.js';
+
+import {
   setupPengembalianForm,
   filterPengembalianByName,
   selectBorrowerForReturn,
@@ -63,19 +75,26 @@ import {
   renderPengembalianFormOptions,
   recalculateDenda,
   handleSubmitPengembalian
-} from './pengembalian/index.js';
+} from './pengembalian/formPengembalian.js';
 
 import {
-  renderRiwayatPengembalian,
+  kasirTunggakanState,
   renderTunggakanDendaList,
-  renderSemuaRiwayatList,
-  switchFineSubtab,
   openModalKonfirmasiLunasiDenda,
   executePelunasanDenda,
   handleBatalkanLunasDenda,
-  sendWhatsAppReminder,
+  sendWhatsAppReminder
+} from './denda/kasirTunggakan.js';
+
+import {
+  renderSemuaRiwayatList
+} from './denda/arsipRiwayat.js';
+
+import {
+  renderRiwayatPengembalian,
+  switchFineSubtab,
   setupSubtabDendaListeners
-} from './denda/index.js';
+} from './denda/subtabDenda.js';
 
 let isPengembalianModuleSetup = false;
 
