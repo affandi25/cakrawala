@@ -121,14 +121,21 @@ export function setupTarifDendaListeners() {
   const inputTarif = document.getElementById('inputTarifDendaGlobal');
 
   if (btnSimpan && inputTarif) {
-    btnSimpan.addEventListener('click', () => {
+    btnSimpan.addEventListener('click', async () => {
       const rawVal = parseInt(inputTarif.value, 10);
       if (isNaN(rawVal) || rawVal < 0) {
         showToast('Masukkan nominal tarif denda yang valid (minimal Rp 0).', 'warning');
         return;
       }
 
-      const newTarif = setTarifDendaHarian(rawVal);
+      btnSimpan.disabled = true;
+      const originalText = btnSimpan.textContent;
+      btnSimpan.textContent = 'Menyimpan...';
+
+      const newTarif = await setTarifDendaHarian(rawVal);
+      
+      btnSimpan.disabled = false;
+      btnSimpan.textContent = originalText;
       syncTarifDendaUI();
 
       // Hitung ulang denda jika ada peminjaman yang sedang dipilih di meja pengembalian
@@ -136,7 +143,7 @@ export function setupTarifDendaListeners() {
         window.recalculateDenda();
       }
 
-      showToast(`Kebijakan tarif denda berhasil disimpan: ${formatRupiah(newTarif)} / hari`, 'success');
+      showToast(`Kebijakan tarif denda berhasil disimpan ke database: ${formatRupiah(newTarif)} / hari`, 'success');
     });
 
     // Dukung pintasan tombol Enter pada input tarif

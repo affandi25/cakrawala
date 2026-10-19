@@ -639,19 +639,17 @@ cakrawala/
     │       │   └── walkIn.js             # Form peminjaman langsung di meja sirkulasi
     │       │
     │       ├── 3-pengembalian/           # MEJA 3: Pengembalian Buku & Denda
-    │       │   ├── index.js              # Koordinator Utama Meja 3 (Pengembalian + Denda)
+    │       │   ├── index.js              # Koordinator Utama Meja 3 (Ekspor langsung tanpa nested index)
     │       │   ├── pengembalian/         # Sub-modul Meja Pengembalian Buku Fisik:
-    │       │   │   ├── index.js          # Re-export sub-modul pengembalian
     │       │   │   ├── formPengembalian.js   # Form penerimaan buku kembali & tampilan tarif aktif
     │       │   │   ├── seleksiPeminjam.js    # Dropdown peminjam, kartu buku aktif, scan lookup
     │       │   │   ├── kalkulatorDenda.js    # Mesin hitung denda, tarif dinamis, aturan 1 bulan
     │       │   │   ├── eksekusiPengembalian.js # Simpan ke Supabase, pulihkan stok (+1), struk
     │       │   │   └── modalStruk.js         # Dialog cetak struk tanda terima pengembalian
     │       │   └── denda/                # Sub-modul Operasional Denda & Riwayat:
-    │       │       ├── index.js          # Re-export operasional denda
     │       │       ├── kasirTunggakan.js # Kasir denda belum lunas, modal 2 lapis, rollback
     │       │       ├── arsipRiwayat.js   # Log arsip pengembalian & pencarian nama user
-    │       │       └── subtabDenda.js    # Switcher sub-tab, total kas, & widget kebijakan tarif denda
+    │       │       └── subtabDenda.js    # Switcher sub-tab, total kas, & widget kebijakan tarif denda (DB: data_pengaturan)
     │       │
     │       ├── 4-buku/                   # MEJA 4: Inventaris Koleksi Buku
     │       │   ├── index.js              # Koordinator inventaris buku

@@ -15,7 +15,8 @@ export {
   hideModal,
   showToast,
   getTarifDendaHarian,
-  setTarifDendaHarian
+  setTarifDendaHarian,
+  fetchTarifDendaFromDB
 } from '../../../assets/js/sharedUtils.js';
 
 /**

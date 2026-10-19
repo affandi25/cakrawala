@@ -10,7 +10,7 @@
 
 import { db } from '../../../assets/js/supabaseClient.js';
 import { state } from './state.js';
-import { showToast } from './petugasHelper.js';
+import { showToast, fetchTarifDendaFromDB } from './petugasHelper.js';
 
 // Kumpulan fungsi callback listener yang akan dipanggil saat data diperbarui
 const syncListeners = new Set();
@@ -112,6 +112,9 @@ export async function syncAllTables() {
       .order('id_pengumuman', { ascending: false });
     if (pengumumanErr) throw pengumumanErr;
     state.cache.pengumuman = pengumumanData || [];
+
+    // 8. Sinkronisasi Kebijakan Tarif Denda Resmi (Tabel data_pengaturan)
+    await fetchTarifDendaFromDB();
 
     // Jalankan seluruh render listener
     notifyListeners();
