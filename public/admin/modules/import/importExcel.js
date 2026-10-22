@@ -34,8 +34,8 @@ export const TEMPLATE_CONFIGS = {
     sheetName: 'Format_SISWA',
     headers: ['NISN', 'Nama Siswa', 'Kelas', 'Email', 'Kontak', 'Username', 'Password'],
     sample: [
-      ['0051234567', 'Ahmad Fauzi', 'XII MIPA 1', 'ahmad@sekolah.sch.id', '081234567890', 'ahmad005', 'pass1234'],
-      ['0051234568', 'Siti Aisyah', 'XI IPS 2', 'aisyah@sekolah.sch.id', '081234567891', 'aisyah005', 'pass1234']
+      ['24670002', 'Ahmad Fauzi', 'XII MIPA 1', 'ahmad@sekolah.sch.id', '081234567890', '24670002', 'password123'],
+      ['24670003', 'Siti Aisyah', 'XI IPS 2', 'aisyah@sekolah.sch.id', '081234567891', '24670003', 'password123']
     ]
   },
   guru: {
@@ -43,8 +43,8 @@ export const TEMPLATE_CONFIGS = {
     sheetName: 'Format_GURU',
     headers: ['NIP', 'Nama Guru', 'Mata Pelajaran', 'Email', 'Kontak', 'Username', 'Password'],
     sample: [
-      ['198501012010011001', 'Dr. Budi Santoso, M.Pd.', 'Bahasa Indonesia', 'budi@sekolah.sch.id', '081234567892', 'budisantoso', 'pass1234'],
-      ['198802152012012002', 'Dewi Sartika, S.Pd.', 'Matematika', 'dewi@sekolah.sch.id', '081234567893', 'dewisartika', 'pass1234']
+      ['198501012010011001', 'Dr. Budi Santoso, M.Pd.', 'Bahasa Indonesia', 'budi@sekolah.sch.id', '081234567892', '198501012010011001', 'password123'],
+      ['198802152012012002', 'Dewi Sartika, S.Pd.', 'Matematika', 'dewi@sekolah.sch.id', '081234567893', '198802152012012002', 'password123']
     ]
   },
   petugas: {
@@ -52,8 +52,8 @@ export const TEMPLATE_CONFIGS = {
     sheetName: 'Format_PETUGAS',
     headers: ['ID Petugas', 'Nama Petugas', 'Email', 'Kontak', 'Username', 'Password'],
     sample: [
-      ['PTG001', 'Siti Rahmawati, S.I.Pust.', 'siti@cakrawala.id', '081234567894', 'sitipustaka', 'pass1234'],
-      ['PTG002', 'Rian Hidayat', 'rian@cakrawala.id', '081234567895', 'rianpustaka', 'pass1234']
+      ['PTG001', 'Siti Rahmawati, S.I.Pust.', 'siti@cakrawala.id', '081234567894', 'PTG001', 'password123'],
+      ['PTG002', 'Rian Hidayat', 'rian@cakrawala.id', '081234567895', 'PTG002', 'password123']
     ]
   }
 };
