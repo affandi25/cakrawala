@@ -86,37 +86,38 @@ function renderAvatar(el, fotoUrl, altName = 'Pengguna') {
    ========================================================================== */
 
 /**
- * Pencarian akun pengguna fleksibel di Supabase:
- * Mencari via username, NIP/Email Guru, NISN/Email Siswa, atau ID/Email Petugas
+ * Resolusi username dari identifier fleksibel (NISN, NIP, email, atau username).
+ * Mencari tabel profil terkait jika identifier bukan username langsung.
+ * Mengembalikan string username yang terdaftar di data_user, atau null.
  */
-async function findUserByIdentifier(identifier) {
+async function resolveUsername(identifier) {
   if (!db) return null;
 
-  // 1. Cari langsung di tabel data_user via username
-  const { data: userByUsername } = await db
+  // 1. Cek apakah identifier cocok langsung sebagai username di data_user
+  const { data: directMatch } = await db
     .from('data_user')
-    .select('id_user, username, password, role')
+    .select('username')
     .ilike('username', identifier)
     .maybeSingle();
 
-  if (userByUsername) return userByUsername;
+  if (directMatch?.username) return directMatch.username;
 
-  // 2. Jika bukan username, cari ID user di tabel profil terkait
+  // 2. Jika tidak ditemukan, cari di tabel profil terkait untuk dapat id_user
   const lookups = [
-    { table: 'data_guru', query: `nip_guru.eq.${identifier},email_guru.ilike.${identifier}` },
-    { table: 'data_siswa', query: `nisn_siswa.eq.${identifier},email_siswa.ilike.${identifier}` },
+    { table: 'data_guru',    query: `nip_guru.eq.${identifier},email_guru.ilike.${identifier}` },
+    { table: 'data_siswa',   query: `nisn_siswa.eq.${identifier},email_siswa.ilike.${identifier}` },
     { table: 'data_petugas', query: `id_petugas.eq.${identifier},email_petugas.ilike.${identifier}` }
   ];
 
   for (const { table, query } of lookups) {
     const { data: profile } = await db.from(table).select('id_user').or(query).maybeSingle();
     if (profile?.id_user) {
-      const { data: userMatch } = await db
+      const { data: userRow } = await db
         .from('data_user')
-        .select('id_user, username, password, role')
+        .select('username')
         .eq('id_user', profile.id_user)
         .maybeSingle();
-      if (userMatch) return userMatch;
+      if (userRow?.username) return userRow.username;
     }
   }
 
@@ -208,9 +209,23 @@ function initLoginForm() {
     }
 
     try {
-      const userMatch = await findUserByIdentifier(identifier);
+      // Resolusi identifier fleksibel (NISN/NIP/email) ke username data_user
+      const resolvedUsername = await resolveUsername(identifier);
+      if (!resolvedUsername) {
+        showError('NISN, NIP, Email, atau password salah.');
+        return;
+      }
 
-      if (userMatch && userMatch.password === passwordValue) {
+      // Verifikasi password via fungsi Bcrypt di database (SECURITY DEFINER)
+      const { data: result, error } = await db.rpc('verify_user_login', {
+        p_identifier: resolvedUsername,
+        p_password:   passwordValue
+      });
+
+      if (error) throw error;
+
+      const userMatch = result?.[0] ?? null;
+      if (userMatch) {
         saveSession(userMatch, userMatch.role);
         redirectByRole(userMatch.role);
         return;
