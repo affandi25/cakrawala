@@ -293,3 +293,32 @@ if (typeof window !== 'undefined') {
   fetchTarifDendaFromDB().catch(() => {});
 }
 
+/**
+ * Menghapus berkas fisik dari Supabase Storage berdasarkan URL publiknya
+ * @param {string} url - URL lengkap berkas di Supabase Storage
+ * @param {string} bucketName - Nama bucket ('buku' atau 'pengumuman')
+ * @returns {Promise<boolean>}
+ */
+export async function deleteStorageFileByUrl(url, bucketName) {
+  if (!url || typeof url !== 'string' || !db || !db.storage) return false;
+  try {
+    const marker = `/storage/v1/object/public/${bucketName}/`;
+    const idx = url.indexOf(marker);
+    if (idx === -1) return false;
+
+    const rawPath = url.substring(idx + marker.length).split('?')[0];
+    const filePath = decodeURIComponent(rawPath);
+    if (!filePath) return false;
+
+    const { error } = await db.storage.from(bucketName).remove([filePath]);
+    if (error) {
+      console.warn(`[sharedUtils] Gagal menghapus berkas ${filePath} dari bucket ${bucketName}:`, error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn(`[sharedUtils] Error saat menghapus berkas storage:`, err);
+    return false;
+  }
+}
+

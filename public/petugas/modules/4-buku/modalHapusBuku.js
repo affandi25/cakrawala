@@ -10,7 +10,7 @@
 
 import { db } from '../../../assets/js/supabaseClient.js';
 import { state } from '../core/state.js';
-import { showModal, hideModal, showToast } from '../core/petugasHelper.js';
+import { showModal, hideModal, showToast, deleteStorageFileByUrl } from '../core/petugasHelper.js';
 import { syncAllTables } from '../core/syncData.js';
 
 let isDeleteBookModalSetup = false;
@@ -43,11 +43,18 @@ export function setupDeleteBookModal() {
     confirmBtn.addEventListener('click', async () => {
       if (!state.deleteTargetBook) return;
       const bookId = state.deleteTargetBook.id_buku;
+      const coverUrl = state.deleteTargetBook.cover_url;
 
       try {
         confirmBtn.disabled = true;
         confirmBtn.textContent = 'Menghapus...';
 
+        // 1. Bersihkan berkas fisik cover dari Supabase Storage (jika diupload)
+        if (coverUrl) {
+          await deleteStorageFileByUrl(coverUrl, 'buku');
+        }
+
+        // 2. Hapus baris data buku dari database
         const { error } = await db
           .from('data_buku')
           .delete()

@@ -9,7 +9,7 @@
 
 import { db } from '../../../assets/js/supabaseClient.js';
 import { state } from '../core/state.js';
-import { showModal, hideModal, showToast } from '../core/petugasHelper.js';
+import { showModal, hideModal, showToast, deleteStorageFileByUrl } from '../core/petugasHelper.js';
 import { syncAllTables } from '../core/syncData.js';
 
 let isDeleteModalSetup = false;
@@ -42,11 +42,18 @@ export function setupDeletePengumumanModal() {
     confirmBtn.addEventListener('click', async () => {
       if (!state.deleteTargetPengumuman) return;
       const targetId = state.deleteTargetPengumuman.id_pengumuman;
+      const gambarUrl = state.deleteTargetPengumuman.gambar_url;
 
       try {
         confirmBtn.disabled = true;
         confirmBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-sm"></i> <span>Menghapus...</span>';
 
+        // 1. Bersihkan berkas fisik poster dari Supabase Storage (jika diupload)
+        if (gambarUrl) {
+          await deleteStorageFileByUrl(gambarUrl, 'pengumuman');
+        }
+
+        // 2. Hapus baris data pengumuman dari database
         const { error } = await db
           .from('data_pengumuman')
           .delete()

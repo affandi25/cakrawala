@@ -10,7 +10,7 @@
 
 import { db } from '../../../assets/js/supabaseClient.js';
 import { state } from '../core/state.js';
-import { fileToDataUrl, showModal, hideModal, showToast } from '../core/petugasHelper.js';
+import { fileToDataUrl, showModal, hideModal, showToast, deleteStorageFileByUrl } from '../core/petugasHelper.js';
 import { syncAllTables } from '../core/syncData.js';
 
 let isFormModalSetup = false;
@@ -329,6 +329,13 @@ async function handlePengumumanFormSubmit() {
 
     if (finalPosterUrl) {
       payload.gambar_url = finalPosterUrl;
+      // Bersihkan berkas poster lama dari Supabase Storage jika diganti baru
+      if (id && state.selectedPosterFile) {
+        const oldItem = (state.cache.pengumuman || []).find(p => p.id_pengumuman === Number(id));
+        if (oldItem && oldItem.gambar_url && oldItem.gambar_url !== finalPosterUrl) {
+          deleteStorageFileByUrl(oldItem.gambar_url, 'pengumuman').catch(() => {});
+        }
+      }
     }
 
     if (!id) {

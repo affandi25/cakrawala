@@ -16,7 +16,8 @@ export {
   showToast,
   getTarifDendaHarian,
   setTarifDendaHarian,
-  fetchTarifDendaFromDB
+  fetchTarifDendaFromDB,
+  deleteStorageFileByUrl
 } from '../../../assets/js/sharedUtils.js';
 
 /**
