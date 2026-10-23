@@ -40,12 +40,18 @@ function htmlIncludePlugin() {
     },
     writeBundle(options) {
       const outputDir = options.dir || resolve(__dirname, 'dist');
+      const source = path.resolve(__dirname, 'public/.well-known/security.txt');
+
+      // Berkas security.txt bersifat opsional: lewati saja bila belum ada
+      // agar build tidak gagal hanya karena berkas tersebut belum dibuat.
+      if (!fs.existsSync(source)) {
+        console.warn('[well-known] public/.well-known/security.txt tidak ditemukan, dilewati.');
+        return;
+      }
+
       const targetDir = path.join(outputDir, '.well-known');
       fs.mkdirSync(targetDir, { recursive: true });
-      fs.copyFileSync(
-        path.resolve(__dirname, 'public/.well-known/security.txt'),
-        path.join(targetDir, 'security.txt')
-      );
+      fs.copyFileSync(source, path.join(targetDir, 'security.txt'));
     }
   };
 }
