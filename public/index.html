@@ -6,6 +6,18 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CAKRAWALA | Perpustakaan Digital</title>
 
+  <!-- Normalisasi URL: halaman ini hanya sah untuk root "/". Bila server
+       menyajikan halaman utama pada path tak dikenal (fallback), alamat
+       dikembalikan ke root agar tidak "nyangkut" di URL yang salah. -->
+  <script>
+    (function () {
+      var path = window.location.pathname;
+      if (path !== '/' && path !== '/index.html') {
+        window.location.replace('/');
+      }
+    })();
+  </script>
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -43,10 +55,14 @@
           <a href="#pengumuman" class="transition hover:text-white">Pengumuman</a>
           <a href="#katalog" class="transition hover:text-white">Katalog</a>
         </div>
-        <a href="login.html"
+        <a id="navAuthLink" href="/login.html"
           class="rounded-lg bg-white px-4 py-2 text-sm font-bold text-navy shadow-sm transition hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-white">
           Login
         </a>
+        <button id="navLogoutButton" type="button"
+          class="hidden rounded-lg border border-white/40 px-4 py-2 text-sm font-bold text-white transition hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white">
+          Keluar
+        </button>
         <!-- Mobile Hamburger Toggle (styled in landing.css: .btn-nav-toggle) -->
         <button id="btnToggleNavMenu" type="button" aria-label="Buka menu navigasi" class="sm:hidden btn-nav-toggle">
           <i class="ph ph-list text-xl" id="iconNavMenu"></i>

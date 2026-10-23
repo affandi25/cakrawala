@@ -18,6 +18,29 @@
 <html lang="id">
 
 <head>
+  <!-- ROUTE GUARD (sinkron): hanya role Petugas/Admin. Berjalan sebelum halaman dirender. -->
+  <script>
+    (function () {
+      var LOGIN_URL = '/login.html';
+      var ALLOWED = ['petugas', 'admin'];
+      var HOME = {
+        siswa: '/siswa-guru/dashboard.html',
+        guru: '/siswa-guru/dashboard.html',
+        petugas: '/petugas/dashboard.html',
+        admin: '/admin/dashboard.html'
+      };
+      try {
+        var raw = sessionStorage.getItem('cakrawala_user') || localStorage.getItem('cakrawala_user');
+        if (!raw) { window.location.replace(LOGIN_URL); return; }
+        var user = JSON.parse(raw);
+        var role = (user && user.role ? String(user.role) : '').trim().toLowerCase();
+        // Role tidak berhak -> lempar ke dashboard milik role-nya sendiri
+        if (ALLOWED.indexOf(role) === -1) { window.location.replace(HOME[role] || LOGIN_URL); }
+      } catch (e) {
+        window.location.replace(LOGIN_URL);
+      }
+    })();
+  </script>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Dashboard Petugas Sirkulasi | CAKRAWALA Digital Library</title>

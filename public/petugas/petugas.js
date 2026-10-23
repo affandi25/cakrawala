@@ -172,7 +172,17 @@ onDataSynced(() => {
  * Inisialisasi utama aplikasi Dashboard Petugas dengan isolasi aman (Fault-Tolerant)
  */
 async function init() {
-  // 1. Setup UI Navigasi & Logout
+  // 1. Route guard PALING AWAL: hanya role Petugas/Admin yang diizinkan.
+  // Bila tidak berhak, batalkan seluruh inisialisasi (guard sudah mengalihkan halaman).
+  let isAuthorized = false;
+  try {
+    isAuthorized = await initSessionAndOfficer(state);
+  } catch (err) {
+    console.error('Error verifikasi auth sesi petugas:', err);
+  }
+  if (!isAuthorized) return;
+
+  // 2. Setup UI Navigasi & Logout
   try {
     setupNavigation();
   } catch (err) {
@@ -185,14 +195,14 @@ async function init() {
     console.error('Error inisialisasi logout:', err);
   }
 
-  // 2. Setup Meja 1: Overview
+  // 3. Setup Meja 1: Overview
   try {
     if (typeof setupOverviewModule === 'function') setupOverviewModule();
   } catch (err) {
     console.error('Error inisialisasi Meja 1 Overview:', err);
   }
 
-  // 3. Setup Meja 2: Sirkulasi Peminjaman
+  // 4. Setup Meja 2: Sirkulasi Peminjaman
   try {
     if (typeof setupSirkulasiHandlers === 'function') setupSirkulasiHandlers();
   } catch (err) {
@@ -205,39 +215,32 @@ async function init() {
     console.error('Error inisialisasi Walk-In Modal:', err);
   }
 
-  // 4. Setup Meja 3: Pengembalian & Denda
+  // 5. Setup Meja 3: Pengembalian & Denda
   try {
     if (typeof setupPengembalianModule === 'function') setupPengembalianModule();
   } catch (err) {
     console.error('Error inisialisasi Meja 3 Pengembalian:', err);
   }
 
-  // 5. Setup Meja 4: Inventaris Buku
+  // 6. Setup Meja 4: Inventaris Buku
   try {
     if (typeof setupInventarisModule === 'function') setupInventarisModule();
   } catch (err) {
     console.error('Error inisialisasi Meja 4 Inventaris:', err);
   }
 
-  // 6. Setup Meja 5: Kelola Pengumuman
+  // 7. Setup Meja 5: Kelola Pengumuman
   try {
     if (typeof setupPengumumanModule === 'function') setupPengumumanModule();
   } catch (err) {
     console.error('Error inisialisasi Meja 5 Pengumuman:', err);
   }
 
-  // 7. Setup Scanner Kamera Universal
+  // 8. Setup Scanner Kamera Universal
   try {
     if (typeof setupCameraScannerModule === 'function') setupCameraScannerModule();
   } catch (err) {
     console.error('Error inisialisasi modul Scanner Kamera:', err);
-  }
-
-  // 8. Verifikasi sesi login & role Petugas
-  try {
-    await initSessionAndOfficer(state);
-  } catch (err) {
-    console.error('Error verifikasi auth sesi petugas:', err);
   }
 
   // 9. Unduh seluruh data tabel dari Supabase

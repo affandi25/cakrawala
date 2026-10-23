@@ -193,6 +193,11 @@ if (typeof window !== 'undefined') {
  * Inisialisasi utama aplikasi Portal Siswa & Guru
  */
 export async function initSiswaGuru() {
+  // Route guard PALING AWAL: hanya role Siswa & Guru yang boleh mengakses.
+  // Bila tidak berhak, batalkan seluruh inisialisasi (guard sudah mengalihkan halaman).
+  const isAuthorized = await initSessionAndMember(state);
+  if (!isAuthorized) return;
+
   setupNavigation();
   setupLogout();
 
@@ -203,9 +208,8 @@ export async function initSiswaGuru() {
   setupRiwayatModule();
   setupProfileModule();
 
-  // Inisialisasi Sesi Auth dan Sinkronisasi Data Supabase
+  // Sinkronisasi Data Supabase
   try {
-    await initSessionAndMember(state);
     await fetchAllMemberData();
     renderBeranda();
   } catch (err) {
