@@ -250,7 +250,7 @@ export function handleLogout() {
     });
   } else {
     clearSession();
-    window.location.replace('../login.html');
+    window.location.replace('/login.html');
   }
 }
 
@@ -396,15 +396,17 @@ export function setupProfileModule() {
           state.memberProfile.foto_profil = newPhoto;
         }
 
-        // Simpan ke SessionStorage
+        // Simpan ke SessionStorage & LocalStorage agar sesi tetap konsisten lintas tab
         try {
-          const rawSession = sessionStorage.getItem('cakrawala_user');
+          const rawSession = sessionStorage.getItem('cakrawala_user') || localStorage.getItem('cakrawala_user');
           if (rawSession) {
             const parsed = JSON.parse(rawSession);
             parsed.email = newEmail;
             parsed.kontak = newKontak;
             parsed.foto_profil = newPhoto;
-            sessionStorage.setItem('cakrawala_user', JSON.stringify(parsed));
+            const serialized = JSON.stringify(parsed);
+            sessionStorage.setItem('cakrawala_user', serialized);
+            localStorage.setItem('cakrawala_user', serialized);
           }
         } catch (_) { }
 

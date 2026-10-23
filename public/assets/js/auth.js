@@ -17,6 +17,17 @@ import { db } from './supabaseClient.js';
    ========================================================================== */
 
 /**
+ * Rute dashboard utama (home) untuk masing-masing role.
+ * Dipakai untuk mengarahkan pengguna ke halaman sesuai hak aksesnya.
+ */
+export const ROLE_HOME = {
+  siswa: '/siswa-guru/dashboard.html',
+  guru: '/siswa-guru/dashboard.html',
+  petugas: '/petugas/dashboard.html',
+  admin: '/admin/dashboard.html'
+};
+
+/**
  * Mengambil data user yang sedang login dari storage
  */
 export function getCurrentUser() {
@@ -26,6 +37,15 @@ export function getCurrentUser() {
   } catch (_) {
     return null;
   }
+}
+
+/**
+ * Mengambil role pengguna yang sedang login dalam bentuk huruf kecil yang seragam
+ * @returns {string} 'siswa' | 'guru' | 'petugas' | 'admin' | ''
+ */
+export function getUserRole() {
+  const user = getCurrentUser();
+  return user && user.role ? String(user.role).trim().toLowerCase() : '';
 }
 
 /**
@@ -58,13 +78,44 @@ export function clearSession() {
 }
 
 /**
- * Mengarahkan pengguna ke halaman login berdasarkan kedalaman URL saat ini
+ * Mengarahkan pengguna ke halaman login.
+ * Selalu memakai URL absolut agar tidak salah resolusi saat halaman berada
+ * di dalam sub-folder (mis. /petugas/ atau /siswa-guru/).
  */
 function redirectToLogin() {
-  const isNested = window.location.pathname.includes('/siswa-guru/') ||
-    window.location.pathname.includes('/petugas/') ||
-    window.location.pathname.includes('/admin/');
-  window.location.replace(isNested ? '../login.html' : 'login.html');
+  window.location.replace('/login.html');
+}
+
+/**
+ * Mengarahkan pengguna ke dashboard utama sesuai role-nya.
+ * Bila role tidak dikenali, pengguna diarahkan ke halaman login.
+ */
+export function goToRoleHome(role) {
+  const key = (role || '').trim().toLowerCase();
+  window.location.replace(ROLE_HOME[key] || '/login.html');
+}
+
+/**
+ * Route guard terpusat berbasis role.
+ * - Belum login -> dialihkan ke halaman login.
+ * - Role tidak sesuai -> dialihkan ke dashboard milik role pengguna tersebut.
+ * @param {string[]} allowedRoles Daftar role yang diizinkan mengakses halaman ini
+ * @returns {boolean} true bila pengguna berhak mengakses halaman
+ */
+export function guardRoute(allowedRoles = []) {
+  const user = getCurrentUser();
+  if (!user) {
+    redirectToLogin();
+    return false;
+  }
+
+  const role = getUserRole();
+  if (allowedRoles.length > 0 && allowedRoles.indexOf(role) === -1) {
+    goToRoleHome(role);
+    return false;
+  }
+
+  return true;
 }
 
 /**
@@ -124,6 +175,27 @@ async function resolveUsername(identifier) {
   return null;
 }
 
+/**
+ * Fallback verifikasi password untuk akun yang passwordnya masih tersimpan apa adanya
+ * (plaintext), misalnya akun yang dibuat lewat panel Admin atau akun lama.
+ * RPC `verify_user_login` memverifikasi dengan bcrypt sehingga tidak akan cocok dengan
+ * password plaintext; fungsi ini mengecek kecocokan langsung agar akun tersebut tetap
+ * bisa login tanpa mengubah isi database.
+ * @returns {Promise<Object|null>} baris data_user bila cocok, atau null
+ */
+async function verifyPlaintextPassword(username, password) {
+  if (!db) return null;
+  const { data, error } = await db
+    .from('data_user')
+    .select('id_user, username, role')
+    .eq('username', username)
+    .eq('password', password)
+    .maybeSingle();
+
+  if (error || !data) return null;
+  return data;
+}
+
 function initLoginForm() {
   const loginForm = document.querySelector('#loginForm');
   if (!loginForm) return;
@@ -151,18 +223,12 @@ function initLoginForm() {
     const r = (role || '').trim().toLowerCase();
     const params = new URLSearchParams(window.location.search);
     const bukuId = params.get('buku_id');
+    const home = ROLE_HOME[r] || ROLE_HOME.siswa;
 
-    if (r === 'siswa' || r === 'guru') {
-      window.location.href = bukuId
-        ? `siswa-guru/dashboard.html?action=pinjam&buku_id=${encodeURIComponent(bukuId)}`
-        : 'siswa-guru/dashboard.html';
-    } else if (r === 'petugas') {
-      window.location.href = 'petugas/dashboard.html';
-    } else if (r === 'admin') {
-      window.location.href = 'admin/dashboard.html';
-    } else {
-      window.location.href = 'siswa-guru/dashboard.html';
-    }
+    // URL absolut agar pengalihan tetap benar dari halaman mana pun.
+    window.location.href = (bukuId && (r === 'siswa' || r === 'guru'))
+      ? home + '?action=pinjam&buku_id=' + encodeURIComponent(bukuId)
+      : home;
   }
 
   // Toggle Lihat Password
@@ -231,6 +297,14 @@ function initLoginForm() {
         return;
       }
 
+      // Fallback: akun dengan password tersimpan plaintext (akun baru via panel Admin / akun lama)
+      const plainMatch = await verifyPlaintextPassword(resolvedUsername, passwordValue);
+      if (plainMatch) {
+        saveSession(plainMatch, plainMatch.role);
+        redirectByRole(plainMatch.role);
+        return;
+      }
+
       showError('NISN, NIP, Email, atau password salah.');
     } catch (err) {
       console.error('Login error:', err);
@@ -253,20 +327,17 @@ initLoginForm();
 
 /**
  * Memvalidasi sesi login anggota (Siswa atau Guru) dan memuat profil data terkait
+ * @param {Object} targetState Objek state dashboard siswa-guru
+ * @returns {Promise<boolean>} true bila sesi & role valid
  */
 export async function initSessionAndMember(targetState = {}) {
+  // Route guard terpusat: hanya role Siswa & Guru yang boleh mengakses halaman ini
+  if (!guardRoute(['siswa', 'guru'])) return false;
+
   const user = getCurrentUser();
-  if (!user) {
-    redirectToLogin();
-    return;
-  }
 
   try {
-    const role = (user.role || '').trim().toLowerCase();
-    if (role !== 'siswa' && role !== 'guru') {
-      redirectToLogin();
-      return;
-    }
+    const role = getUserRole();
 
     targetState.currentUser = user;
     targetState.memberType = role;
@@ -306,10 +377,11 @@ export async function initSessionAndMember(targetState = {}) {
     }
 
     updateMemberProfileDisplay(targetState);
-    return targetState;
+    return true;
   } catch (err) {
     console.error('Gagal memverifikasi sesi siswa/guru:', err);
     redirectToLogin();
+    return false;
   }
 }
 
@@ -361,21 +433,16 @@ export function updateMemberProfileDisplay(targetState = {}) {
 
 /**
  * Memeriksa sesi login petugas dan mengambil data profil dari tabel 'data_petugas'
+ * @param {Object} targetState Objek state dashboard petugas
+ * @returns {Promise<boolean>} true bila sesi & role valid
  */
 export async function initSessionAndOfficer(targetState = {}) {
+  // Route guard terpusat: hanya Petugas (dan Admin sebagai superuser) yang diizinkan
+  if (!guardRoute(['petugas', 'admin'])) return false;
+
   const user = getCurrentUser();
-  if (!user) {
-    redirectToLogin();
-    return;
-  }
 
   try {
-    const role = (user.role || '').trim().toLowerCase();
-    if (role !== 'petugas' && role !== 'admin') {
-      redirectToLogin();
-      return;
-    }
-
     targetState.currentUser = user;
 
     if (user.id_user && db) {
@@ -395,10 +462,11 @@ export async function initSessionAndOfficer(targetState = {}) {
       updateOfficerProfileDisplay(user.username || 'Petugas');
     }
 
-    return targetState;
+    return true;
   } catch (err) {
     console.error('Gagal memverifikasi sesi petugas:', err);
     redirectToLogin();
+    return false;
   }
 }
 
@@ -420,18 +488,10 @@ export function updateOfficerProfileDisplay(name, fotoUrl = null) {
  * Memeriksa sesi login admin dan menginisialisasi tampilan profil
  */
 export async function initSessionAndAdmin(targetState = {}) {
+  // Route guard terpusat: hanya role Admin yang diizinkan mengakses halaman ini
+  if (!guardRoute(['admin'])) return false;
+
   const user = getCurrentUser();
-  if (!user) {
-    redirectToLogin();
-    return false;
-  }
-
-  const role = (user.role || '').trim().toLowerCase();
-  if (role !== 'admin') {
-    redirectToLogin();
-    return false;
-  }
-
   targetState.currentUser = user;
   const username = user.username || user.identifier || 'Administrator';
   updateAdminProfileDisplay(username);
@@ -510,3 +570,65 @@ export function setupLogout() {
     });
   }
 }
+
+/* ==========================================================================
+   7. NAVIGASI HALAMAN PUBLIK (index.html & login.html)
+   ========================================================================== */
+
+/**
+ * Mengeluarkan pengguna dari sesi dan mengalihkannya ke halaman login
+ */
+export function logout() {
+  clearSession();
+  window.location.replace('/login.html');
+}
+
+/**
+ * Menyesuaikan navigasi halaman publik dengan status sesi pengguna:
+ * - Sudah login : tautan "Login" berubah menjadi "Dashboard" sesuai role,
+ *                 tombol "Keluar" ditampilkan, dan panel "sudah masuk" dibuka.
+ * - Belum login : tautan tetap menuju halaman login, tombol keluar disembunyikan.
+ * @returns {string} role pengguna, atau string kosong bila belum login
+ */
+export function initPublicAuthNav() {
+  const user = getCurrentUser();
+  const role = getUserRole();
+
+  const navAuthLink = document.getElementById('navAuthLink');
+  const navLogoutButton = document.getElementById('navLogoutButton');
+  const loggedInPanel = document.getElementById('alreadyLoggedInPanel');
+  const loggedInRole = document.getElementById('alreadyLoggedInRole');
+  const btnGoDashboard = document.getElementById('btnGoDashboard');
+
+  if (!user) {
+    if (navLogoutButton) navLogoutButton.classList.add('hidden');
+    return '';
+  }
+
+  if (navAuthLink) {
+    navAuthLink.textContent = 'Dashboard';
+    navAuthLink.setAttribute('href', ROLE_HOME[role] || '/login.html');
+  }
+
+  if (navLogoutButton) {
+    navLogoutButton.classList.remove('hidden');
+    navLogoutButton.addEventListener('click', logout);
+  }
+
+  if (loggedInPanel) loggedInPanel.classList.remove('hidden');
+  if (loggedInRole) loggedInRole.textContent = role || 'pengguna';
+
+  if (btnGoDashboard) {
+    const bukuId = new URLSearchParams(window.location.search).get('buku_id');
+    let target = ROLE_HOME[role] || '/login.html';
+    if (bukuId && (role === 'siswa' || role === 'guru')) {
+      target += (target.indexOf('?') === -1 ? '?' : '&') + 'action=pinjam&buku_id=' + encodeURIComponent(bukuId);
+    }
+    btnGoDashboard.setAttribute('href', target);
+  }
+
+  return role;
+}
+
+// Jalankan penyesuaian navigasi publik pada halaman yang memuat modul ini
+initPublicAuthNav();

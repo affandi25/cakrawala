@@ -24,7 +24,7 @@
 <main class="min-h-screen grid md:grid-cols-2">
   <!-- Kolom Kiri: Branding -->
   <section class="relative hidden flex-col justify-between bg-navy p-8 text-white md:flex">
-    <a href="index.html" class="flex w-max items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">&#8592; Kembali ke Utama</a>
+    <a href="/index.html" class="flex w-max items-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10">&#8592; Kembali ke Utama</a>
     <div class="flex flex-1 flex-col items-center justify-center gap-8 py-12 text-center">
       <div class="flex h-48 w-48 items-center justify-center rounded-[2rem] bg-white/10 text-7xl">
         <i class="ph ph-books" aria-hidden="true"></i>
@@ -41,10 +41,23 @@
   <section class="flex items-center justify-center bg-white p-8">
     <div class="w-full max-w-sm">
       <div class="mb-8 md:hidden">
-        <a href="index.html" class="text-sm font-semibold text-navy">&#8592; Kembali ke Utama</a>
+        <a href="/index.html" class="text-sm font-semibold text-navy">&#8592; Kembali ke Utama</a>
       </div>
       <h1 class="text-3xl font-extrabold tracking-tight text-navy">CAKRAWALA</h1>
       <p class="mt-2 text-sm text-slate-500">Masuk dengan akun terdaftar untuk melanjutkan.</p>
+
+      <!-- Panel status: muncul otomatis bila pengguna sudah login -->
+      <div id="alreadyLoggedInPanel" class="mt-6 hidden rounded-xl border border-blue-200 bg-blue-50 p-4">
+        <p class="text-sm font-semibold text-navy">
+          Anda sudah masuk sebagai <span id="alreadyLoggedInRole" class="uppercase">pengguna</span>.
+        </p>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <a id="btnGoDashboard" href="/login.html"
+            class="rounded-lg bg-navy px-4 py-2 text-sm font-bold text-white transition hover:bg-blue-900">Buka Dashboard</a>
+          <button id="navLogoutButton" type="button"
+            class="rounded-lg border border-navy px-4 py-2 text-sm font-bold text-navy transition hover:bg-blue-100">Keluar</button>
+        </div>
+      </div>
 
       <form id="loginForm" class="mt-8 space-y-5" novalidate>
         <label class="block">
