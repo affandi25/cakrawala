@@ -1,21 +1,21 @@
 
 /**
  * CAKRAWALA Digital Library - Modul Form User (Tambah & Edit Pengguna)
- * File: public/admin/modules/modalUser.js
+ * File: public/admin/modules/modals/modalUser.js
  * 
  * Tanggung Jawab:
  * - Menampilkan form dialog tambah pengguna baru / edit data & reset password
  * - Mode dinamis: Menyesuaikan field form berdasarkan role aktif (Siswa, Guru, Petugas)
- * - Pratinjau dan upload pasfoto profil resmi ke Supabase Storage
+ * - Pendaftaran akun baru dengan kredensial & password default (123456)
  * - Penanganan transaksi database Supabase (data_user + data_siswa/data_guru/data_petugas)
  * - Otomatis refresh tabel dan metrik KPI ringkasan setelah penyimpanan
  */
 
-import { db } from '../../assets/js/supabaseClient.js';
-import { showToast, escapeHtml } from '../../assets/js/sharedUtils.js';
-import { state, TAB_CONFIGS, DOM } from './state.js';
-import { loadData, refreshAllBadges, generateUserId } from './data.js';
-import { loadKpiStats } from './0-overview/kpiMetrics.js';
+import { db } from '../../../assets/js/supabaseClient.js';
+import { showToast, escapeHtml } from '../../../assets/js/sharedUtils.js';
+import { state, TAB_CONFIGS, DOM } from '../core/state.js';
+import { loadData, refreshAllBadges, generateUserId } from '../core/data.js';
+import { loadKpiStats } from '../0-overview/kpiMetrics.js';
 
 let modalListenersAttached = false;
 
@@ -71,25 +71,18 @@ export function openAddModal() {
   if (starPassword) starPassword.classList.remove('hidden');
   if (inputPass) {
     inputPass.required = true;
-    inputPass.placeholder = 'Minimal 6 karakter';
+    inputPass.value = 'Password123';
+    inputPass.placeholder = 'Default: password123';
+    inputPass.type = 'password';
   }
+  const iconTogglePass = DOM.iconToggleModalPassword || document.getElementById('iconToggleModalPassword');
+  if (iconTogglePass) iconTogglePass.className = 'ph ph-eye';
   if (passHelp) {
-    passHelp.textContent = 'Password autentikasi pengguna.';
+    passHelp.textContent = 'Password default diset: password123 (Pengguna dapat mengubahnya saat login).';
   }
   if (btnSubmitText) {
     btnSubmitText.textContent = 'Simpan Pengguna';
   }
-
-  // Reset Pasfoto Preview ke Default
-  const avatarPreview = DOM.adminUserAvatarPreview || document.getElementById('adminUserAvatarPreview');
-  const btnRemovePhoto = DOM.btnRemoveAdminUserPhoto || document.getElementById('btnRemoveAdminUserPhoto');
-  const photoInput = DOM.inputAdminUserPhoto || document.getElementById('inputAdminUserPhoto');
-  if (avatarPreview) {
-    avatarPreview.innerHTML = '<i class="ph-fill ph-user text-3xl text-white"></i>';
-    avatarPreview.className = 'flex h-16 w-16 items-center justify-center rounded-2xl bg-navy text-white text-base font-black shadow-sm overflow-hidden border-2 border-white';
-  }
-  if (btnRemovePhoto) btnRemovePhoto.classList.add('hidden');
-  if (photoInput) photoInput.value = '';
 
   // Render Form Fields Dinamis Berdasarkan Tab Aktif
   if (state.activeTab === 'siswa') {
@@ -380,33 +373,15 @@ export function openEditModal(item) {
     inputPass.required = false;
     inputPass.value = '';
     inputPass.placeholder = 'Kosongkan jika tidak ingin mengubah password';
+    inputPass.type = 'password';
   }
+  const iconTogglePassEdit = DOM.iconToggleModalPassword || document.getElementById('iconToggleModalPassword');
+  if (iconTogglePassEdit) iconTogglePassEdit.className = 'ph ph-eye';
   if (passHelp) {
     passHelp.textContent = 'Biarkan kosong untuk mempertahankan password lama.';
   }
   if (btnSubmitText) {
     btnSubmitText.textContent = 'Simpan Perubahan';
-  }
-
-  // Setup Pasfoto Preview saat Edit
-  const avatarPreview = DOM.adminUserAvatarPreview || document.getElementById('adminUserAvatarPreview');
-  const btnRemovePhoto = DOM.btnRemoveAdminUserPhoto || document.getElementById('btnRemoveAdminUserPhoto');
-  const photoInput = DOM.inputAdminUserPhoto || document.getElementById('inputAdminUserPhoto');
-  if (photoInput) photoInput.value = '';
-
-  const currentFoto = item.foto_profil || null;
-  const displayName = item.nama_siswa || item.nama_guru || item.nama_petugas || 'U';
-  const initials = displayName.substring(0, 2).toUpperCase();
-
-  if (avatarPreview) {
-    if (currentFoto && typeof currentFoto === 'string' && currentFoto.trim() !== '') {
-      avatarPreview.innerHTML = `<img src="${currentFoto}" alt="Avatar" class="h-full w-full object-cover" />`;
-      if (btnRemovePhoto) btnRemovePhoto.classList.remove('hidden');
-    } else {
-      avatarPreview.innerHTML = `<span class="text-base font-black">${initials}</span>`;
-      avatarPreview.className = 'flex h-16 w-16 items-center justify-center rounded-2xl bg-navy text-white text-base font-black shadow-sm overflow-hidden border-2 border-white';
-      if (btnRemovePhoto) btnRemovePhoto.classList.add('hidden');
-    }
   }
 
   // Render Field Sesuai Tab
@@ -682,6 +657,10 @@ export function closeAddModal() {
   setTimeout(() => {
     if (modalEl) modalEl.classList.add('hidden');
     if (formEl) formEl.reset();
+    const inputPass = DOM.inputPassword || document.getElementById('inputPassword');
+    const iconTogglePass = DOM.iconToggleModalPassword || document.getElementById('iconToggleModalPassword');
+    if (inputPass) inputPass.type = 'password';
+    if (iconTogglePass) iconTogglePass.className = 'ph ph-eye';
     state.modalMode = 'add';
     state.editingRecord = null;
   }, 200);
@@ -741,30 +720,7 @@ export async function handleAddUserSubmit(event) {
         throw new Error(userError.message || 'Gagal memperbarui data login pengguna.');
       }
 
-      // 2. Upload Pasfoto Resmi Jika Ada Perubahan
-      let uploadedFotoUrl = editingRecord.foto_profil || null;
-      const photoInput = DOM.inputAdminUserPhoto || document.getElementById('inputAdminUserPhoto');
-      if (photoInput && photoInput.files && photoInput.files[0]) {
-        const file = photoInput.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${editingRecord.id_user}_${Date.now()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
-
-        const { error: uploadError } = await db.storage
-          .from('avatars')
-          .upload(filePath, file, { upsert: true });
-
-        if (!uploadError) {
-          const { data: publicUrlData } = db.storage
-            .from('avatars')
-            .getPublicUrl(filePath);
-          if (publicUrlData && publicUrlData.publicUrl) {
-            uploadedFotoUrl = publicUrlData.publicUrl;
-          }
-        }
-      }
-
-      // 3. Update tabel data_siswa / data_guru / data_petugas
+      // 2. Update tabel data_siswa / data_guru / data_petugas (Pertahankan foto_profil yang sudah ada)
       let updateError = null;
       if (state.activeTab === 'siswa') {
         const payload = {
@@ -773,7 +729,7 @@ export async function handleAddUserSubmit(event) {
           email_siswa: formData.get('email_siswa'),
           kontak_siswa: formData.get('kontak_siswa')
         };
-        if (uploadedFotoUrl) payload.foto_profil = uploadedFotoUrl;
+        if (editingRecord.foto_profil) payload.foto_profil = editingRecord.foto_profil;
 
         const { error } = await db
           .from('data_siswa')
@@ -788,7 +744,7 @@ export async function handleAddUserSubmit(event) {
           email_guru: formData.get('email_guru'),
           kontak_guru: formData.get('kontak_guru')
         };
-        if (uploadedFotoUrl) payload.foto_profil = uploadedFotoUrl;
+        if (editingRecord.foto_profil) payload.foto_profil = editingRecord.foto_profil;
 
         const { error } = await db
           .from('data_guru')
@@ -802,7 +758,6 @@ export async function handleAddUserSubmit(event) {
           email_petugas: formData.get('email_petugas'),
           kontak_petugas: formData.get('kontak_petugas')
         };
-        if (uploadedFotoUrl) payload.foto_profil = uploadedFotoUrl;
 
         const { error } = await db
           .from('data_petugas')
@@ -842,7 +797,9 @@ export async function handleAddUserSubmit(event) {
     return;
   }
 
-  if (!password || password.length < 6) {
+  const effectivePassword = (password && password.trim() !== '') ? password.trim() : 'Password123';
+
+  if (effectivePassword.length < 6) {
     showModalFormError('Password minimal harus 6 karakter.');
     return;
   }
@@ -854,14 +811,14 @@ export async function handleAddUserSubmit(event) {
 
     const roleDb = role === 'siswa' ? 'Siswa' : role === 'guru' ? 'Guru' : 'Petugas';
 
-    // 1. Insert data_user
+    // 1. Insert data_user dengan sandi default / custom
     const { error: userError } = await db
       .from('data_user')
       .insert([
         {
           id_user: idUser,
           username: username,
-          password: password,
+          password: effectivePassword,
           role: roleDb
         }
       ]);
@@ -873,30 +830,7 @@ export async function handleAddUserSubmit(event) {
       throw new Error(userError.message || 'Gagal mendaftarkan akun login pengguna.');
     }
 
-    // 2. Upload Pasfoto Jika Dipilih
-    let uploadedFotoUrl = null;
-    const photoInput = DOM.inputAdminUserPhoto || document.getElementById('inputAdminUserPhoto');
-    if (photoInput && photoInput.files && photoInput.files[0]) {
-      const file = photoInput.files[0];
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${idUser}_${Date.now()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
-
-      const { error: uploadError } = await db.storage
-        .from('avatars')
-        .upload(filePath, file, { upsert: true });
-
-      if (!uploadError) {
-        const { data: publicUrlData } = db.storage
-          .from('avatars')
-          .getPublicUrl(filePath);
-        if (publicUrlData && publicUrlData.publicUrl) {
-          uploadedFotoUrl = publicUrlData.publicUrl;
-        }
-      }
-    }
-
-    // 3. Insert entitas profil spesifik
+    // 2. Insert entitas profil spesifik (foto_profil null, default WhatsApp avatar)
     let profileError = null;
 
     if (role === 'siswa') {
@@ -906,9 +840,9 @@ export async function handleAddUserSubmit(event) {
         kelas: formData.get('kelas'),
         email_siswa: formData.get('email_siswa'),
         kontak_siswa: formData.get('kontak_siswa'),
+        foto_profil: null,
         id_user: idUser
       };
-      if (uploadedFotoUrl) payload.foto_profil = uploadedFotoUrl;
 
       const { error } = await db.from('data_siswa').insert([payload]);
       profileError = error;
@@ -920,9 +854,9 @@ export async function handleAddUserSubmit(event) {
         mata_pelajaran: formData.get('mata_pelajaran'),
         email_guru: formData.get('email_guru'),
         kontak_guru: formData.get('kontak_guru'),
+        foto_profil: null,
         id_user: idUser
       };
-      if (uploadedFotoUrl) payload.foto_profil = uploadedFotoUrl;
 
       const { error } = await db.from('data_guru').insert([payload]);
       profileError = error;
@@ -935,7 +869,6 @@ export async function handleAddUserSubmit(event) {
         kontak_petugas: formData.get('kontak_petugas'),
         id_user: idUser
       };
-      if (uploadedFotoUrl) payload.foto_profil = uploadedFotoUrl;
 
       const { error } = await db.from('data_petugas').insert([payload]);
       profileError = error;
@@ -993,9 +926,6 @@ export function setupModalUserListeners() {
   const btnTogglePass = DOM.btnToggleModalPassword || document.getElementById('btnToggleModalPassword');
   const inputPass = DOM.inputPassword || document.getElementById('inputPassword');
   const iconTogglePass = DOM.iconToggleModalPassword || document.getElementById('iconToggleModalPassword');
-  const inputPhoto = DOM.inputAdminUserPhoto || document.getElementById('inputAdminUserPhoto');
-  const btnRemovePhoto = DOM.btnRemoveAdminUserPhoto || document.getElementById('btnRemoveAdminUserPhoto');
-  const avatarPreview = DOM.adminUserAvatarPreview || document.getElementById('adminUserAvatarPreview');
 
   if (btnCancel) btnCancel.addEventListener('click', closeAddModal);
   if (btnClose) btnClose.addEventListener('click', closeAddModal);
@@ -1013,42 +943,6 @@ export function setupModalUserListeners() {
       const isPassword = inputPass.type === 'password';
       inputPass.type = isPassword ? 'text' : 'password';
       iconTogglePass.className = isPassword ? 'ph ph-eye-slash' : 'ph ph-eye';
-    });
-  }
-
-  // Pasfoto Upload & Preview Handler
-  if (inputPhoto && avatarPreview) {
-    inputPhoto.addEventListener('change', (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-
-      if (!file.type.startsWith('image/')) {
-        showToast('File harus berupa gambar (JPG, PNG, atau WebP).', 'warning');
-        inputPhoto.value = '';
-        return;
-      }
-
-      if (file.size > 2 * 1024 * 1024) {
-        showToast('Ukuran gambar maksimal 2 MB.', 'warning');
-        inputPhoto.value = '';
-        return;
-      }
-
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        avatarPreview.innerHTML = `<img src="${event.target.result}" alt="Preview Foto" class="h-full w-full object-cover" />`;
-        if (btnRemovePhoto) btnRemovePhoto.classList.remove('hidden');
-      };
-      reader.readAsDataURL(file);
-    });
-  }
-
-  if (btnRemovePhoto && avatarPreview && inputPhoto) {
-    btnRemovePhoto.addEventListener('click', () => {
-      inputPhoto.value = '';
-      avatarPreview.innerHTML = '<i class="ph-fill ph-user text-3xl text-white"></i>';
-      avatarPreview.className = 'flex h-16 w-16 items-center justify-center rounded-2xl bg-navy text-white text-base font-black shadow-sm overflow-hidden border-2 border-white';
-      btnRemovePhoto.classList.add('hidden');
     });
   }
 }

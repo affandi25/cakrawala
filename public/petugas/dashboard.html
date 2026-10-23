@@ -5,14 +5,13 @@
   File: public/petugas/dashboard.html
   
   STRUKTUR KOMPONEN MODULAR TAHAP 1:
-  - components/sidebar.html              : Sidebar navigasi desktop & bilah menu mobile
-  - components/header.html               : Topbar judul meja kerja & breadcrumb
+  - components/layout/sidebar.html       : Sidebar navigasi desktop & bilah menu mobile
+  - components/layout/header.html        : Topbar judul meja kerja & breadcrumb
   - components/tabs/tab-overview.html    : Meja 1 - Statistik, ringkasan, dan kartu metrik
   - components/tabs/tab-sirkulasi.html   : Meja 2 - Antrean prapinjam & peminjaman walk-in
   - components/tabs/tab-pengembalian.html: Meja 3 - Pengembalian buku & kalkulator denda
   - components/tabs/tab-inventaris.html  : Meja 4 - Master katalog & cetak stiker QR
-  - components/tabs/tab-pengumuman.html  : Meja 5 - Kelola agenda & broadcast pengumuman
-  - components/modals.html               : Jendela pop-up modal dialog sistem
+  - components/modals/                   : Jendela-jendela modal dialog sistem terpusat
   =============================================================================================
 -->
 <html lang="id">
@@ -86,12 +85,12 @@
 <body class="bg-slate-50 font-sans text-slate-800 antialiased h-screen overflow-hidden flex flex-col md:flex-row selection:bg-navy selection:text-white">
 
   <!-- 1. Navigasi Sidebar & Header Mobile -->
-  <include src="./components/sidebar.html" />
+  <include src="./components/layout/sidebar.html" />
 
   <!-- 2. Area Konten Utama Meja Kerja (Independent Scroll Viewport) -->
   <div class="flex-1 flex flex-col min-w-0 h-full overflow-y-auto">
     <!-- Header Atas Dinamis: Breadcrumb & Judul Meja -->
-    <include src="./components/header.html" />
+    <include src="./components/layout/header.html" />
 
     <!-- Ruang Kerja Utama (5 Meja Operasional) -->
     <main class="flex-1 p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl w-full mx-auto">
@@ -113,7 +112,12 @@
   </div>
 
   <!-- Jendela-Jendela Modal Pop-up Terpusat -->
-  <include src="./components/modals.html" />
+  <include src="./components/modals/modal-buku.html" />
+  <include src="./components/modals/modal-scanner.html" />
+  <include src="./components/modals/modal-sirkulasi.html" />
+  <include src="./components/modals/modal-pengembalian.html" />
+  <include src="./components/modals/modal-pengumuman.html" />
+  <include src="./components/modals/modal-logout.html" />
 
   <!-- Toast Notification Container -->
   <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 pointer-events-none max-w-sm w-full" aria-live="polite"></div>

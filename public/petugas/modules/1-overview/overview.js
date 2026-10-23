@@ -17,71 +17,45 @@ import { state } from '../core/state.js';
 import { formatRupiah, formatTanggalIndo, getBorrowerInfo } from '../core/petugasHelper.js';
 
 let isOverviewSetup = false;
-let clockIntervalId = null;
 
 /**
- * Menghitung status jam operasional meja (07.30 - 15.30 WIB)
- */
-export function updateOperatingHoursBadge() {
-  const clockEl = document.getElementById('clockCurrentTime');
-  const badgeEl = document.getElementById('badgeStatusLayanan');
-  const dateBadgeEl = document.getElementById('overviewDateBadge');
-
-  const now = new Date();
-  const day = now.getDay(); // 0 = Minggu, 6 = Sabtu
-  const hours = now.getHours();
-  const minutes = now.getMinutes();
-  const seconds = now.getSeconds();
-
-  const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} WIB`;
-  if (clockEl) clockEl.textContent = timeString;
-
-  if (dateBadgeEl) {
-    dateBadgeEl.textContent = formatTanggalIndo(now.toISOString().split('T')[0]);
-  }
-
-  // Jam operasional: Senin - Jumat, 07:30 - 15:30 WIB
-  const currentTotalMinutes = hours * 60 + minutes;
-  const openMinutes = 7 * 60 + 30;   // 07:30
-  const closeMinutes = 15 * 60 + 30; // 15:30
-  const isWeekday = day >= 1 && day <= 5;
-  const isOpen = isWeekday && currentTotalMinutes >= openMinutes && currentTotalMinutes < closeMinutes;
-
-  if (badgeEl) {
-    if (isOpen) {
-      badgeEl.className = 'inline-flex items-center gap-1 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold text-emerald-800';
-      badgeEl.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span> Layanan Meja Buka';
-    } else {
-      badgeEl.className = 'inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-600';
-      badgeEl.innerHTML = '<span class="h-1.5 w-1.5 rounded-full bg-slate-400"></span> Layanan Meja Tutup';
-    }
-  }
-}
-
-/**
- * Menyiapkan jam dan event listener untuk Meja 1 Overview
+ * Menyiapkan shortcut banner dan event listener untuk Meja 1 Overview
  */
 export function setupOverviewModule() {
-  // Mulai jam operasional real-time
-  updateOperatingHoursBadge();
-  if (!clockIntervalId) {
-    clockIntervalId = setInterval(updateOperatingHoursBadge, 1000);
-  }
-
   if (isOverviewSetup) return;
   isOverviewSetup = true;
 
-  // 1. Tombol 'Buka Menu Sirkulasi Lengkap'
-  const btnLihatSemua = document.getElementById('btnLihatSemuaPrapinjam');
-  if (btnLihatSemua) {
-    btnLihatSemua.addEventListener('click', () => {
-      if (typeof window.switchTab === 'function') {
-        window.switchTab('sirkulasi');
-      }
+  // 1. Pintasan Cepat dari Banner Sambutan Petugas
+  const btnQuickSirkulasi = document.getElementById('btnQuickToSirkulasi');
+  if (btnQuickSirkulasi) {
+    btnQuickSirkulasi.addEventListener('click', () => {
+      if (typeof window.switchTab === 'function') window.switchTab('sirkulasi');
     });
   }
 
-  // 2. Shortcut Card 1: Total Judul Buku -> Buka Meja Inventaris
+  const btnQuickPengembalian = document.getElementById('btnQuickToPengembalian');
+  if (btnQuickPengembalian) {
+    btnQuickPengembalian.addEventListener('click', () => {
+      if (typeof window.switchTab === 'function') window.switchTab('pengembalian');
+    });
+  }
+
+  const btnQuickInventaris = document.getElementById('btnQuickToInventaris');
+  if (btnQuickInventaris) {
+    btnQuickInventaris.addEventListener('click', () => {
+      if (typeof window.switchTab === 'function') window.switchTab('inventaris');
+    });
+  }
+
+  // 2. Tombol 'Buka Menu Sirkulasi Lengkap'
+  const btnLihatSemua = document.getElementById('btnLihatSemuaPrapinjam');
+  if (btnLihatSemua) {
+    btnLihatSemua.addEventListener('click', () => {
+      if (typeof window.switchTab === 'function') window.switchTab('sirkulasi');
+    });
+  }
+
+  // 3. Shortcut Card 1: Total Judul Buku -> Buka Meja Inventaris
   const cardBuku = document.getElementById('cardOverviewBuku');
   if (cardBuku) {
     cardBuku.addEventListener('click', () => {
@@ -89,7 +63,7 @@ export function setupOverviewModule() {
     });
   }
 
-  // 3. Shortcut Card 2: Peminjaman Aktif -> Buka Meja Sirkulasi
+  // 4. Shortcut Card 2: Peminjaman Aktif -> Buka Meja Sirkulasi
   const cardDipinjam = document.getElementById('cardOverviewDipinjam');
   if (cardDipinjam) {
     cardDipinjam.addEventListener('click', () => {
@@ -97,7 +71,7 @@ export function setupOverviewModule() {
     });
   }
 
-  // 4. Shortcut Card 3: Antrean Prapinjam -> Buka Meja Sirkulasi
+  // 5. Shortcut Card 3: Antrean Prapinjam -> Buka Meja Sirkulasi
   const cardPrapinjam = document.getElementById('cardOverviewPrapinjam');
   if (cardPrapinjam) {
     cardPrapinjam.addEventListener('click', () => {
@@ -105,7 +79,7 @@ export function setupOverviewModule() {
     });
   }
 
-  // 5. Shortcut Card 4: Kas Denda Tertunda -> Buka Meja Pengembalian & Denda
+  // 6. Shortcut Card 4: Kas Denda Tertunda -> Buka Meja Pengembalian & Denda
   const cardDenda = document.getElementById('cardOverviewDenda');
   if (cardDenda) {
     cardDenda.addEventListener('click', () => {
@@ -118,6 +92,13 @@ export function setupOverviewModule() {
  * Menghitung dan merender angka metrik KPI di Meja 1
  */
 export function renderOverview() {
+  // 0. Sinkronisasi Nama Sambutan Petugas
+  const welcomeEl = document.getElementById('welcomeOfficerName');
+  if (welcomeEl) {
+    const officerName = state.officerProfile?.nama_petugas || state.currentUser?.username || 'Petugas Perpustakaan';
+    welcomeEl.textContent = officerName;
+  }
+
   // 1. Metrik Koleksi Buku
   const totalJudul = (state.cache.buku || []).length;
   const totalEksemplar = (state.cache.buku || []).reduce((acc, b) => acc + (Number(b.stok) || 0), 0);

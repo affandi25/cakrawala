@@ -9,13 +9,13 @@
  * - Memperbarui badge indikator jumlah di navigasi/sidebar
  */
 
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import {
   showToast,
   getUserActiveLoansCount,
   getActiveUserLoanForBook,
   MAX_ACTIVE_LOANS
-} from '../siswaHelper.js';
+} from '../core/siswaHelper.js';
 
 // Memori internal keranjang pra-pinjam
 if (!state.cart) {

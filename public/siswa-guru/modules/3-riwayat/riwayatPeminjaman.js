@@ -15,14 +15,13 @@
  */
 
 import { db } from '../../../assets/js/supabaseClient.js';
-import { state } from '../state.js';
+import { state } from '../core/state.js';
 import {
   formatRupiah,
   formatTanggalIndo,
-  getTodayDateString,
-  calculateDateDiffInDays,
   escapeHtml,
-  showToast
+  showToast,
+  getTarifDendaHarian
 } from '../../../assets/js/sharedUtils.js';
 
 let isRiwayatModuleSetup = false;
@@ -120,7 +119,8 @@ export function calculateDendaEstimasi(batasKembaliStr, hargaBuku = 50000) {
     const lateDays = Math.abs(diffDays);
     const isMonthOverdue = lateDays >= 30;
     const nominalHarga = Number(hargaBuku) || 50000;
-    const denda = isMonthOverdue ? nominalHarga : (lateDays * 1000);
+    const tarifHarian = getTarifDendaHarian();
+    const denda = isMonthOverdue ? nominalHarga : (lateDays * tarifHarian);
     return {
       denda,
       lateDays,

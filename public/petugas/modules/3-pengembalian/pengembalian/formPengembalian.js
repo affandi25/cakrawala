@@ -8,9 +8,9 @@
  * - eksekusiPengembalian.js: Penyimpanan pengembalian ke Supabase & pemulihan stok
  */
 
-import { state } from '../core/state.js';
-import { getTodayDateString, showToast } from '../core/petugasHelper.js';
-import { syncAllData } from '../core/syncData.js';
+import { state } from '../../core/state.js';
+import { getTodayDateString, showToast, formatRupiah, getTarifDendaHarian } from '../../core/petugasHelper.js';
+import { syncAllData } from '../../core/syncData.js';
 import {
   renderBorrowerSearchResults,
   filterPengembalianByName,
@@ -116,9 +116,10 @@ export function setupPengembalianForm() {
     radio.addEventListener('change', recalculateDenda);
   });
 
-  const inputTarifDenda = document.getElementById('inputTarifDendaPerHari');
-  if (inputTarifDenda) {
-    inputTarifDenda.addEventListener('input', recalculateDenda);
+  // Inisialisasi teks tampilan tarif kebijakan aktif pada formulir pengembalian
+  const displayTarifAktifForm = document.getElementById('displayTarifAktifForm');
+  if (displayTarifAktifForm) {
+    displayTarifAktifForm.textContent = `${formatRupiah(getTarifDendaHarian())} / hari`;
   }
 
   if (btnSubmit) {

@@ -155,6 +155,38 @@ export function openQrCodeModal(bookId) {
     }
   }
 
+  // Sinkronkan juga ke wadah cetak stiker fisik (@media print)
+  const printId = document.getElementById('printBookId');
+  const printTitle = document.getElementById('printBookTitle');
+  const printAuthor = document.getElementById('printBookAuthor');
+  const printCat = document.getElementById('printBookCategory');
+  const printShelf = document.getElementById('printBookShelf');
+  const printQrContainer = document.getElementById('printQrTargetCanvas');
+
+  if (printId) printId.textContent = book.id_buku;
+  if (printTitle) printTitle.textContent = book.judul_buku;
+  if (printAuthor) printAuthor.textContent = `${book.penulis} (${book.tahun_terbit})`;
+  if (printCat) printCat.textContent = kategori ? kategori.nama_kategori : 'Koleksi Umum';
+  if (printShelf) printShelf.textContent = book.keterangan || 'Rak Umum';
+
+  if (printQrContainer) {
+    printQrContainer.innerHTML = '';
+    if (typeof QRCode !== 'undefined') {
+      try {
+        new QRCode(printQrContainer, {
+          text: qrText,
+          width: 120,
+          height: 120,
+          colorDark: '#000000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel ? QRCode.CorrectLevel.H : 2
+        });
+      } catch (err) {
+        console.error('Gagal render print QR:', err);
+      }
+    }
+  }
+
   showModal(modal, content);
 }
 

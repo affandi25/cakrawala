@@ -1,6 +1,6 @@
 /**
  * CAKRAWALA Digital Library - Utility Helpers Dashboard Siswa & Guru
- * File: public/siswa-guru/modules/siswaHelper.js
+ * File: public/siswa-guru/modules/core/siswaHelper.js
  */
 
 import { state } from './state.js';
@@ -14,8 +14,11 @@ export {
   escapeHtml,
   showModal,
   hideModal,
-  showToast
-} from '../../assets/js/sharedUtils.js';
+  showToast,
+  getTarifDendaHarian,
+  setTarifDendaHarian,
+  fetchTarifDendaFromDB
+} from '../../../assets/js/sharedUtils.js';
 
 /**
  * Batas maksimal kuota peminjaman aktif per anggota (dipinjam + tiket antrean)
@@ -43,9 +46,11 @@ export function getUserActiveLoansCount() {
 export function getActiveUserLoanForBook(bookId) {
   const memberId = state.memberId;
   const loans = state.cache.peminjaman || [];
+  const cleanId = String(bookId || '').trim().toLowerCase();
   return loans.find(p => {
     const isUser = !memberId || p.nisn_siswa === memberId;
-    return isUser && p.id_buku === bookId && (p.status === 'Menunggu' || p.status === 'Dipinjam');
+    const isBook = String(p.id_buku || '').trim().toLowerCase() === cleanId;
+    return isUser && isBook && (p.status === 'Menunggu' || p.status === 'Dipinjam');
   }) || null;
 }
 
@@ -79,6 +84,7 @@ export function getRemainingDays(batasKembaliStr) {
   } else if (diffDays === 0) {
     return {
       days: 0,
+      lateDays: 0,
       isOverdue: false,
       text: 'Batas Tempo Hari Ini!',
       badgeClass: 'bg-amber-100 text-amber-800 border-amber-200'
@@ -86,6 +92,7 @@ export function getRemainingDays(batasKembaliStr) {
   } else if (diffDays <= 2) {
     return {
       days: diffDays,
+      lateDays: 0,
       isOverdue: false,
       text: `Sisa ${diffDays} Hari Lagi`,
       badgeClass: 'bg-amber-100 text-amber-800 border-amber-200'
@@ -93,6 +100,7 @@ export function getRemainingDays(batasKembaliStr) {
   } else {
     return {
       days: diffDays,
+      lateDays: 0,
       isOverdue: false,
       text: `Sisa ${diffDays} Hari`,
       badgeClass: 'bg-emerald-100 text-emerald-800 border-emerald-200'

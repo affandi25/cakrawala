@@ -10,8 +10,8 @@
  * - Menghubungkan pintasan tombol aksi cepat (Quick to Katalog, Quick to Pinjaman, Quick to Kartu)
  */
 
-import { state } from '../state.js';
-import { formatRupiah, formatTanggalIndo, getRemainingDays } from '../siswaHelper.js';
+import { state } from '../core/state.js';
+import { formatRupiah, formatTanggalIndo, getRemainingDays } from '../core/siswaHelper.js';
 
 /**
  * Menyiapkan pendengar aksi cepat (Quick Action Buttons) di Beranda

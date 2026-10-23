@@ -1,12 +1,12 @@
 /**
  * CAKRAWALA Digital Library - Data Synchronization Admin Module
- * File: public/admin/modules/data.js
+ * File: public/admin/modules/core/data.js
  */
 
-import { db } from '../../assets/js/supabaseClient.js';
+import { db } from '../../../assets/js/supabaseClient.js';
 import { state, DOM } from './state.js';
 import { renderTable, renderTableError, updateBadge } from './table.js';
-import { loadKpiStats } from './0-overview/kpiMetrics.js';
+import { loadKpiStats } from '../0-overview/kpiMetrics.js';
 
 export { loadKpiStats };
 
@@ -86,7 +86,7 @@ export async function fetchGuru() {
 export async function fetchPetugas() {
   const { data, error } = await db
     .from('data_petugas')
-    .select('id_petugas, nama_petugas, email_petugas, kontak_petugas, foto_profil, id_user, data_user(id_user, username, role)')
+    .select('id_petugas, nama_petugas, email_petugas, kontak_petugas, id_user, data_user(id_user, username, role)')
     .order('nama_petugas', { ascending: true });
 
   if (error) throw error;

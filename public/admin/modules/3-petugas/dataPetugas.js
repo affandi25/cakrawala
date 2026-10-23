@@ -11,66 +11,13 @@
 
 import { db } from '../../../assets/js/supabaseClient.js';
 import { escapeHtml } from '../../../assets/js/sharedUtils.js';
-import { state } from '../state.js';
-import { openAddModal, openEditModal } from '../modalUser.js';
-import { openDeleteModal } from '../modalKonfirmasi.js';
-import { updateBadge } from '../table.js';
+import { state } from '../core/state.js';
+import { openAddModal, openEditModal } from '../modals/modalUser.js';
+import { openDeleteModal } from '../modals/modalKonfirmasi.js';
+import { updateBadge, renderAvatarThumb } from '../core/table.js';
+import { enrichWithUserData } from '../core/data.js';
 
 let searchListenerAttached = false;
-
-/**
- * Render thumbnail pasfoto resmi petugas dengan inisial fallback
- */
-function renderPetugasAvatarThumb(fotoUrl, name) {
-  const initials = name ? name.substring(0, 2).toUpperCase() : 'PT';
-  if (fotoUrl && typeof fotoUrl === 'string' && fotoUrl.trim() !== '') {
-    return `
-      <div class="h-8 w-8 shrink-0 rounded-xl overflow-hidden bg-slate-100 border border-slate-200/80 shadow-2xs">
-        <img src="${fotoUrl}" alt="${escapeHtml(name)}" class="h-full w-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<span class=\\'text-[11px] font-bold text-white\\'>${initials}</span>'; this.parentElement.className='h-8 w-8 shrink-0 rounded-xl bg-indigo-700 text-white flex items-center justify-center font-bold text-[11px] shadow-2xs';" />
-      </div>
-    `;
-  }
-  return `
-    <div class="h-8 w-8 shrink-0 rounded-xl bg-indigo-700 text-white flex items-center justify-center font-bold text-[11px] shadow-2xs">
-      ${initials}
-    </div>
-  `;
-}
-
-/**
- * Helper untuk memastikan relasi data_user terhubung dengan aman
- */
-async function enrichPetugasWithUserData(rows) {
-  if (!rows || rows.length === 0) return rows;
-
-  const needsFallback = rows.some(r => r.id_user && (!r.data_user || typeof r.data_user !== 'object'));
-  if (!needsFallback) return rows;
-
-  try {
-    const userIds = rows.map(r => r.id_user).filter(Boolean);
-    if (userIds.length === 0) return rows;
-
-    const { data: users, error } = await db
-      .from('data_user')
-      .select('id_user, username, role')
-      .in('id_user', userIds);
-
-    if (!error && users) {
-      const userMap = {};
-      users.forEach(u => { userMap[u.id_user] = u; });
-
-      rows.forEach(r => {
-        if (!r.data_user && r.id_user && userMap[r.id_user]) {
-          r.data_user = userMap[r.id_user];
-        }
-      });
-    }
-  } catch (err) {
-    console.warn('[DataPetugas] Fallback query data_user error:', err);
-  }
-
-  return rows;
-}
 
 /**
  * Mengambil data petugas dari Supabase
@@ -79,7 +26,7 @@ export async function fetchPetugas() {
   console.log('[DataPetugas] Mengambil data petugas dari database Supabase...');
   const { data, error } = await db
     .from('data_petugas')
-    .select('id_petugas, nama_petugas, email_petugas, kontak_petugas, foto_profil, id_user, data_user(id_user, username, role)')
+    .select('id_petugas, nama_petugas, email_petugas, kontak_petugas, id_user, data_user(id_user, username, role)')
     .order('nama_petugas', { ascending: true });
 
   if (error) {
@@ -87,7 +34,7 @@ export async function fetchPetugas() {
     throw error;
   }
 
-  const enriched = await enrichPetugasWithUserData(data || []);
+  const enriched = await enrichWithUserData(data || []);
   state.cache.petugas = enriched;
   updateBadge('petugas', enriched.length);
   return enriched;
@@ -202,7 +149,7 @@ export function renderTablePetugas(customData = null) {
         <td class="px-6 py-4 font-mono text-xs font-bold text-navy">${escapeHtml(row.id_petugas)}</td>
         <td class="px-6 py-4">
           <div class="flex items-center gap-3">
-            ${renderPetugasAvatarThumb(row.foto_profil, row.nama_petugas)}
+            ${renderAvatarThumb(row.foto_profil, row.nama_petugas)}
             <span class="font-bold text-slate-800">${escapeHtml(row.nama_petugas)}</span>
           </div>
         </td>

@@ -2,7 +2,7 @@ import { db } from './supabaseClient.js';
 import { getCurrentUser } from './auth.js';
 
 if (window.AOS) {
-  AOS.init({ once: true, offset: 60 });
+  AOS.init({ once: false, offset: 60 });
 }
 
 var bookData = {};
@@ -66,8 +66,8 @@ function openPinjamModal(bukuId) {
     return;
   }
 
-  // Jika sudah login, arahkan ke dashboard sesuai role (URL absolut agar benar
-  // walau halaman katalog diakses dari sub-folder).
+  // Jika sudah login, arahkan ke dashboard sesuai role. URL absolut dipakai agar
+  // pengalihan tetap benar walau halaman katalog diakses dari sub-folder.
   var userRole = (user.role ? String(user.role) : 'siswa').trim().toLowerCase();
 
   if (userRole === 'petugas') {
@@ -100,7 +100,7 @@ async function loadPengumuman() {
 
     container.innerHTML = data.map(function (item) {
       return `
-        <article class="announcement-card group relative flex-shrink-0 w-[380px] sm:w-[480px] h-[220px] snap-start flex">
+        <article data-aos="fade-up"class="announcement-card group relative flex-shrink-0 w-[380px] sm:w-[480px] h-[220px] snap-start flex" >
           <!-- Sisi Poster: Tampilan poster jernih natural tanpa aura/filter gradasi biru tua -->
           <div class="relative w-40 sm:w-48 h-full flex-shrink-0 overflow-hidden bg-slate-900">
             <img 

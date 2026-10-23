@@ -10,12 +10,12 @@
  * - Mendaftarkan fungsi switchTab ke window.switchTab & window.switchSiswaTab
  */
 
-import { state, TAB_CONFIGS } from './modules/state.js';
+import { state, TAB_CONFIGS } from './modules/core/state.js';
 import { initSessionAndMember, setupLogout } from '../assets/js/auth.js';
 
 // Modul Modular Baru
 import { setupBerandaModule, renderBeranda } from './modules/0-beranda/index.js';
-import { setupKatalogModule, renderKatalogGrid, openDetailModal } from './modules/1-katalog/index.js';
+import { setupKatalogModule, renderKatalogGrid, openDetailModal, checkUrlRedirectBooking } from './modules/1-katalog/index.js';
 import {
   setupPrapinjamModule,
   openBookingModal,
@@ -39,7 +39,7 @@ import {
   loadUserProfile,
   handleLogout
 } from './modules/4-profil/index.js';
-import { fetchAllMemberData } from './modules/data.js';
+import { fetchAllMemberData } from './modules/core/data.js';
 
 /**
  * Menyiapkan navigasi antar tab dan kontrol drawer menu mobile
@@ -212,6 +212,7 @@ export async function initSiswaGuru() {
   try {
     await fetchAllMemberData();
     renderBeranda();
+    await checkUrlRedirectBooking();
   } catch (err) {
     console.error('[siswaGuru] Gangguan sinkronisasi data Supabase:', err);
   }

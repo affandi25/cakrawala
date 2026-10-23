@@ -9,13 +9,13 @@
  * - Sinkronisasi preview buku dan opsi pengembalian legacy
  */
 
-import { state } from '../core/state.js';
+import { state } from '../../core/state.js';
 import {
   formatRupiah,
   formatTanggalIndo,
   showToast,
   getBorrowerInfo
-} from '../core/petugasHelper.js';
+} from '../../core/petugasHelper.js';
 import { recalculateDenda } from './kalkulatorDenda.js';
 
 /**

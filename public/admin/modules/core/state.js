@@ -1,6 +1,6 @@
 /**
  * CAKRAWALA Digital Library - State Management Admin Dashboard
- * File: public/admin/modules/state.js
+ * File: public/admin/modules/core/state.js
  */
 
 export const state = {

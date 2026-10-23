@@ -20,7 +20,7 @@
   </div>
   <!-- Tombol untuk membuka menu di layar HP (dihubungkan dengan JavaScript lewat id="btnToggleMobileSidebar") -->
   <button id="btnToggleMobileSidebar" type="button" aria-label="Buka menu navigasi"
-    class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy">
+    class="flex h-10 w-10 items-center justify-center rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-navy focus:outline-none focus:ring-2 focus:ring-navy cursor-pointer">
     <i class="ph ph-list text-2xl" id="iconMobileSidebar"></i>
   </button>
 </header>
@@ -47,7 +47,7 @@
       </div>
       <!-- Tombol silang (X) untuk menutup sidebar di layar HP -->
       <button id="btnCloseMobileSidebar" type="button" aria-label="Tutup menu navigasi"
-        class="md:hidden flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700">
+        class="md:hidden flex h-8 w-8 items-center justify-center rounded-lg text-slate-400 hover:bg-slate-100 hover:text-slate-700 cursor-pointer">
         <i class="ph ph-x text-lg"></i>
       </button>
     </div>
@@ -61,42 +61,37 @@
     <nav class="mt-3 space-y-1.5" aria-label="Navigasi Petugas Sirkulasi">
       <!-- 1. Tombol Meja Overview -->
       <button type="button" id="tabBtnOverview" data-tab="overview"
-        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 bg-navy text-white shadow-sm shadow-navy/20">
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 bg-navy text-white shadow-sm shadow-navy/20 cursor-pointer">
         <i class="ph ph-gauge text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
         <span class="flex-1 text-left">Overview</span>
       </button>
 
       <!-- 2. Tombol Meja Sirkulasi (Ada angka badge merah jika ada siswa memesan online) -->
       <button type="button" id="tabBtnSirkulasi" data-tab="sirkulasi"
-        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy cursor-pointer">
         <i class="ph ph-arrows-left-right text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
         <span class="flex-1 text-left">Sirkulasi Peminjaman</span>
-        <!-- Angka notifikasi antrean yang menunggu verifikasi -->
-
       </button>
 
       <!-- 3. Tombol Meja Pengembalian & Denda -->
       <button type="button" id="tabBtnPengembalian" data-tab="pengembalian"
-        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy cursor-pointer">
         <i class="ph ph-hand-coins text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
         <span class="flex-1 text-left">Pengembalian</span>
-
       </button>
 
       <!-- 4. Tombol Meja Inventaris Buku -->
       <button type="button" id="tabBtnInventaris" data-tab="inventaris"
-        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy cursor-pointer">
         <i class="ph ph-barcode text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
         <span class="flex-1 text-left">Inventaris Buku</span>
-
       </button>
 
       <!-- 5. Tombol Meja Kelola Pengumuman -->
       <button type="button" id="tabBtnPengumuman" data-tab="pengumuman"
-        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy">
+        class="nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy cursor-pointer">
         <i class="ph ph-megaphone text-xl transition-transform group-hover:scale-110" aria-hidden="true"></i>
         <span class="flex-1 text-left">Kelola Pengumuman</span>
-
       </button>
     </nav>
 
@@ -120,8 +115,8 @@
       title="Klik untuk melihat dan mengatur profil akun petugas"
       class="group flex w-full items-center gap-3 rounded-xl bg-slate-50 p-2.5 border border-slate-200/70 shadow-2xs hover:bg-slate-100 hover:border-slate-300 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-navy/20 cursor-pointer">
       <div id="petugasAvatarInitials"
-        class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-navy text-white text-xs font-bold shadow-sm overflow-hidden border border-slate-200/60">
-        PT
+        class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-2xs border border-slate-200/80">
+        <i class="ph-fill ph-user text-base text-slate-400"></i>
       </div>
       <div class="min-w-0 flex-1">
         <div class="flex items-center justify-between gap-1">
@@ -137,7 +132,7 @@
 
     <!-- Tombol Keluar Sistem (Logout) -->
     <button type="button" id="btnLogout"
-      class="group flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400">
+      class="group flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus:ring-2 focus:ring-rose-400 cursor-pointer">
       <i class="ph ph-sign-out text-xl transition-transform group-hover:-translate-x-0.5" aria-hidden="true"></i>
       <span>Keluar Sistem</span>
     </button>

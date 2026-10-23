@@ -9,8 +9,8 @@
  * - Menangani tombol cepat menuju pengajuan pra-pinjam / booking
  */
 
-import { state } from '../state.js';
-import { formatRupiah, showModal, hideModal, showToast } from '../../../assets/js/sharedUtils.js';
+import { state } from '../core/state.js';
+import { formatRupiah, showModal, hideModal } from '../../../assets/js/sharedUtils.js';
 import { MAX_ACTIVE_LOANS, getUserActiveLoansCount, getActiveUserLoanForBook } from './katalogBuku.js';
 
 let isDetailModalSetup = false;

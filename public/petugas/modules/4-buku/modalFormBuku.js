@@ -12,11 +12,11 @@
 import { db } from '../../../assets/js/supabaseClient.js';
 import { state } from '../core/state.js';
 import {
-  generateRandomId,
   fileToDataUrl,
   showModal,
   hideModal,
-  showToast
+  showToast,
+  deleteStorageFileByUrl
 } from '../core/petugasHelper.js';
 import { syncAllTables } from '../core/syncData.js';
 
@@ -438,6 +438,13 @@ async function handleBookFormSubmit() {
       };
       if (finalCoverUrl) {
         updatePayload.cover_url = finalCoverUrl;
+        // Bersihkan berkas cover lama dari Supabase Storage jika diganti baru
+        if (state.selectedCoverFile) {
+          const oldBook = (state.cache.buku || []).find(b => b.id_buku === editId);
+          if (oldBook && oldBook.cover_url && oldBook.cover_url !== finalCoverUrl) {
+            deleteStorageFileByUrl(oldBook.cover_url, 'buku').catch(() => {});
+          }
+        }
       }
 
       const { error: updateErr } = await db

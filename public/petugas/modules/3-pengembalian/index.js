@@ -2,21 +2,34 @@
  * CAKRAWALA Digital Library - Modul Meja 3: Pengembalian Buku & Denda (Koordinator Fitur)
  * Path: public/petugas/modules/3-pengembalian/index.js
  * 
- * Struktur Modular:
- * - denda/                 : Sub-folder operasional kasir tunggakan denda, arsip riwayat, dan sub-tab switcher
- * - seleksiPeminjam.js     : Seleksi peminjam & kartu pinjaman aktif
- * - kalkulatorDenda.js     : Kalkulator denda harian dinamis & aturan >= 1 bulan
- * - eksekusiPengembalian.js: Transaksi pengembalian buku & update stok Supabase
- * - formPengembalian.js    : Formulir koordinator meja pengembalian
- * - modalStruk.js          : Cetak bukti struk resmi pengembalian
+ * Struktur Modular Bersih (2 Sub-meja Terintegrasi):
+ * - pengembalian/ : Sub-folder operasional formulir pengembalian, seleksi peminjam, kalkulator denda, dan struk
+ * - denda/        : Sub-folder operasional kasir tunggakan denda, arsip riwayat, dan kebijakan tarif denda
  */
 
+// 1. Re-export modul Pengembalian Buku langsung dari sumbernya
 export {
   setupReceiptModal,
   showReceiptModal,
   printReceipt
-} from './modalStruk.js';
+} from './pengembalian/modalStruk.js';
 
+export {
+  setupPengembalianForm,
+  renderBorrowerSearchResults,
+  filterPengembalianByName,
+  selectBorrowerForReturn,
+  renderActiveLoansCards,
+  selectLoanForReturn,
+  resetPengembalianSelection,
+  filterPengembalianByBook,
+  renderPengembalianFormOptions,
+  updatePreviewPeminjamanBox,
+  recalculateDenda,
+  handleSubmitPengembalian
+} from './pengembalian/formPengembalian.js';
+
+// 2. Re-export modul Operasional Denda & Riwayat langsung dari sumbernya
 export {
   kasirTunggakanState,
   getSearchQueryTunggakan,
@@ -27,58 +40,61 @@ export {
   handleBatalkanLunasDenda,
   formatWhatsAppNumber,
   sendWhatsAppReminder,
-  setupKasirTunggakanListeners,
+  setupKasirTunggakanListeners
+} from './denda/kasirTunggakan.js';
+
+export {
   arsipRiwayatState,
   renderSemuaRiwayatList,
   filterRiwayatPengembalian,
-  setupArsipRiwayatListeners,
+  setupArsipRiwayatListeners
+} from './denda/arsipRiwayat.js';
+
+export {
   subtabDendaState,
   renderRiwayatPengembalian,
   switchFineSubtab,
-  setupSubtabDendaListeners
-} from './denda/index.js';
+  setupSubtabDendaListeners,
+  syncTarifDendaUI,
+  setupTarifDendaListeners
+} from './denda/subtabDenda.js';
 
-export {
+import {
+  setupReceiptModal,
+  showReceiptModal,
+  printReceipt
+} from './pengembalian/modalStruk.js';
+
+import {
   setupPengembalianForm,
-  renderBorrowerSearchResults,
   filterPengembalianByName,
   selectBorrowerForReturn,
-  renderActiveLoansCards,
   selectLoanForReturn,
   resetPengembalianSelection,
   filterPengembalianByBook,
   renderPengembalianFormOptions,
-  updatePreviewPeminjamanBox,
   recalculateDenda,
   handleSubmitPengembalian
-} from './formPengembalian.js';
+} from './pengembalian/formPengembalian.js';
 
-import { setupReceiptModal, showReceiptModal, printReceipt } from './modalStruk.js';
 import {
-  setupPengembalianForm,
-  renderBorrowerSearchResults,
-  filterPengembalianByName,
-  selectBorrowerForReturn,
-  renderActiveLoansCards,
-  selectLoanForReturn,
-  resetPengembalianSelection,
-  filterPengembalianByBook,
-  renderPengembalianFormOptions,
-  updatePreviewPeminjamanBox,
-  recalculateDenda,
-  handleSubmitPengembalian
-} from './formPengembalian.js';
-import {
-  renderRiwayatPengembalian,
+  kasirTunggakanState,
   renderTunggakanDendaList,
-  renderSemuaRiwayatList,
-  switchFineSubtab,
   openModalKonfirmasiLunasiDenda,
   executePelunasanDenda,
   handleBatalkanLunasDenda,
-  sendWhatsAppReminder,
+  sendWhatsAppReminder
+} from './denda/kasirTunggakan.js';
+
+import {
+  renderSemuaRiwayatList
+} from './denda/arsipRiwayat.js';
+
+import {
+  renderRiwayatPengembalian,
+  switchFineSubtab,
   setupSubtabDendaListeners
-} from './denda/index.js';
+} from './denda/subtabDenda.js';
 
 let isPengembalianModuleSetup = false;
 

@@ -37,6 +37,15 @@ function htmlIncludePlugin() {
           type: 'full-reload'
         });
       }
+    },
+    writeBundle(options) {
+      const outputDir = options.dir || resolve(__dirname, 'dist');
+      const targetDir = path.join(outputDir, '.well-known');
+      fs.mkdirSync(targetDir, { recursive: true });
+      fs.copyFileSync(
+        path.resolve(__dirname, 'public/.well-known/security.txt'),
+        path.join(targetDir, 'security.txt')
+      );
     }
   };
 }

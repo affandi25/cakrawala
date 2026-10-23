@@ -1,6 +1,6 @@
 /**
  * CAKRAWALA Digital Library - Modul Modal Konfirmasi Hapus & Logout
- * File: public/admin/modules/modalKonfirmasi.js
+ * File: public/admin/modules/modals/modalKonfirmasi.js
  * 
  * Tanggung Jawab:
  * - Menampilkan dialog konfirmasi penghapusan pengguna (Cascade Delete)
@@ -9,11 +9,11 @@
  * - Interaksi keyboard accessibility (Escape / backdrop click)
  */
 
-import { db } from '../../assets/js/supabaseClient.js';
-import { showToast } from '../../assets/js/sharedUtils.js';
-import { state, DOM } from './state.js';
-import { loadData, refreshAllBadges } from './data.js';
-import { loadKpiStats } from './0-overview/kpiMetrics.js';
+import { db } from '../../../assets/js/supabaseClient.js';
+import { showToast } from '../../../assets/js/sharedUtils.js';
+import { state, DOM } from '../core/state.js';
+import { loadData, refreshAllBadges } from '../core/data.js';
+import { loadKpiStats } from '../0-overview/kpiMetrics.js';
 
 let listenersInitialized = false;
 

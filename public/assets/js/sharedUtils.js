@@ -6,6 +6,8 @@
  * dan sistem notifikasi toast mengambang di seluruh dashboard.
  */
 
+import { db } from './supabaseClient.js';
+
 /**
  * Format angka ke mata uang Rupiah resmi Indonesia (contoh: 50000 -> "Rp 50.000")
  * @param {number|string} amount
@@ -188,3 +190,135 @@ export function showToast(message, type = 'info', duration = 3500) {
     }
   }, duration);
 }
+
+/**
+ * Kunci penyimpanan dan konfigurasi tarif denda harian perpustakaan
+ */
+export const STORAGE_KEY_TARIF_DENDA = 'cakrawala_tarif_denda_harian';
+export const DEFAULT_TARIF_DENDA = 1000;
+
+// In-memory cache agar pembacaan getTarifDendaHarian() tetap sinkron & 0-latency
+let _cachedTarifDenda = null;
+
+/**
+ * Mengambil tarif denda harian (sinkron untuk kalkulator UI, dengan fallback memory/localStorage)
+ * @returns {number}
+ */
+export function getTarifDendaHarian() {
+  if (_cachedTarifDenda !== null && !isNaN(_cachedTarifDenda)) {
+    return _cachedTarifDenda;
+  }
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY_TARIF_DENDA);
+    if (saved !== null && saved !== undefined && saved !== '') {
+      const parsed = parseInt(saved, 10);
+      if (!isNaN(parsed) && parsed >= 0) {
+        _cachedTarifDenda = parsed;
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('[sharedUtils] Gagal membaca tarif denda dari localStorage:', e);
+  }
+  _cachedTarifDenda = DEFAULT_TARIF_DENDA;
+  return DEFAULT_TARIF_DENDA;
+}
+
+/**
+ * Mengunduh tarif denda harian dari tabel public.data_pengaturan di database Supabase
+ * dan memperbarui memory cache serta localStorage
+ * @returns {Promise<number>}
+ */
+export async function fetchTarifDendaFromDB() {
+  try {
+    if (!db || !db.from) return getTarifDendaHarian();
+    const { data, error } = await db
+      .from('data_pengaturan')
+      .select('nilai')
+      .eq('kunci', 'tarif_denda_harian')
+      .maybeSingle();
+
+    if (!error && data && data.nilai !== null && data.nilai !== undefined) {
+      const parsed = parseInt(data.nilai, 10);
+      if (!isNaN(parsed) && parsed >= 0) {
+        _cachedTarifDenda = parsed;
+        try {
+          localStorage.setItem(STORAGE_KEY_TARIF_DENDA, String(parsed));
+        } catch (_) {}
+        return parsed;
+      }
+    }
+  } catch (e) {
+    console.warn('[sharedUtils] Gagal sinkron tarif denda dari Supabase:', e);
+  }
+  return getTarifDendaHarian();
+}
+
+/**
+ * Menyimpan kebijakan tarif denda harian ke database Supabase (tabel public.data_pengaturan)
+ * serta mengupdate memory cache & localStorage
+ * @param {number|string} amount
+ * @returns {Promise<number>}
+ */
+export async function setTarifDendaHarian(amount) {
+  const val = Math.max(0, parseInt(amount, 10) || 0);
+  _cachedTarifDenda = val;
+  try {
+    localStorage.setItem(STORAGE_KEY_TARIF_DENDA, String(val));
+  } catch (_) {}
+
+  try {
+    if (db && db.from) {
+      const { error } = await db
+        .from('data_pengaturan')
+        .upsert({
+          kunci: 'tarif_denda_harian',
+          nilai: String(val),
+          keterangan: 'Tarif denda keterlambatan per hari (Rupiah)',
+          updated_at: new Date().toISOString()
+        }, { onConflict: 'kunci' });
+
+      if (error) {
+        console.warn('[sharedUtils] Gagal menyimpan tarif denda ke database Supabase:', error);
+      }
+    }
+  } catch (e) {
+    console.warn('[sharedUtils] Error upsert tarif denda ke Supabase:', e);
+  }
+  return val;
+}
+
+// Inisialisasi awal: sinkronkan secara non-blocking di latar belakang saat modul dimuat
+if (typeof window !== 'undefined') {
+  fetchTarifDendaFromDB().catch(() => {});
+}
+
+/**
+ * Menghapus berkas fisik dari Supabase Storage berdasarkan URL publiknya
+ * @param {string} url - URL lengkap berkas di Supabase Storage
+ * @param {string} bucketName - Nama bucket ('buku' atau 'pengumuman')
+ * @returns {Promise<boolean>}
+ */
+export async function deleteStorageFileByUrl(url, bucketName) {
+  if (!url || typeof url !== 'string' || !db || !db.storage) return false;
+  try {
+    const marker = `/storage/v1/object/public/${bucketName}/`;
+    const idx = url.indexOf(marker);
+    if (idx === -1) return false;
+
+    const rawPath = url.substring(idx + marker.length).split('?')[0];
+    const filePath = decodeURIComponent(rawPath);
+    if (!filePath) return false;
+
+    const { error } = await db.storage.from(bucketName).remove([filePath]);
+    if (error) {
+      console.warn(`[sharedUtils] Gagal menghapus berkas ${filePath} dari bucket ${bucketName}:`, error);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn(`[sharedUtils] Error saat menghapus berkas storage:`, err);
+    return false;
+  }
+}
+

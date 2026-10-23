@@ -3,37 +3,40 @@
  * File: public/admin/admin.js
  * 
  * FUNGSI UTAMA:
- * Sebagai entry point utama yang mengorkestrasi modul-modul terpisah:
- * 1. modules/state.js       - Sentral state, tab configs, dan DOM getters
- * 2. modules/data.js        - Sinkronisasi data Siswa, Guru, Petugas via Supabase
- * 3. modules/table.js       - Rendering tabel, skeleton, filtering, dan tab switcher
- * 4. modules/modalUser.js   - Form tambah/edit pengguna, reset password, dan upload foto
- * 5. modules/modalKonfirmasi.js - Konfirmasi cascade delete pengguna
- * 6. modules/import/        - Import massal Excel/CSV terstandarisasi
- * 7. ../assets/js/auth.js   - Verifikasi sesi admin terpusat & kontroler modal logout
- * 8. ../assets/js/sharedUtils.js  - Shared helper toast & format utilities
+ * Sebagai entry point utama yang mengorkestrasi modul-modul modular:
+ * 1. modules/core/          - Sentral state, data sync, dan table engine
+ * 2. modules/modals/        - Form tambah/edit pengguna, upload foto, & konfirmasi hapus
+ * 3. modules/0-overview/    - Metrik KPI & koneksi Supabase
+ * 4. modules/1-siswa/       - Dataset & table renderer Siswa
+ * 5. modules/2-guru/        - Dataset & table renderer Guru
+ * 6. modules/3-petugas/     - Dataset & table renderer Petugas
+ * 7. modules/import/        - Import massal Excel/CSV terstandarisasi
+ * 8. ../assets/js/auth.js   - Verifikasi sesi admin terpusat & kontroler modal logout
+ * 9. ../assets/js/sharedUtils.js  - Shared helper toast & format utilities
  */
 
 import { initSessionAndAdmin, setupLogout } from '../assets/js/auth.js';
 import { showToast } from '../assets/js/sharedUtils.js';
-import { state, TAB_CONFIGS, DOM } from './modules/state.js';
-import { loadData, refreshAllBadges, loadKpiStats } from './modules/data.js';
-import { renderTable, switchTab } from './modules/table.js';
 import {
-  openAddModal,
+  state,
+  TAB_CONFIGS,
+  DOM,
+  loadData,
+  refreshAllBadges,
+  loadKpiStats,
+  renderTable,
+  switchTab
+} from './modules/core/index.js';
+import {
+  initModalUser,
+  initModalKonfirmasi,
   closeAddModal,
-  handleAddUserSubmit,
-  initModalUser
-} from './modules/modalUser.js';
-import {
-  closeDeleteModal,
-  handleConfirmDelete,
-  initModalKonfirmasi
-} from './modules/modalKonfirmasi.js';
+  closeDeleteModal
+} from './modules/modals/index.js';
 import { initKpiMetrics } from './modules/0-overview/index.js';
-import { initModulSiswa } from './modules/1-siswa/index.js';
-import { initModulGuru } from './modules/2-guru/index.js';
-import { initModulPetugas } from './modules/3-petugas/index.js';
+import { setupSiswaEventListeners } from './modules/1-siswa/index.js';
+import { setupGuruEventListeners } from './modules/2-guru/index.js';
+import { setupPetugasEventListeners } from './modules/3-petugas/index.js';
 import { initImportExcel, closeImportModal } from './modules/import/index.js';
 
 // ========================================================
@@ -119,28 +122,8 @@ function initEventListeners() {
     });
   });
 
-  // 4. Modal Add User Events (Dukungan seluruh tab)
-  document.querySelectorAll('.btn-open-add-modal').forEach(btn => {
-    btn.addEventListener('click', openAddModal);
-  });
-  if (DOM.btnCancelAddModal) DOM.btnCancelAddModal.addEventListener('click', closeAddModal);
-  if (DOM.btnCloseAddModal) DOM.btnCloseAddModal.addEventListener('click', closeAddModal);
-
-  // Toggle Password Visibility in Modal
-  if (DOM.btnToggleModalPassword && DOM.inputPassword && DOM.iconToggleModalPassword) {
-    DOM.btnToggleModalPassword.addEventListener('click', () => {
-      const isPassword = DOM.inputPassword.type === 'password';
-      DOM.inputPassword.type = isPassword ? 'text' : 'password';
-      DOM.iconToggleModalPassword.className = isPassword ? 'ph ph-eye-slash' : 'ph ph-eye';
-    });
-  }
-
-  // Submit User Form
-  if (DOM.formAddUser) DOM.formAddUser.addEventListener('submit', handleAddUserSubmit);
-
-  // 5. Modal Delete Confirm Actions
-  if (DOM.btnCancelDelete) DOM.btnCancelDelete.addEventListener('click', closeDeleteModal);
-  if (DOM.btnConfirmDelete) DOM.btnConfirmDelete.addEventListener('click', handleConfirmDelete);
+  // 4. Catatan: Seluruh event modal (User, Konfirmasi Hapus, Import)
+  // diinisialisasi secara modular via initModalUser, initModalKonfirmasi, & initImportExcel.
 
   // 6. Mobile Sidebar Events
   if (DOM.btnToggleMobileSidebar) DOM.btnToggleMobileSidebar.addEventListener('click', openMobileSidebar);
@@ -169,18 +152,6 @@ function initEventListeners() {
     }
   });
 
-  // Close modals on clicking backdrop area outside the content box
-  if (DOM.modalAddUser) {
-    DOM.modalAddUser.addEventListener('click', (e) => {
-      if (e.target === DOM.modalAddUser) closeAddModal();
-    });
-  }
-
-  if (DOM.modalDeleteConfirm) {
-    DOM.modalDeleteConfirm.addEventListener('click', (e) => {
-      if (e.target === DOM.modalDeleteConfirm) closeDeleteModal();
-    });
-  }
 }
 
 // ========================================================
@@ -205,11 +176,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     }).join('');
   }
 
-  // 4. Inisialisasi Modul Modular (0-Overview KPI, 1-Siswa, 2-Guru, 3-Petugas)
+  // 4. Inisialisasi Modul Modular (0-Overview KPI, Event Listener Siswa, Guru, Petugas)
   initKpiMetrics();
-  initModulSiswa();
-  initModulGuru();
-  initModulPetugas();
+  setupSiswaEventListeners();
+  setupGuruEventListeners();
+  setupPetugasEventListeners();
 
   // 5. Inisialisasi Modul Interaktif (Form User, Konfirmasi Hapus, & Import Excel)
   initModalUser();

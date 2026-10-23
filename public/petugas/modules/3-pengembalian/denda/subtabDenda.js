@@ -6,7 +6,7 @@
  */
 
 import { state } from '../../core/state.js';
-import { formatRupiah } from '../../core/petugasHelper.js';
+import { formatRupiah, showToast, getTarifDendaHarian, setTarifDendaHarian } from '../../core/petugasHelper.js';
 import { renderTunggakanDendaList, setupKasirTunggakanListeners } from './kasirTunggakan.js';
 import { renderSemuaRiwayatList, setupArsipRiwayatListeners } from './arsipRiwayat.js';
 
@@ -34,6 +34,9 @@ export function renderRiwayatPengembalian() {
   if (badgeRiwayat) badgeRiwayat.textContent = list.length;
   if (summaryRupiah) summaryRupiah.textContent = formatRupiah(totalNominalTunggakan);
   if (summarySiswa) summarySiswa.textContent = `${tunggakanList.length} Transaksi`;
+
+  // Sinkronkan badge tarif denda resmi
+  syncTarifDendaUI();
 
   // Render list masing-masing panel
   renderTunggakanDendaList();
@@ -91,6 +94,66 @@ export function setupSubtabDendaListeners() {
   // Pasang listener modul anak
   setupKasirTunggakanListeners();
   setupArsipRiwayatListeners();
+  setupTarifDendaListeners();
+}
+
+/**
+ * Sinkronkan tampilan badge dan input tarif denda di seluruh meja
+ */
+export function syncTarifDendaUI() {
+  const currentTarif = getTarifDendaHarian();
+  const inputTarif = document.getElementById('inputTarifDendaGlobal');
+  const badgeTarif = document.getElementById('badgeTarifAktif');
+  const displayForm = document.getElementById('displayTarifAktifForm');
+
+  if (inputTarif) inputTarif.value = currentTarif;
+  if (badgeTarif) badgeTarif.textContent = `${formatRupiah(currentTarif)} / hari`;
+  if (displayForm) displayForm.textContent = `${formatRupiah(currentTarif)} / hari`;
+}
+
+/**
+ * Pasang listener tombol Simpan Kebijakan Tarif Denda
+ */
+export function setupTarifDendaListeners() {
+  syncTarifDendaUI();
+
+  const btnSimpan = document.getElementById('btnSimpanTarifDenda');
+  const inputTarif = document.getElementById('inputTarifDendaGlobal');
+
+  if (btnSimpan && inputTarif) {
+    btnSimpan.addEventListener('click', async () => {
+      const rawVal = parseInt(inputTarif.value, 10);
+      if (isNaN(rawVal) || rawVal < 0) {
+        showToast('Masukkan nominal tarif denda yang valid (minimal Rp 0).', 'warning');
+        return;
+      }
+
+      btnSimpan.disabled = true;
+      const originalText = btnSimpan.textContent;
+      btnSimpan.textContent = 'Menyimpan...';
+
+      const newTarif = await setTarifDendaHarian(rawVal);
+      
+      btnSimpan.disabled = false;
+      btnSimpan.textContent = originalText;
+      syncTarifDendaUI();
+
+      // Hitung ulang denda jika ada peminjaman yang sedang dipilih di meja pengembalian
+      if (window.recalculateDenda) {
+        window.recalculateDenda();
+      }
+
+      showToast(`Kebijakan tarif denda berhasil disimpan ke database: ${formatRupiah(newTarif)} / hari`, 'success');
+    });
+
+    // Dukung pintasan tombol Enter pada input tarif
+    inputTarif.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        btnSimpan.click();
+      }
+    });
+  }
 }
 
 // Ekspos global jika diperlukan

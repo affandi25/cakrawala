@@ -10,8 +10,8 @@
  * - Memperbarui status pembayaran denda (Lunas / Belum Lunas)
  */
 
-import { state } from '../core/state.js';
-import { formatRupiah, getTodayDateString } from '../core/petugasHelper.js';
+import { state } from '../../core/state.js';
+import { formatRupiah, getTodayDateString, getTarifDendaHarian } from '../../core/petugasHelper.js';
 
 /**
  * Mesin kalkulator denda otomatis keterlambatan dan kerusakan fisik
@@ -55,10 +55,13 @@ export function recalculateDenda() {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   const hariTerlambat = diffDays > 0 ? diffDays : 0;
 
-  // 1. Baca Tarif Denda Harian yang Dapat Dikustomisasi Petugas
-  const inputTarifDenda = document.getElementById('inputTarifDendaPerHari');
-  const tarifPerHari = inputTarifDenda ? Math.max(0, parseInt(inputTarifDenda.value, 10) || 0) : 1000;
+  // 1. Baca Tarif Denda Harian dari Kebijakan Resmi Sistem
+  const tarifPerHari = getTarifDendaHarian();
   const labelTarifPerHari = document.getElementById('labelTarifPerHari');
+  const displayTarifAktifForm = document.getElementById('displayTarifAktifForm');
+  if (displayTarifAktifForm) {
+    displayTarifAktifForm.textContent = `${formatRupiah(tarifPerHari)} / hari`;
+  }
 
   // 2. Ambil Harga Buku Fisik
   const buku = (state.cache.buku || []).find(b => b.id_buku === loan.id_buku);

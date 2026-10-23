@@ -1,14 +1,32 @@
 /**
  * CAKRAWALA Digital Library - Table & Navigation Admin Module
- * File: public/admin/modules/table.js
+ * File: public/admin/modules/core/table.js
  */
 
-import { escapeHtml } from '../../assets/js/sharedUtils.js';
+import { escapeHtml } from '../../../assets/js/sharedUtils.js';
 import { state, TAB_CONFIGS, DOM } from './state.js';
 import { loadData } from './data.js';
-import { loadKpiStats } from './0-overview/kpiMetrics.js';
-import { openAddModal, openEditModal } from './modalUser.js';
-import { openDeleteModal } from './modalKonfirmasi.js';
+import { loadKpiStats } from '../0-overview/kpiMetrics.js';
+import { openAddModal, openEditModal } from '../modals/modalUser.js';
+import { openDeleteModal } from '../modals/modalKonfirmasi.js';
+
+/**
+ * Render thumbnail pasfoto pengguna (Foto Profil jika ada, atau Ikon Default WhatsApp)
+ */
+export function renderAvatarThumb(fotoUrl, name) {
+  if (fotoUrl && typeof fotoUrl === 'string' && fotoUrl.trim() !== '') {
+    return `
+      <div class="h-8 w-8 shrink-0 rounded-full overflow-hidden bg-slate-100 border border-slate-200/80 shadow-2xs">
+        <img src="${fotoUrl}" alt="${escapeHtml(name || '')}" class="h-full w-full object-cover" onerror="this.onerror=null; this.parentElement.innerHTML='<i class=\\'ph-fill ph-user text-base text-slate-400\\'></i>'; this.parentElement.className='h-8 w-8 shrink-0 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center shadow-2xs';" />
+      </div>
+    `;
+  }
+  return `
+    <div class="h-8 w-8 shrink-0 rounded-full bg-slate-200 text-slate-400 flex items-center justify-center shadow-2xs" title="${escapeHtml(name || '')}">
+      <i class="ph-fill ph-user text-base text-slate-400"></i>
+    </div>
+  `;
+}
 
 /**
  * Memperbarui badge hitungan jumlah data pada menu tab sidebar
@@ -172,7 +190,12 @@ export function renderTable() {
           <tr class="hover:bg-slate-50/80 transition-colors group">
             <td class="px-6 py-4 text-center text-xs font-semibold text-slate-400">${index + 1}</td>
             <td class="px-6 py-4 font-mono text-xs font-bold text-navy">${escapeHtml(row.nisn_siswa)}</td>
-            <td class="px-6 py-4 font-bold text-slate-800">${escapeHtml(row.nama_siswa)}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                ${renderAvatarThumb(row.foto_profil, row.nama_siswa)}
+                <span class="font-bold text-slate-800">${escapeHtml(row.nama_siswa)}</span>
+              </div>
+            </td>
             <td class="px-6 py-4">
               <span class="inline-flex rounded-md bg-blue-50 px-2 py-0.5 text-xs font-bold text-navy border border-blue-100">
                 ${escapeHtml(row.kelas)}
@@ -218,7 +241,12 @@ export function renderTable() {
           <tr class="hover:bg-slate-50/80 transition-colors group">
             <td class="px-6 py-4 text-center text-xs font-semibold text-slate-400">${index + 1}</td>
             <td class="px-6 py-4 font-mono text-xs font-bold text-navy">${escapeHtml(row.nip_guru)}</td>
-            <td class="px-6 py-4 font-bold text-slate-800">${escapeHtml(row.nama_guru)}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                ${renderAvatarThumb(row.foto_profil, row.nama_guru)}
+                <span class="font-bold text-slate-800">${escapeHtml(row.nama_guru)}</span>
+              </div>
+            </td>
             <td class="px-6 py-4">
               <span class="inline-flex rounded-md bg-emerald-50 px-2 py-0.5 text-xs font-bold text-emerald-800 border border-emerald-100">
                 ${escapeHtml(row.mata_pelajaran)}
@@ -264,7 +292,12 @@ export function renderTable() {
           <tr class="hover:bg-slate-50/80 transition-colors group">
             <td class="px-6 py-4 text-center text-xs font-semibold text-slate-400">${index + 1}</td>
             <td class="px-6 py-4 font-mono text-xs font-bold text-navy">${escapeHtml(row.id_petugas)}</td>
-            <td class="px-6 py-4 font-bold text-slate-800">${escapeHtml(row.nama_petugas)}</td>
+            <td class="px-6 py-4">
+              <div class="flex items-center gap-3">
+                ${renderAvatarThumb(row.foto_profil, row.nama_petugas)}
+                <span class="font-bold text-slate-800">${escapeHtml(row.nama_petugas)}</span>
+              </div>
+            </td>
             <td class="px-6 py-4 text-xs text-slate-600">${escapeHtml(row.email_petugas)}</td>
             <td class="px-6 py-4 text-xs text-slate-500">${escapeHtml(row.kontak_petugas)}</td>
             <td class="px-6 py-4">
