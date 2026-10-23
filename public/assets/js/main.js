@@ -1,4 +1,5 @@
 import { db } from './supabaseClient.js';
+import { getCurrentUser } from './auth.js';
 
 if (window.AOS) {
   AOS.init({ once: true, offset: 60 });
@@ -57,27 +58,24 @@ function openPinjamModal(bukuId) {
   if (!book || !book.available) return;
   activeBookId = bukuId;
 
-  var userSessionRaw = sessionStorage.getItem('cakrawala_user') || sessionStorage.getItem('cakrawala_logged_in');
-  if (!userSessionRaw) {
-    window.location.href = 'login.html?buku_id=' + encodeURIComponent(bukuId);
+  // Baca sesi terpusat (sessionStorage + localStorage) agar navigasi lintas tab
+  // ke halaman katalog tidak dianggap logout.
+  var user = getCurrentUser();
+  if (!user) {
+    window.location.href = '/login.html?buku_id=' + encodeURIComponent(bukuId);
     return;
   }
 
-  // Jika sudah login, tentukan redirect berdasarkan role
-  var userRole = 'siswa';
-  try {
-    var parsed = JSON.parse(userSessionRaw);
-    if (parsed && parsed.role) userRole = parsed.role.toLowerCase();
-  } catch (e) {
-    userRole = String(userSessionRaw).toLowerCase();
-  }
+  // Jika sudah login, arahkan ke dashboard sesuai role (URL absolut agar benar
+  // walau halaman katalog diakses dari sub-folder).
+  var userRole = (user.role ? String(user.role) : 'siswa').trim().toLowerCase();
 
   if (userRole === 'petugas') {
-    window.location.href = 'petugas/dashboard.html';
+    window.location.href = '/petugas/dashboard.html';
   } else if (userRole === 'admin') {
-    window.location.href = 'admin/dashboard.html';
+    window.location.href = '/admin/dashboard.html';
   } else {
-    window.location.href = 'siswa-guru/dashboard.html?action=pinjam&buku_id=' + encodeURIComponent(bukuId);
+    window.location.href = '/siswa-guru/dashboard.html?action=pinjam&buku_id=' + encodeURIComponent(bukuId);
   }
 }
 
