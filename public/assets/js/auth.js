@@ -597,33 +597,39 @@ export function logout() {
 }
 
 /**
- * Menyesuaikan navigasi halaman publik dengan status sesi pengguna:
- * - Sudah login : tautan "Login" berubah menjadi "Dashboard" sesuai role,
- *                 tombol "Keluar" ditampilkan, dan panel "sudah masuk" dibuka.
- * - Belum login : tautan tetap menuju halaman login, tombol keluar disembunyikan.
+ * Menyesuaikan navigasi halaman publik (landing page & login):
+ * - Tamu (belum login)        : menampilkan tombol "Login"
+ * - Pengguna yang sedang login: menampilkan tombol "← Kembali ke Dashboard"
+ *   yang otomatis mengarah ke dashboard perannya tanpa tombol logout ganda.
  * @returns {string} role pengguna, atau string kosong bila belum login
  */
 export function initPublicAuthNav() {
+  const user = getCurrentUser();
+  const role = getUserRole();
+
   const navAuthLink = document.getElementById('navAuthLink');
   const navLogoutButton = document.getElementById('navLogoutButton');
 
-  // Khusus halaman utama / Landing Page (index.html):
-  // Navbar publik selalu bersih: hanya Pengumuman, Katalog, dan tombol Login.
-  const isLandingPage = window.location.pathname === '/' ||
-    window.location.pathname.endsWith('/index.html') ||
-    window.location.pathname === '';
+  // Tombol logout ganda selalu disembunyikan di landing page agar navigasi tetap bersih
+  if (navLogoutButton) {
+    navLogoutButton.classList.add('hidden');
+  }
 
-  if (isLandingPage) {
-    if (navAuthLink) {
-      navAuthLink.textContent = 'Login';
+  if (navAuthLink) {
+    if (user && role && ROLE_HOME[role]) {
+      // Pengguna sedang login (misal membuka katalog publik dari dashboard)
+      navAuthLink.innerHTML = '<span class="inline-flex items-center gap-1.5"><i class="ph ph-arrow-left text-base"></i><span class="hidden sm:inline">Kembali ke </span><span>Dashboard</span></span>';
+      navAuthLink.setAttribute('href', ROLE_HOME[role]);
+      navAuthLink.setAttribute('title', `Kembali ke Dashboard ${role.toUpperCase()}`);
+    } else {
+      // Pengunjung tamu yang belum pernah login
+      navAuthLink.innerHTML = 'Login';
       navAuthLink.setAttribute('href', '/login.html');
-    }
-    if (navLogoutButton) {
-      navLogoutButton.classList.add('hidden');
+      navAuthLink.removeAttribute('title');
     }
   }
 
-  return getUserRole();
+  return user && role ? role : '';
 }
 
 // Jalankan penyesuaian navigasi publik pada halaman yang memuat modul ini
