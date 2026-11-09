@@ -286,24 +286,22 @@ Sistem memanfaatkan 2 wadah berkas (*public buckets*) di Supabase:
 
 ---
 
-## 5. Konfigurasi Kebijakan Keamanan Aktif (Row-Level Security / RLS)
+## 5. Konfigurasi Kebijakan Keamanan (Row-Level Security / RLS)
 
-Seluruh tabel di PostgreSQL Supabase telah diproteksi dengan RLS aktif (`rowsecurity: true`) berbasis aturan integritas data (*Business Logic & Integrity Constraints*):
+Pada fase pengembangan (prototype/development stage), seluruh tabel di Supabase dikonfigurasikan dengan kebijakan akses publik terpusat (`USING (true)`) untuk menjamin integrasi sirkulasi multi-role berjalan lancar:
 
-| Tabel | Operasi | Nama Kebijakan (Policy) | Aturan Validasi (USING / WITH CHECK) |
+| Tabel | Kebijakan Aktif (Policy) | Cakupan Operasi | Keterangan |
 | --- | --- | --- | --- |
-| `data_buku` | `SELECT` | `Publik dapat melihat katalog buku` | `USING (true)` |
-| `data_buku` | `INSERT` | `Petugas dapat menambah koleksi buku` | `WITH CHECK (stok >= 0 AND harga_buku >= 0)` |
-| `data_buku` | `UPDATE` | `Petugas dapat memperbarui data buku` | `WITH CHECK (stok >= 0 AND harga_buku >= 0)` |
-| `data_buku` | `DELETE` | `Proteksi hapus buku sedang dipinjam` | `USING (status != 'Dipinjam')` |
-| `data_peminjaman` | `SELECT` | `Akses melihat transaksi peminjaman` | `USING (true)` |
-| `data_peminjaman` | `INSERT` | `Validasi alur peminjaman baru` | `WITH CHECK (status IN ('Menunggu', 'Dipinjam') AND batas_kembali >= tanggal_pinjam)` |
-| `data_peminjaman` | `UPDATE` | `Pembaruan status sirkulasi peminjaman` | `USING (true)` |
-| `data_peminjaman` | `DELETE` | `Proteksi hapus peminjaman hanya saat menunggu` | `USING (status = 'Menunggu')` |
-| `data_pengembalian` | `SELECT` | `Akses melihat riwayat pengembalian dan denda` | `USING (true)` |
-| `data_pengembalian` | `INSERT` | `Pencatatan pengembalian dan denda` | `WITH CHECK (denda >= 0 AND kondisi_buku IN ('Baik', 'Rusak', 'Hilang'))` |
-| `data_pengembalian` | `UPDATE` | `Pembaruan status pelunasan denda kasir` | `WITH CHECK (denda >= 0 AND status_denda IN ('Tidak Ada', 'Belum Lunas', 'Lunas'))` |
-| `data_pengembalian` | `DELETE` | **TIDAK ADA POLICY (ZERO DELETION)** | Seluruh riwayat pengembalian dan kas denda **dikunci permanen** dari aksi hapus. |
-| `data_user` | `ALL` | `Akses baca dan kelola akun user` | `WITH CHECK (role IN ('Admin', 'Petugas', 'Siswa', 'Guru'))` |
+| `data_buku` | `Akses anon kelola buku` | `ALL (true)` | Akses operasional katalog buku & stiker QR |
+| `data_peminjaman` | `Akses anon data peminjaman` | `ALL (true)` | Alur sirkulasi reservasi daring & walk-in |
+| `data_pengembalian` | `Akses anon data pengembalian` | `ALL (true)` | Pencatatan pengembalian buku & kasir denda |
+| `data_kategori` | `Akses anon kelola kategori` | `ALL (true)` | Master data kategori koleksi |
+| `data_pengumuman` | `Akses anon kelola pengumuman` | `ALL (true)` | Broadcast berita & agenda kampus |
+| `data_pengaturan` | `Akses anon kelola pengaturan` | `ALL (true)` | Konfigurasi tarif denda dinamis |
+| `data_user`, `data_siswa`, dll. | `Akses anon data ...` | `ALL (true)` | Akses autentikasi & profil terpadu |
+
+> **Catatan Arsitektur untuk Tahap Produksi:**  
+> Proteksi hak akses pengguna di fase ini ditegakkan melalui **Client-Side Auth Guards** di [`auth.js`](file:///c:/xampp/htdocs/cakrawala/public/assets/js/auth.js). Pada roadmap rilis produksi skala besar (Enterprise Milestone), autentikasi akan dimigrasikan ke Supabase Auth resmi berbasis JWT token untuk menerapkan penguncian RLS granular (`TO authenticated`).
+
 
 

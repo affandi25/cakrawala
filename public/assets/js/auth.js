@@ -28,12 +28,25 @@ export const ROLE_HOME = {
 };
 
 /**
- * Mengambil data user yang sedang login dari storage
+ * Mengambil data user yang sedang login dari storage.
+ * Melakukan validasi ketat agar data kosong/tidak valid tidak dianggap sudah login.
  */
 export function getCurrentUser() {
   try {
+    const isLoggedIn = (sessionStorage.getItem('cakrawala_logged_in') || localStorage.getItem('cakrawala_logged_in')) === 'true';
+    if (!isLoggedIn) return null;
+
     const raw = sessionStorage.getItem('cakrawala_user') || localStorage.getItem('cakrawala_user');
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+
+    const user = JSON.parse(raw);
+    if (!user || typeof user !== 'object') return null;
+    // Pastikan user memiliki kredensial identitas dan role yang sah
+    if ((!user.id_user && !user.username) || !user.role) {
+      clearSession();
+      return null;
+    }
+    return user;
   } catch (_) {
     return null;
   }
@@ -591,43 +604,26 @@ export function logout() {
  * @returns {string} role pengguna, atau string kosong bila belum login
  */
 export function initPublicAuthNav() {
-  const user = getCurrentUser();
-  const role = getUserRole();
-
   const navAuthLink = document.getElementById('navAuthLink');
   const navLogoutButton = document.getElementById('navLogoutButton');
-  const loggedInPanel = document.getElementById('alreadyLoggedInPanel');
-  const loggedInRole = document.getElementById('alreadyLoggedInRole');
-  const btnGoDashboard = document.getElementById('btnGoDashboard');
 
-  if (!user) {
-    if (navLogoutButton) navLogoutButton.classList.add('hidden');
-    return '';
-  }
+  // Khusus halaman utama / Landing Page (index.html):
+  // Navbar publik selalu bersih: hanya Pengumuman, Katalog, dan tombol Login.
+  const isLandingPage = window.location.pathname === '/' ||
+    window.location.pathname.endsWith('/index.html') ||
+    window.location.pathname === '';
 
-  if (navAuthLink) {
-    navAuthLink.textContent = 'Dashboard';
-    navAuthLink.setAttribute('href', ROLE_HOME[role] || '/login.html');
-  }
-
-  if (navLogoutButton) {
-    navLogoutButton.classList.remove('hidden');
-    navLogoutButton.addEventListener('click', logout);
-  }
-
-  if (loggedInPanel) loggedInPanel.classList.remove('hidden');
-  if (loggedInRole) loggedInRole.textContent = role || 'pengguna';
-
-  if (btnGoDashboard) {
-    const bukuId = new URLSearchParams(window.location.search).get('buku_id');
-    let target = ROLE_HOME[role] || '/login.html';
-    if (bukuId && (role === 'siswa' || role === 'guru')) {
-      target += (target.indexOf('?') === -1 ? '?' : '&') + 'action=pinjam&buku_id=' + encodeURIComponent(bukuId);
+  if (isLandingPage) {
+    if (navAuthLink) {
+      navAuthLink.textContent = 'Login';
+      navAuthLink.setAttribute('href', '/login.html');
     }
-    btnGoDashboard.setAttribute('href', target);
+    if (navLogoutButton) {
+      navLogoutButton.classList.add('hidden');
+    }
   }
 
-  return role;
+  return getUserRole();
 }
 
 // Jalankan penyesuaian navigasi publik pada halaman yang memuat modul ini
