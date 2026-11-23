@@ -89,7 +89,10 @@ export function renderPrapinjamOnlyTable() {
   // Update badge jumlah total prapinjam
   if (badgeSubtab) badgeSubtab.textContent = rawPendingList.length;
   if (countDisplay) countDisplay.textContent = `${rawPendingList.length} Antrean`;
-  if (badgePendingApprovals) badgePendingApprovals.textContent = rawPendingList.length;
+  if (badgePendingApprovals) {
+    badgePendingApprovals.textContent = rawPendingList.length;
+    badgePendingApprovals.classList.toggle('hidden', rawPendingList.length === 0);
+  }
 
   // Hitung jumlah masing-masing status persiapan untuk pills
   const countBelum = rawPendingList.filter(p => (p.status_persiapan || 'Belum Diambil') === 'Belum Diambil').length;
@@ -322,6 +325,12 @@ export function setupPrapinjamVerifyModal() {
       if (e.target === modal) closeModal();
     });
   }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeModal();
+    }
+  });
 
   if (launchCameraBtn) {
     launchCameraBtn.addEventListener('click', () => {

@@ -39,6 +39,12 @@ export function setupDeleteBookModal() {
     });
   }
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeDeleteModal();
+    }
+  });
+
   if (confirmBtn) {
     confirmBtn.addEventListener('click', async () => {
       if (!state.deleteTargetBook) return;

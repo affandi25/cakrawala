@@ -38,6 +38,12 @@ export function setupQrCodeModal() {
     });
   }
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeQrModal();
+    }
+  });
+
   if (printBtn) {
     printBtn.addEventListener('click', () => {
       printQrLabel();

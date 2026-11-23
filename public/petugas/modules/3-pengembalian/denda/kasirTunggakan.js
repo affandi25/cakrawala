@@ -85,6 +85,13 @@ export function setupKasirTunggakanHandlers() {
     });
   }
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modalLunasi && !modalLunasi.classList.contains('hidden')) {
+      hideModal(modalLunasi, modalLunasiContent);
+      targetPaymentItem = null;
+    }
+  });
+
   if (btnEksekusiLunasiModal) {
     btnEksekusiLunasiModal.addEventListener('click', async () => {
       if (!targetPaymentItem) return;

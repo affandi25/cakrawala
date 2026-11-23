@@ -66,6 +66,12 @@ export function setupPengumumanFormModal() {
     });
   }
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closePengumumanModal();
+    }
+  });
+
   if (dropzone && fileInput) {
     dropzone.addEventListener('click', e => {
       if (e.target !== removePosterBtn && !removePosterBtn?.contains(e.target)) {
@@ -287,6 +293,16 @@ async function handlePengumumanFormSubmit() {
   if (!judul || !tanggal || !kategori) {
     showToast('Harap lengkapi judul, kategori, dan tanggal pengumuman!', 'warning');
     return;
+  }
+
+  if (linkDetail) {
+    const isHttpUrl = /^https?:\/\/[^\s$.?#].[^\s]*$/i.test(linkDetail);
+    if (!isHttpUrl) {
+      showToast('Tautan informasi pengumuman harus diawali protokol http:// atau https://', 'warning');
+      const linkEl = document.getElementById('inputPengumumanLink');
+      if (linkEl) linkEl.focus();
+      return;
+    }
   }
 
   const saveBtn = document.getElementById('btnSavePengumuman');

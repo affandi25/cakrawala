@@ -32,6 +32,12 @@
         var raw = sessionStorage.getItem('cakrawala_user') || localStorage.getItem('cakrawala_user');
         if (!raw) { window.location.replace(LOGIN_URL); return; }
         var user = JSON.parse(raw);
+        if (user.expires_at && user.expires_at < Date.now()) {
+          sessionStorage.removeItem('cakrawala_user');
+          localStorage.removeItem('cakrawala_user');
+          window.location.replace(LOGIN_URL);
+          return;
+        }
         var role = (user && user.role ? String(user.role) : '').trim().toLowerCase();
         // Role tidak berhak -> lempar ke dashboard milik role-nya sendiri
         if (ALLOWED.indexOf(role) === -1) { window.location.replace(HOME[role] || LOGIN_URL); }

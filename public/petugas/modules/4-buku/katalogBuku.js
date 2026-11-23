@@ -10,7 +10,7 @@
  */
 
 import { state } from '../core/state.js';
-import { formatRupiah, showToast } from '../core/petugasHelper.js';
+import { formatRupiah, showToast, escapeHtml } from '../core/petugasHelper.js';
 import { syncAllTables } from '../core/syncData.js';
 import { openBookModal, setupBookFormModal } from './modalFormBuku.js';
 import { openQrCodeModal, setupQrCodeModal } from './modalQrBuku.js';
@@ -115,20 +115,20 @@ export function renderBooksInventory() {
               ${coverUrl ? `<img src="${coverUrl}" class="h-full w-full object-cover" alt="Cover" onerror="this.src='';this.parentElement.innerHTML='<i class=\\'ph ph-book text-base\\'></i>'" />` : '<i class="ph ph-book text-base"></i>'}
             </div>
             <div>
-              <span class="font-mono text-xs font-bold text-navy">${book.id_buku}</span>
-              <p class="text-[10px] text-slate-400">Tahun: ${book.tahun_terbit}</p>
+              <span class="font-mono text-xs font-bold text-navy">${escapeHtml(book.id_buku)}</span>
+              <p class="text-[10px] text-slate-400">Tahun: ${escapeHtml(String(book.tahun_terbit || '-'))}</p>
             </div>
           </div>
         </td>
 
         <td class="px-5 py-3">
-          <p class="font-bold text-slate-800 text-xs line-clamp-1">${book.judul_buku}</p>
-          <p class="text-[11px] text-slate-500">${book.penulis} &bull; <span class="text-slate-400">${book.penerbit}</span></p>
+          <p class="font-bold text-slate-800 text-xs line-clamp-1">${escapeHtml(book.judul_buku || '')}</p>
+          <p class="text-[11px] text-slate-500">${escapeHtml(book.penulis || '')} &bull; <span class="text-slate-400">${escapeHtml(book.penerbit || '')}</span></p>
         </td>
 
         <td class="px-5 py-3 text-xs">
-          <span class="font-semibold text-slate-700 block">${namaKategori}</span>
-          <span class="inline-block mt-0.5 rounded bg-blue-50 border border-blue-100 px-2 py-0.5 text-[10px] font-bold text-navy">${book.keterangan || 'Rak Umum'}</span>
+          <span class="font-semibold text-slate-700 block">${escapeHtml(namaKategori)}</span>
+          <span class="inline-block mt-0.5 rounded bg-blue-50 border border-blue-100 px-2 py-0.5 text-[10px] font-bold text-navy">${escapeHtml(book.keterangan || 'Rak Umum')}</span>
         </td>
 
         <td class="px-5 py-3">

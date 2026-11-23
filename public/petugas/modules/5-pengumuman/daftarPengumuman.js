@@ -9,6 +9,7 @@
  */
 
 import { state } from '../core/state.js';
+import { escapeHtml } from '../core/petugasHelper.js';
 import { openPengumumanModal } from './modalFormPengumuman.js';
 import { openDeletePengumumanModal } from './modalHapusPengumuman.js';
 
@@ -21,7 +22,10 @@ export function renderPengumumanTable() {
   if (!tbody) return;
 
   const allList = state.cache.pengumuman || [];
-  if (badgeTotalSidebar) badgeTotalSidebar.textContent = allList.length;
+  if (badgeTotalSidebar) {
+    badgeTotalSidebar.textContent = allList.length;
+    badgeTotalSidebar.classList.toggle('hidden', allList.length === 0);
+  }
 
   if (filterSelect) {
     const currentSelected = state.filterKategoriPengumuman || '';
@@ -90,13 +94,18 @@ export function renderPengumumanTable() {
   tbody.innerHTML = filtered.map(item => {
     const posterUrl = item.gambar_url || 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=300';
     const badgeClass = getBadgeStyle(item.kategori);
+    const cleanJudul = escapeHtml(item.judul || '');
+    const cleanKategori = escapeHtml(item.kategori || 'Umum');
+    const cleanTanggal = escapeHtml(item.tanggal_event || '-');
 
-    const linkDetailHtml = item.link_detail ? `
-      <a href="${item.link_detail}" target="_blank" rel="noopener noreferrer"
+    const rawLink = (item.link_detail || '').trim();
+    const safeLink = rawLink && !rawLink.toLowerCase().startsWith('javascript:') ? encodeURI(rawLink) : '';
+    const linkDetailHtml = safeLink ? `
+      <a href="${safeLink}" target="_blank" rel="noopener noreferrer"
         class="inline-flex items-center gap-1 text-xs font-bold text-navy hover:text-blue-600 transition truncate max-w-[180px]"
-        title="${item.link_detail}">
+        title="${escapeHtml(safeLink)}">
         <i class="ph ph-arrow-square-out text-sm shrink-0"></i>
-        <span class="truncate">${item.link_detail.replace(/^https?:\/\/(www\.)?/, '')}</span>
+        <span class="truncate">${escapeHtml(safeLink.replace(/^https?:\/\/(www\.)?/, ''))}</span>
       </a>
     ` : `<span class="text-xs text-slate-400 italic">Tanpa Tautan</span>`;
 
@@ -105,7 +114,7 @@ export function renderPengumumanTable() {
         <td class="px-5 py-3.5">
           <div class="flex items-center gap-3">
             <div class="h-12 w-16 shrink-0 rounded-lg overflow-hidden bg-slate-200 border border-slate-200/80 shadow-2xs">
-              <img src="${posterUrl}" alt="${item.judul}" class="h-full w-full object-cover hover:scale-105 transition duration-300"
+              <img src="${posterUrl}" alt="${cleanJudul}" class="h-full w-full object-cover hover:scale-105 transition duration-300"
                 onerror="this.src='https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=300';" />
             </div>
             <div>
@@ -115,19 +124,19 @@ export function renderPengumumanTable() {
         </td>
 
         <td class="px-5 py-3.5">
-          <p class="font-bold text-slate-800 text-xs line-clamp-2 leading-snug">${item.judul}</p>
+          <p class="font-bold text-slate-800 text-xs line-clamp-2 leading-snug">${cleanJudul}</p>
         </td>
 
         <td class="px-5 py-3.5 whitespace-nowrap">
           <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badgeClass}">
-            ${item.kategori || 'Umum'}
+            ${cleanKategori}
           </span>
         </td>
 
         <td class="px-5 py-3.5 whitespace-nowrap">
           <div class="flex items-center gap-1.5 text-xs text-slate-600 font-semibold">
             <i class="ph ph-calendar text-slate-400 text-sm"></i>
-            <span>${item.tanggal_event || '-'}</span>
+            <span>${cleanTanggal}</span>
           </div>
         </td>
 

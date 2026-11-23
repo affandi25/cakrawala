@@ -69,6 +69,12 @@ export function setupBookFormModal() {
     });
   }
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeBookModal();
+    }
+  });
+
   if (dropzone && fileInput) {
     dropzone.addEventListener('click', e => {
       if (e.target !== removeCoverBtn && !removeCoverBtn.contains(e.target)) {
