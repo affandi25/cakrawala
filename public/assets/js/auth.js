@@ -431,8 +431,8 @@ export function updateMemberProfileDisplay(targetState = {}) {
  * @returns {Promise<boolean>} true bila sesi & role valid
  */
 export async function initSessionAndOfficer(targetState = {}) {
-  // Route guard terpusat: hanya Petugas (dan Admin sebagai superuser) yang diizinkan
-  if (!(await guardRoute(['petugas', 'admin']))) return false;
+  // Route guard terpusat: hanya role Petugas yang diizinkan mengakses dashboard meja sirkulasi
+  if (!(await guardRoute(['petugas']))) return false;
 
   const user = getCurrentUser();
 

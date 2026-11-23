@@ -17,11 +17,11 @@
 <html lang="id">
 
 <head>
-  <!-- ROUTE GUARD (sinkron): hanya role Petugas/Admin. Berjalan sebelum halaman dirender. -->
+  <!-- ROUTE GUARD (sinkron): hanya role Petugas. Berjalan sebelum halaman dirender. -->
   <script>
     (function () {
       var LOGIN_URL = '/login.html';
-      var ALLOWED = ['petugas', 'admin'];
+      var ALLOWED = ['petugas'];
       var HOME = {
         siswa: '/siswa-guru/dashboard.html',
         guru: '/siswa-guru/dashboard.html',
