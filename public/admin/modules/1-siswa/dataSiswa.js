@@ -144,7 +144,7 @@ export function renderTableSiswa(customData = null) {
         <td class="px-6 py-4">
           <div class="flex items-center gap-3">
             ${renderAvatarThumb(row.foto_profil, row.nama_siswa)}
-            <span class="font-bold text-slate-800">${escapeHtml(row.nama_siswa)}</span>
+            <span class="font-bold text-slate-800 max-w-[220px] truncate block" title="${escapeHtml(row.nama_siswa)}">${escapeHtml(row.nama_siswa)}</span>
           </div>
         </td>
         <td class="px-6 py-4">
