@@ -111,18 +111,19 @@ export function switchTab(tabKey) {
   navButtons.forEach(item => {
     const btn = document.getElementById(item.id);
     if (!btn) return;
-    const badge = btn.querySelector('span[id^="badge"]');
+    const badges = btn.querySelectorAll('span[id^="badge"]');
 
     if (item.key === normalizedKey) {
       btn.className = 'nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold transition-all duration-200 bg-navy text-white shadow-sm shadow-navy/20';
-      if (badge) {
-        badge.className = 'rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold text-white';
-      }
+      badges.forEach(b => {
+        b.className = 'rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold text-white';
+      });
     } else {
       btn.className = 'nav-tab-btn group flex w-full items-center gap-3 rounded-xl px-3.5 py-3 text-sm font-semibold text-slate-600 transition-all duration-200 hover:bg-slate-100 hover:text-navy';
-      if (badge) {
-        badge.className = 'rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600';
-      }
+      const bActive = document.getElementById('badgeSidebarActiveCount');
+      if (bActive) bActive.className = 'rounded-full bg-slate-100 px-2 py-0.5 text-xs font-bold text-slate-600';
+      const bPending = document.getElementById('badgeSidebarPendingCount');
+      if (bPending) bPending.className = 'rounded-full bg-amber-100 px-2 py-0.5 text-xs font-bold text-amber-700';
     }
   });
 

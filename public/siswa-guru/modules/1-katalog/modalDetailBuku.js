@@ -50,6 +50,12 @@ export function setupDetailModal(onNavigateToBooking) {
     });
   }
 
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) {
+      closeDetailModal();
+    }
+  });
+
   if (bookBtn) {
     bookBtn.addEventListener('click', () => {
       if (state.selectedBukuDetail) {

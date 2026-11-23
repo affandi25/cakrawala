@@ -31,10 +31,10 @@ export const MAX_ACTIVE_LOANS = 2;
  */
 export function getUserActiveLoansCount() {
   const memberId = state.memberId;
+  if (!memberId) return 0;
   const loans = state.cache.peminjaman || [];
   return loans.filter(p => {
-    const isUser = !memberId || p.nisn_siswa === memberId;
-    return isUser && (p.status === 'Menunggu' || p.status === 'Dipinjam');
+    return p.nisn_siswa === memberId && (p.status === 'Menunggu' || p.status === 'Dipinjam');
   }).length;
 }
 
@@ -45,12 +45,12 @@ export function getUserActiveLoansCount() {
  */
 export function getActiveUserLoanForBook(bookId) {
   const memberId = state.memberId;
+  if (!memberId) return null;
   const loans = state.cache.peminjaman || [];
   const cleanId = String(bookId || '').trim().toLowerCase();
   return loans.find(p => {
-    const isUser = !memberId || p.nisn_siswa === memberId;
     const isBook = String(p.id_buku || '').trim().toLowerCase() === cleanId;
-    return isUser && isBook && (p.status === 'Menunggu' || p.status === 'Dipinjam');
+    return p.nisn_siswa === memberId && isBook && (p.status === 'Menunggu' || p.status === 'Dipinjam');
   }) || null;
 }
 

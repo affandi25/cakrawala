@@ -336,8 +336,22 @@ export function setupProfileModule() {
         return;
       }
 
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(newEmail)) {
+        showToast('Format alamat email tidak valid (contoh: user@domain.com).', 'warning');
+        if (inputEmail) inputEmail.focus();
+        return;
+      }
+
       if (!newKontak) {
         showToast('Nomor kontak/WhatsApp wajib diisi.', 'warning');
+        if (inputKontak) inputKontak.focus();
+        return;
+      }
+
+      const phoneRegex = /^[0-9+\s-]{8,20}$/;
+      if (!phoneRegex.test(newKontak)) {
+        showToast('Format nomor kontak tidak valid (minimal 8 digit angka).', 'warning');
         if (inputKontak) inputKontak.focus();
         return;
       }
