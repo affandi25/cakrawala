@@ -19,7 +19,7 @@ import { setupSirkulasiHandlers, setupWalkInModal, renderSirkulasi } from './mod
 import { initSessionAndOfficer, setupLogout } from '../assets/js/auth.js';
 
 // Import handler Meja 3 (Pengembalian), Meja 4 (Inventaris), Meja 5 (Pengumuman) & Scanner
-import { setupCameraScannerModule } from './modules/scanner/index.js';
+import { setupCameraScannerModule, stopAndCloseCameraScanner } from './modules/scanner/index.js';
 import { setupPengembalianModule, renderPengembalianTab } from './modules/3-pengembalian/index.js';
 import { setupInventarisModule, renderInventarisTab } from './modules/4-buku/index.js';
 import { setupPengumumanModule, renderPengumumanTab } from './modules/5-pengumuman/index.js';
@@ -74,6 +74,11 @@ export function switchTab(tabKey) {
   const cleanTab = (tabKey || '').toLowerCase().trim();
   const validTab = ALLOWED_TABS.includes(cleanTab) ? cleanTab : 'overview';
   state.activeTab = validTab;
+
+  // Matikan hardware kamera scanner secara tuntas jika berpindah tab
+  if (typeof stopAndCloseCameraScanner === 'function') {
+    stopAndCloseCameraScanner().catch(() => {});
+  }
 
   const navButtons = [
     { id: 'tabBtnOverview', key: 'overview' },
