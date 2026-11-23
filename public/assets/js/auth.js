@@ -204,6 +204,15 @@ function initLoginForm() {
     errorMessage.classList.remove('hidden');
   }
 
+  // Sembunyikan pesan error otomatis saat pengguna mulai mengetik ulang
+  const hideErrorOnInput = () => {
+    if (errorMessage && !errorMessage.classList.contains('hidden')) {
+      errorMessage.classList.add('hidden');
+    }
+  };
+  if (usernameInput) usernameInput.addEventListener('input', hideErrorOnInput);
+  if (passwordInput) passwordInput.addEventListener('input', hideErrorOnInput);
+
   function redirectByRole(role) {
     const r = (role || '').trim().toLowerCase();
     const params = new URLSearchParams(window.location.search);
@@ -214,6 +223,13 @@ function initLoginForm() {
     window.location.href = (bukuId && (r === 'siswa' || r === 'guru'))
       ? home + '?action=pinjam&buku_id=' + encodeURIComponent(bukuId)
       : home;
+  }
+
+  // Jika pengguna sudah memiliki sesi login aktif yang sah, langsung alihkan ke dashboard perannya
+  const existingUser = getCurrentUser();
+  if (existingUser && existingUser.role) {
+    redirectByRole(existingUser.role);
+    return;
   }
 
   // Toggle Lihat Password
@@ -240,6 +256,13 @@ function initLoginForm() {
       if (e.target === modalForgotPassword) setForgotModal(false);
     });
   }
+
+  // Tutup modal dengan tombol Escape (aksesibilitas keyboard)
+  window.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && modalForgotPassword && !modalForgotPassword.classList.contains('hidden')) {
+      setForgotModal(false);
+    }
+  });
 
   // Eksekusi Submit Form Login
   loginForm.addEventListener('submit', async (event) => {
