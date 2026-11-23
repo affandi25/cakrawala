@@ -45,9 +45,9 @@ export async function fetchSiswa() {
  */
 export function renderTableSiswa(customData = null) {
   const container = document.getElementById('tabSiswa');
-  const tableBody = container ? container.querySelector('#tableBody') : document.getElementById('tableBody');
-  const recordCount = container ? container.querySelector('#tableRecordCount') : document.getElementById('tableRecordCount');
-  const headRow = container ? container.querySelector('#tableHeadRow') : document.getElementById('tableHeadRow');
+  const tableBody = container ? (container.querySelector('#tableBodySiswa') || container.querySelector('#tableBody')) : (document.getElementById('tableBodySiswa') || document.getElementById('tableBody'));
+  const recordCount = container ? (container.querySelector('#tableRecordCountSiswa') || container.querySelector('#tableRecordCount')) : (document.getElementById('tableRecordCountSiswa') || document.getElementById('tableRecordCount'));
+  const headRow = container ? (container.querySelector('#tableHeadRowSiswa') || container.querySelector('#tableHeadRow')) : (document.getElementById('tableHeadRowSiswa') || document.getElementById('tableHeadRow'));
 
   if (!tableBody) return;
 
@@ -215,57 +215,9 @@ export function renderTableSiswa(customData = null) {
  * Setup Event Listener Pencarian & Aksi Tab Siswa
  */
 export function setupSiswaEventListeners() {
+  // Listener pencarian, refresh, dan tambah user dikelola secara terpusat di admin.js & modalUser.js
   if (searchListenerAttached) return;
   searchListenerAttached = true;
-
-  const tabContainer = document.getElementById('tabSiswa');
-  if (!tabContainer) return;
-
-  const searchInput = tabContainer.querySelector('#searchInput');
-  const btnClear = tabContainer.querySelector('#btnClearSearch');
-  const btnRefresh = tabContainer.querySelector('#btnRefreshData');
-  const btnAdd = tabContainer.querySelector('#btnOpenAddModal');
-
-  if (searchInput) {
-    searchInput.addEventListener('input', (e) => {
-      state.searchQuery = e.target.value;
-      if (btnClear) {
-        if (state.searchQuery.length > 0) btnClear.classList.remove('hidden');
-        else btnClear.classList.add('hidden');
-      }
-      renderTableSiswa();
-    });
-  }
-
-  if (btnClear && searchInput) {
-    btnClear.addEventListener('click', () => {
-      searchInput.value = '';
-      state.searchQuery = '';
-      btnClear.classList.add('hidden');
-      searchInput.focus();
-      renderTableSiswa();
-    });
-  }
-
-  if (btnRefresh) {
-    btnRefresh.addEventListener('click', async () => {
-      const icon = btnRefresh.querySelector('i');
-      if (icon) icon.classList.add('animate-spin');
-      try {
-        await fetchSiswa();
-        renderTableSiswa();
-      } finally {
-        if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 300);
-      }
-    });
-  }
-
-  if (btnAdd) {
-    btnAdd.addEventListener('click', () => {
-      state.activeTab = 'siswa';
-      openAddModal();
-    });
-  }
 }
 
 /**

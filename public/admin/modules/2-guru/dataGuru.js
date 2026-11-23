@@ -224,55 +224,9 @@ export function renderTableGuru(customData = null) {
  * Setup Event Listener Pencarian & Aksi Tab Guru
  */
 export function setupGuruEventListeners() {
+  // Listener pencarian, refresh, dan tambah user dikelola secara terpusat di admin.js & modalUser.js
   if (searchListenerAttached) return;
   searchListenerAttached = true;
-
-  const tabContainer = document.getElementById('tabGuru');
-  if (!tabContainer) return;
-
-  const searchInput = tabContainer.querySelector('#searchInputGuru');
-  const btnClear = tabContainer.querySelector('#btnClearSearchGuru');
-  const btnRefresh = tabContainer.querySelector('#btnRefreshDataGuru');
-  const btnAdd = tabContainer.querySelector('#btnOpenAddModalGuru');
-
-  if (searchInput) {
-    searchInput.addEventListener('input', () => {
-      if (btnClear) {
-        if (searchInput.value.trim().length > 0) btnClear.classList.remove('hidden');
-        else btnClear.classList.add('hidden');
-      }
-      renderTableGuru();
-    });
-  }
-
-  if (btnClear && searchInput) {
-    btnClear.addEventListener('click', () => {
-      searchInput.value = '';
-      btnClear.classList.add('hidden');
-      searchInput.focus();
-      renderTableGuru();
-    });
-  }
-
-  if (btnRefresh) {
-    btnRefresh.addEventListener('click', async () => {
-      const icon = btnRefresh.querySelector('i');
-      if (icon) icon.classList.add('animate-spin');
-      try {
-        await fetchGuru();
-        renderTableGuru();
-      } finally {
-        if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 300);
-      }
-    });
-  }
-
-  if (btnAdd) {
-    btnAdd.addEventListener('click', () => {
-      state.activeTab = 'guru';
-      openAddModal();
-    });
-  }
 }
 
 /**

@@ -216,55 +216,9 @@ export function renderTablePetugas(customData = null) {
  * Setup Event Listener Pencarian & Aksi Tab Petugas
  */
 export function setupPetugasEventListeners() {
+  // Listener pencarian, refresh, dan tambah user dikelola secara terpusat di admin.js & modalUser.js
   if (searchListenerAttached) return;
   searchListenerAttached = true;
-
-  const tabContainer = document.getElementById('tabPetugas');
-  if (!tabContainer) return;
-
-  const searchInput = tabContainer.querySelector('#searchInputPetugas');
-  const btnClear = tabContainer.querySelector('#btnClearSearchPetugas');
-  const btnRefresh = tabContainer.querySelector('#btnRefreshDataPetugas');
-  const btnAdd = tabContainer.querySelector('#btnOpenAddModalPetugas');
-
-  if (searchInput) {
-    searchInput.addEventListener('input', () => {
-      if (btnClear) {
-        if (searchInput.value.trim().length > 0) btnClear.classList.remove('hidden');
-        else btnClear.classList.add('hidden');
-      }
-      renderTablePetugas();
-    });
-  }
-
-  if (btnClear && searchInput) {
-    btnClear.addEventListener('click', () => {
-      searchInput.value = '';
-      btnClear.classList.add('hidden');
-      searchInput.focus();
-      renderTablePetugas();
-    });
-  }
-
-  if (btnRefresh) {
-    btnRefresh.addEventListener('click', async () => {
-      const icon = btnRefresh.querySelector('i');
-      if (icon) icon.classList.add('animate-spin');
-      try {
-        await fetchPetugas();
-        renderTablePetugas();
-      } finally {
-        if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 300);
-      }
-    });
-  }
-
-  if (btnAdd) {
-    btnAdd.addEventListener('click', () => {
-      state.activeTab = 'petugas';
-      openAddModal();
-    });
-  }
 }
 
 /**

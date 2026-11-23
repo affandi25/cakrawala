@@ -71,7 +71,7 @@ export function openAddModal() {
   if (starPassword) starPassword.classList.remove('hidden');
   if (inputPass) {
     inputPass.required = true;
-    inputPass.value = 'Password123';
+    inputPass.value = 'password123';
     inputPass.placeholder = 'Default: password123';
     inputPass.type = 'password';
   }
@@ -873,7 +873,7 @@ export async function handleAddUserSubmit(event) {
     return;
   }
 
-  const effectivePassword = (password && password.trim() !== '') ? password.trim() : 'Password123';
+  const effectivePassword = (password && password.trim() !== '') ? password.trim() : 'password123';
 
   if (effectivePassword.length < 6) {
     showModalFormError('Password minimal harus 6 karakter.');
