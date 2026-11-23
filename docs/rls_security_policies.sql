@@ -145,48 +145,30 @@ USING (app_private.sesi_role() IN ('Admin', 'Petugas'));
 
 
 -- ==============================================================================
--- 2.3 TABEL data_guru
+-- 2.3 TABEL data_guru (HANYA ADMIN)
 -- ==============================================================================
 ALTER TABLE public.data_guru ENABLE ROW LEVEL SECURITY;
 
--- SELECT: Admin & Petugas bisa lihat semua guru, Guru hanya profil miliknya
+-- SELECT: Hanya Admin yang bisa melihat data guru
 CREATE POLICY "data_guru_select" ON public.data_guru
 FOR SELECT TO public
-USING (
-  (app_private.sesi_role() IN ('Admin', 'Petugas')) 
-  OR (
-    (app_private.sesi_role() = 'Guru') 
-    AND (id_user = app_private.sesi_user() OR nip_guru = app_private.ident_saya())
-  )
-);
+USING (app_private.sesi_role() = 'Admin');
 
--- INSERT: Admin & Petugas
+-- INSERT: Hanya Admin yang bisa menambah data guru
 CREATE POLICY "data_guru_insert" ON public.data_guru
 FOR INSERT TO public
-WITH CHECK (app_private.sesi_role() IN ('Admin', 'Petugas'));
+WITH CHECK (app_private.sesi_role() = 'Admin');
 
--- UPDATE: Admin & Petugas bisa edit semua, Guru hanya profilnya sendiri
+-- UPDATE: Hanya Admin yang bisa mengubah data guru
 CREATE POLICY "data_guru_update" ON public.data_guru
 FOR UPDATE TO public
-USING (
-  (app_private.sesi_role() IN ('Admin', 'Petugas')) 
-  OR (
-    (app_private.sesi_role() = 'Guru') 
-    AND (id_user = app_private.sesi_user() OR nip_guru = app_private.ident_saya())
-  )
-)
-WITH CHECK (
-  (app_private.sesi_role() IN ('Admin', 'Petugas')) 
-  OR (
-    (app_private.sesi_role() = 'Guru') 
-    AND (id_user = app_private.sesi_user() OR nip_guru = app_private.ident_saya())
-  )
-);
+USING (app_private.sesi_role() = 'Admin')
+WITH CHECK (app_private.sesi_role() = 'Admin');
 
--- DELETE: Hanya Admin & Petugas
+-- DELETE: Hanya Admin yang bisa menghapus data guru
 CREATE POLICY "data_guru_delete" ON public.data_guru
 FOR DELETE TO public
-USING (app_private.sesi_role() IN ('Admin', 'Petugas'));
+USING (app_private.sesi_role() = 'Admin');
 
 
 -- ==============================================================================
