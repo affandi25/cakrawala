@@ -12,6 +12,29 @@ var activeBookId = null;
 
 var modal = document.querySelector('#modal-buku');
 
+/**
+ * Sanitasi string untuk mencegah kerentanan XSS (OWASP A03)
+ */
+function escapeHtml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Sanitasi URL untuk mencegah injection javascript: atau data: URI
+ */
+function sanitizeUrl(url, fallback = '#') {
+  if (!url || typeof url !== 'string') return fallback;
+  const clean = url.trim();
+  if (/^(?:https?:|\/|#)/i.test(clean)) return clean;
+  return fallback;
+}
+
 // ========================================================
 // 1. MANAJEMEN MODAL & PRA-PINJAM
 // ========================================================
@@ -99,41 +122,45 @@ async function loadPengumuman() {
     if (error) throw error;
 
     container.innerHTML = data.map(function (item) {
+      const safeGambar = sanitizeUrl(item.gambar_url, 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80');
+      const safeJudul = escapeHtml(item.judul);
+      const safeKategori = escapeHtml(item.kategori);
+      const safeTanggal = escapeHtml(item.tanggal_event);
+      const safeLink = sanitizeUrl(item.link_detail, '#');
+
       return `
-        <article data-aos="fade-up"class="announcement-card group relative flex-shrink-0 w-[380px] sm:w-[480px] h-[220px] snap-start flex" >
-          <!-- Sisi Poster: Tampilan poster jernih natural tanpa aura/filter gradasi biru tua -->
+        <article data-aos="fade-up" class="announcement-card group relative flex-shrink-0 w-[380px] sm:w-[480px] h-[220px] snap-start flex">
+          <!-- Sisi Poster -->
           <div class="relative w-40 sm:w-48 h-full flex-shrink-0 overflow-hidden bg-slate-900">
             <img 
-              src="${item.gambar_url || 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80'}" 
-              alt="Poster ${item.judul}" 
+              src="${safeGambar}" 
+              alt="Poster ${safeJudul}" 
               class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=600&q=80';"
             />
-            <!-- Label Kategori di pojok atas poster -->
             <div class="absolute top-3 left-3 pointer-events-none">
               <span class="inline-block rounded-full bg-slate-900/70 backdrop-blur-md px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white border border-white/20 shadow-sm">
-                ${item.kategori}
+                ${safeKategori}
               </span>
             </div>
           </div>
 
-          <!-- Sisi Konten: Putih normal -> Gradasi Biru Dongker dengan font putih saat terkena cursor (hover) -->
+          <!-- Sisi Konten -->
           <div class="announcement-content flex-1 p-5 flex flex-col justify-between">
             <div>
               <p class="announcement-badge-type text-[11px] font-bold uppercase tracking-wider">Pengumuman Resmi</p>
               <h3 class="announcement-title mt-1 text-base sm:text-lg font-bold line-clamp-2 leading-snug">
-                ${item.judul}
+                ${safeJudul}
               </h3>
-              <!-- Info Tanggal Agenda / Event dipindah ke sisi kanan agar gambar poster bebas tidak tertutupi -->
               <div class="announcement-date mt-2.5 flex items-center gap-1.5 text-xs font-semibold">
                 <i class="ph ph-calendar-blank text-sm"></i>
-                <span>${item.tanggal_event}</span>
+                <span>${safeTanggal}</span>
               </div>
             </div>
 
             <div class="announcement-divider pt-2 border-t flex items-center justify-between">
               <a 
-                href="${item.link_detail || '#'}" 
+                href="${safeLink}" 
                 target="_blank" 
                 rel="noopener noreferrer"
                 class="announcement-action-link inline-flex items-center gap-1.5 text-xs font-bold"
@@ -171,13 +198,19 @@ function scrollAnnouncement(direction) {
 // ========================================================
 function createBookHorizontalCard(buku) {
   var isTersedia = buku.status === 'Tersedia' && parseInt(buku.stok) > 0;
+  var safeId = escapeHtml(buku.id_buku);
+  var safeCover = sanitizeUrl(buku.cover_url, '');
+  var safeJudul = escapeHtml(buku.judul_buku);
+  var safePenulis = escapeHtml(buku.penulis);
+  var safeStok = escapeHtml(buku.stok);
+
   return `
-    <div class="book-horizontal-card flex-none w-[240px] sm:w-[270px] snap-start" onclick="openDetailModal('${buku.id_buku}')">
+    <div class="book-horizontal-card flex-none w-[240px] sm:w-[270px] snap-start" data-book-id="${safeId}" onclick="openDetailModal(this.dataset.bookId)">
       <!-- Cover Buku -->
       <div class="cover-box">
         <img 
-          src="${buku.cover_url || ''}" 
-          alt="${buku.judul_buku}" 
+          src="${safeCover}" 
+          alt="${safeJudul}" 
           class="h-full w-full object-cover"
           onerror="this.onerror=null;this.src='https://placehold.co/300x450/000C4F/FFFFFF?text=No+Cover';"
           loading="lazy"
@@ -187,13 +220,13 @@ function createBookHorizontalCard(buku) {
       <!-- Keterangan Samping -->
       <div class="flex flex-1 flex-col justify-center min-w-0 pr-1">
         <h4 class="text-sm font-extrabold text-navy leading-snug line-clamp-2 hover:underline">
-          ${buku.judul_buku}
+          ${safeJudul}
         </h4>
         <p class="mt-1 text-xs text-slate-500 line-clamp-1">
-          ${buku.penulis}
+          ${safePenulis}
         </p>
         <p class="mt-1 text-xs text-slate-500 line-clamp-1">
-          Stok: ${buku.stok}
+          Stok: ${safeStok}
         </p>
 
         <div class="mt-2.5">
@@ -312,6 +345,7 @@ function renderShelfView() {
     if (booksInCat.length === 0) return;
 
     var rowId = 'row-' + cat.id_kategori;
+    var safeCatName = escapeHtml(cat.nama_kategori);
     var rowCard = document.createElement('div');
     rowCard.className = 'catalog-row-card p-5';
     rowCard.setAttribute('data-aos', 'fade-up');
@@ -322,23 +356,23 @@ function renderShelfView() {
           <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-navy font-bold">
             <i class="ph-fill ph-book-open text-base"></i>
           </div>
-          <h3 class="text-base font-extrabold text-navy tracking-tight">${cat.nama_kategori}</h3>
+          <h3 class="text-base font-extrabold text-navy tracking-tight">${safeCatName}</h3>
           <span class="text-xs text-slate-400 font-medium">(${booksInCat.length} koleksi)</span>
         </div>
 
         <div class="flex items-center gap-3">
           <!-- Tombol Navigasi Geser -->
           <div class="flex items-center gap-1.5">
-            <button type="button" onclick="scrollRow('${rowId}', 'left')" class="cat-nav-btn text-xs active:scale-95" aria-label="Geser kiri">
+            <button type="button" data-row-id="${rowId}" onclick="scrollRow(this.dataset.rowId, 'left')" class="cat-nav-btn text-xs active:scale-95" aria-label="Geser kiri">
               <i class="ph ph-caret-left font-bold"></i>
             </button>
-            <button type="button" onclick="scrollRow('${rowId}', 'right')" class="cat-nav-btn text-xs active:scale-95" aria-label="Geser kanan">
+            <button type="button" data-row-id="${rowId}" onclick="scrollRow(this.dataset.rowId, 'right')" class="cat-nav-btn text-xs active:scale-95" aria-label="Geser kanan">
               <i class="ph ph-caret-right font-bold"></i>
             </button>
           </div>
 
           <!-- Tautan Lihat Semua -->
-          <button type="button" onclick="filterByCategory('${cat.nama_kategori}')" class="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-navy hover:text-blue-700 transition">
+          <button type="button" data-category-name="${safeCatName}" onclick="filterByCategory(this.dataset.categoryName)" class="hidden sm:inline-flex items-center gap-1 text-xs font-bold text-navy hover:text-blue-700 transition">
             <span>Lihat semua</span>
             <i class="ph ph-arrow-right text-xs font-bold"></i>
           </button>
@@ -440,6 +474,14 @@ function initSearchEvents() {
     clearSearchBtn.addEventListener('click', function () {
       syncSearchInput('');
       if (catalogSearch) catalogSearch.focus();
+    });
+  }
+
+  var heroSearchSubmitBtn = document.getElementById('btnHeroSearchSubmit');
+  if (heroSearchSubmitBtn) {
+    heroSearchSubmitBtn.addEventListener('click', function () {
+      if (heroSearch) syncSearchInput(heroSearch.value);
+      document.getElementById('katalog')?.scrollIntoView({ behavior: 'smooth' });
     });
   }
 

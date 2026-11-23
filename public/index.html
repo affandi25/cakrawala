@@ -85,7 +85,7 @@
 
   <main>
     <!-- Hero Section GSAP Scroll -->
-    <section id="hero" class="relative h-[300vh] bg-navy text-white">
+    <section id="hero" class="relative h-[200vh] sm:h-[300vh] bg-navy text-white">
       <div class="sticky top-0 flex h-screen items-center justify-center overflow-hidden px-4">
         <div id="hero-books" class="pointer-events-none absolute inset-0 z-10 flex items-center justify-center">
           <article
@@ -117,7 +117,12 @@
             <i class="ph ph-magnifying-glass absolute left-5 top-1/2 z-10 -translate-y-1/2 text-2xl text-slate-400"
               aria-hidden="true"></i>
             <input id="searchInput" type="search" aria-label="Cari buku" placeholder="Cari judul buku atau penulis..."
-              class="w-full rounded-full bg-white py-5 pl-14 pr-5 text-lg font-medium text-slate-900 outline-none shadow-xl focus:ring-4 focus:ring-blue-300" />
+              class="w-full rounded-full bg-white py-4 pl-14 pr-24 text-base sm:py-5 sm:text-lg font-medium text-slate-900 outline-none shadow-xl focus:ring-4 focus:ring-blue-300" />
+            <button type="button" id="btnHeroSearchSubmit" aria-label="Cari buku dan lihat katalog"
+              class="absolute right-2.5 top-1/2 -translate-y-1/2 flex items-center gap-1 rounded-full bg-navy px-3.5 py-2 sm:px-4 sm:py-2.5 text-xs font-bold text-white shadow-md transition hover:bg-blue-900 active:scale-95">
+              <span>Cari</span>
+              <i class="ph ph-arrow-down font-bold"></i>
+            </button>
           </div>
         </div>
 
@@ -285,6 +290,12 @@
   </div>
 
 
+
+  <!-- Floating Back to Top Button -->
+  <button id="btnScrollToTop" type="button" aria-label="Kembali ke atas"
+    class="btn-scroll-top fixed bottom-6 right-6 z-40 hidden h-11 w-11 items-center justify-center rounded-full bg-navy text-white shadow-xl transition-all duration-300 hover:bg-blue-900 focus:outline-none focus:ring-2 focus:ring-navy focus:ring-offset-2">
+    <i class="ph ph-arrow-up text-lg font-bold"></i>
+  </button>
 
   <!-- Footer -->
   <footer class="bg-navy py-8 text-center text-sm text-blue-100">

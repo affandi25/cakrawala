@@ -317,3 +317,20 @@
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
 }
+
+/* --------------------------------------------------------------------------
+   6. FLOATING BACK TO TOP BUTTON
+   -------------------------------------------------------------------------- */
+.btn-scroll-top {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px);
+  transition: opacity 0.3s ease, transform 0.3s ease, background-color 0.2s ease;
+}
+
+.btn-scroll-top.visible {
+  display: flex !important;
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
