@@ -682,6 +682,9 @@ export async function handleAddUserSubmit(event) {
   // ========================================================
   // MODE EDIT PENGGUNA & RESET PASSWORD
   // ========================================================
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const phoneRegex = /^[0-9+\s-]{8,20}$/;
+
   if (state.modalMode === 'edit') {
     const editingRecord = state.editingRecord;
     if (!editingRecord || !editingRecord.id_user) {
@@ -693,10 +696,78 @@ export async function handleAddUserSubmit(event) {
       showModalFormError('Username wajib diisi.');
       return;
     }
+    if (!/^[a-zA-Z0-9_]{3,20}$/.test(username)) {
+      showModalFormError('Username harus 3-20 karakter dan hanya boleh berisi huruf, angka, atau underscore (_).');
+      return;
+    }
 
     if (password && password.length < 6) {
       showModalFormError('Password baru minimal harus 6 karakter.');
       return;
+    }
+
+    // Validasi data profil saat edit
+    if (state.activeTab === 'siswa') {
+      const namaVal = String(formData.get('nama_siswa') || '').trim();
+      const kelasVal = String(formData.get('kelas') || '').trim();
+      const emailVal = String(formData.get('email_siswa') || '').trim();
+      const kontakVal = String(formData.get('kontak_siswa') || '').trim();
+
+      if (!namaVal || namaVal.length < 2) {
+        showModalFormError('Nama siswa wajib diisi minimal 2 karakter.');
+        return;
+      }
+      if (!kelasVal) {
+        showModalFormError('Kelas siswa wajib dipilih/diisi.');
+        return;
+      }
+      if (!emailVal || !emailRegex.test(emailVal)) {
+        showModalFormError('Email siswa tidak valid (harus mengandung @ dan domain yang sah).');
+        return;
+      }
+      if (!kontakVal || !phoneRegex.test(kontakVal)) {
+        showModalFormError('Nomor kontak/WhatsApp siswa tidak valid (minimal 8 digit angka).');
+        return;
+      }
+    } else if (state.activeTab === 'guru') {
+      const namaVal = String(formData.get('nama_guru') || '').trim();
+      const mapelVal = String(formData.get('mata_pelajaran') || '').trim();
+      const emailVal = String(formData.get('email_guru') || '').trim();
+      const kontakVal = String(formData.get('kontak_guru') || '').trim();
+
+      if (!namaVal || namaVal.length < 2) {
+        showModalFormError('Nama guru wajib diisi minimal 2 karakter.');
+        return;
+      }
+      if (!mapelVal) {
+        showModalFormError('Mata pelajaran guru wajib diisi.');
+        return;
+      }
+      if (!emailVal || !emailRegex.test(emailVal)) {
+        showModalFormError('Email guru tidak valid (harus mengandung @ dan domain yang sah).');
+        return;
+      }
+      if (!kontakVal || !phoneRegex.test(kontakVal)) {
+        showModalFormError('Nomor kontak guru tidak valid (minimal 8 digit angka).');
+        return;
+      }
+    } else if (state.activeTab === 'petugas') {
+      const namaVal = String(formData.get('nama_petugas') || '').trim();
+      const emailVal = String(formData.get('email_petugas') || '').trim();
+      const kontakVal = String(formData.get('kontak_petugas') || '').trim();
+
+      if (!namaVal || namaVal.length < 2) {
+        showModalFormError('Nama petugas wajib diisi minimal 2 karakter.');
+        return;
+      }
+      if (!emailVal || !emailRegex.test(emailVal)) {
+        showModalFormError('Email petugas tidak valid (harus mengandung @ dan domain yang sah).');
+        return;
+      }
+      if (!kontakVal || !phoneRegex.test(kontakVal)) {
+        showModalFormError('Nomor kontak petugas tidak valid (minimal 8 digit angka).');
+        return;
+      }
     }
 
     setModalSubmitLoading(true);
@@ -724,10 +795,10 @@ export async function handleAddUserSubmit(event) {
       let updateError = null;
       if (state.activeTab === 'siswa') {
         const payload = {
-          nama_siswa: formData.get('nama_siswa'),
-          kelas: formData.get('kelas'),
-          email_siswa: formData.get('email_siswa'),
-          kontak_siswa: formData.get('kontak_siswa')
+          nama_siswa: String(formData.get('nama_siswa') || '').trim(),
+          kelas: String(formData.get('kelas') || '').trim(),
+          email_siswa: String(formData.get('email_siswa') || '').trim(),
+          kontak_siswa: String(formData.get('kontak_siswa') || '').trim()
         };
         if (editingRecord.foto_profil) payload.foto_profil = editingRecord.foto_profil;
 
@@ -739,10 +810,10 @@ export async function handleAddUserSubmit(event) {
 
       } else if (state.activeTab === 'guru') {
         const payload = {
-          nama_guru: formData.get('nama_guru'),
-          mata_pelajaran: formData.get('mata_pelajaran'),
-          email_guru: formData.get('email_guru'),
-          kontak_guru: formData.get('kontak_guru')
+          nama_guru: String(formData.get('nama_guru') || '').trim(),
+          mata_pelajaran: String(formData.get('mata_pelajaran') || '').trim(),
+          email_guru: String(formData.get('email_guru') || '').trim(),
+          kontak_guru: String(formData.get('kontak_guru') || '').trim()
         };
         if (editingRecord.foto_profil) payload.foto_profil = editingRecord.foto_profil;
 
@@ -754,9 +825,9 @@ export async function handleAddUserSubmit(event) {
 
       } else if (state.activeTab === 'petugas') {
         const payload = {
-          nama_petugas: formData.get('nama_petugas'),
-          email_petugas: formData.get('email_petugas'),
-          kontak_petugas: formData.get('kontak_petugas')
+          nama_petugas: String(formData.get('nama_petugas') || '').trim(),
+          email_petugas: String(formData.get('email_petugas') || '').trim(),
+          kontak_petugas: String(formData.get('kontak_petugas') || '').trim()
         };
 
         const { error } = await db
@@ -810,7 +881,6 @@ export async function handleAddUserSubmit(event) {
   }
 
   // Validasi field spesifik per entitas (Mencegah input kosong/tidak valid - BUG D1)
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   let nisnVal = '', nipVal = '', idPetugasVal = '', namaVal = '', emailVal = '', kontakVal = '';
 
   if (role === 'siswa') {
@@ -840,8 +910,8 @@ export async function handleAddUserSubmit(event) {
       showModalFormError('Email siswa tidak valid (harus mengandung @ dan domain yang sah).');
       return;
     }
-    if (!kontakVal) {
-      showModalFormError('Nomor kontak/WhatsApp siswa wajib diisi.');
+    if (!kontakVal || !phoneRegex.test(kontakVal)) {
+      showModalFormError('Nomor kontak/WhatsApp siswa tidak valid (minimal 8 digit angka).');
       return;
     }
   } else if (role === 'guru') {
@@ -855,8 +925,12 @@ export async function handleAddUserSubmit(event) {
       showModalFormError('NIP guru wajib diisi.');
       return;
     }
-    if (!namaVal) {
-      showModalFormError('Nama lengkap guru wajib diisi.');
+    if (!/^\d{8,20}$/.test(nipVal)) {
+      showModalFormError('NIP guru harus berupa 8-20 digit angka.');
+      return;
+    }
+    if (!namaVal || namaVal.length < 2) {
+      showModalFormError('Nama lengkap guru wajib diisi minimal 2 karakter.');
       return;
     }
     if (!mapelVal) {
@@ -867,8 +941,8 @@ export async function handleAddUserSubmit(event) {
       showModalFormError('Email guru tidak valid (harus mengandung @ dan domain yang sah).');
       return;
     }
-    if (!kontakVal) {
-      showModalFormError('Nomor kontak guru wajib diisi.');
+    if (!kontakVal || !phoneRegex.test(kontakVal)) {
+      showModalFormError('Nomor kontak guru tidak valid (minimal 8 digit angka).');
       return;
     }
   } else if (role === 'petugas') {
@@ -881,16 +955,20 @@ export async function handleAddUserSubmit(event) {
       showModalFormError('ID Petugas wajib diisi.');
       return;
     }
-    if (!namaVal) {
-      showModalFormError('Nama petugas wajib diisi.');
+    if (!/^[A-Za-z0-9_-]{3,20}$/.test(idPetugasVal)) {
+      showModalFormError('ID Petugas harus 3-20 karakter alfanumerik (contoh: PTG001).');
+      return;
+    }
+    if (!namaVal || namaVal.length < 2) {
+      showModalFormError('Nama petugas wajib diisi minimal 2 karakter.');
       return;
     }
     if (!emailVal || !emailRegex.test(emailVal)) {
       showModalFormError('Email petugas tidak valid (harus mengandung @ dan domain yang sah).');
       return;
     }
-    if (!kontakVal) {
-      showModalFormError('Nomor kontak petugas wajib diisi.');
+    if (!kontakVal || !phoneRegex.test(kontakVal)) {
+      showModalFormError('Nomor kontak petugas tidak valid (minimal 8 digit angka).');
       return;
     }
   }

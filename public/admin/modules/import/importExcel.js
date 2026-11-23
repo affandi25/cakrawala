@@ -384,9 +384,34 @@ export async function executeImportBatch() {
         throw new Error(`Kolom ${role === 'siswa' ? 'NISN' : role === 'guru' ? 'NIP' : 'ID Petugas'} tidak boleh kosong.`);
       }
 
+      if (role === 'siswa' && !/^\d{8,12}$/.test(primaryKey)) {
+        throw new Error(`NISN "${primaryKey}" harus berupa 8-12 digit angka.`);
+      }
+      if (role === 'guru' && !/^\d{8,20}$/.test(primaryKey)) {
+        throw new Error(`NIP "${primaryKey}" harus berupa deretan 8-20 digit angka.`);
+      }
+      if (role === 'petugas' && !/^[A-Za-z0-9_-]{3,20}$/.test(primaryKey)) {
+        throw new Error(`ID Petugas "${primaryKey}" tidak valid (3-20 karakter alfanumerik).`);
+      }
+
       const nama = (row.nama || '').trim();
-      if (!nama) {
-        throw new Error('Kolom Nama Lengkap tidak boleh kosong.');
+      if (!nama || nama.length < 2) {
+        throw new Error('Kolom Nama Lengkap wajib diisi minimal 2 karakter.');
+      }
+      if (/^\d+$/.test(nama)) {
+        throw new Error(`Nama Lengkap "${nama}" tidak valid (tidak boleh hanya angka).`);
+      }
+
+      // Validasi Kelas (Siswa)
+      let kelas = (row.kelas || '').trim();
+      if (role === 'siswa' && !kelas) {
+        throw new Error('Kolom Kelas wajib diisi untuk data siswa.');
+      }
+
+      // Validasi Mata Pelajaran (Guru)
+      let mapel = (row.mata_pelajaran || '').trim();
+      if (role === 'guru' && !mapel) {
+        throw new Error('Kolom Mata Pelajaran wajib diisi untuk data guru.');
       }
 
       // Validasi Email (Wajib ada dan berformat valid) - Mencegah format rusak (BUG D3)
@@ -397,6 +422,13 @@ export async function executeImportBatch() {
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
         throw new Error(`Format email "${email}" tidak valid (harus mengandung @ dan domain yang sah).`);
       }
+
+      // Validasi Kontak Telepon (jika diisi, harus format nomor valid)
+      let kontak = (row.kontak || '').trim();
+      if (kontak && kontak !== '-' && !/^[0-9+\s-]{8,20}$/.test(kontak)) {
+        throw new Error(`Nomor kontak "${kontak}" tidak valid (minimal 8 digit angka).`);
+      }
+      if (!kontak) kontak = '-';
 
       // Validasi Password (Wajib ada dan minimal 6 karakter, tidak boleh disederhanakan diam-diam) - BUG D3
       const rawPassword = row.password !== undefined && row.password !== null ? String(row.password).trim() : '';
@@ -444,9 +476,9 @@ export async function executeImportBatch() {
           {
             nisn_siswa: primaryKey,
             nama_siswa: nama,
-            kelas: row.kelas || 'X',
-            email_siswa: row.email || `${username}@sekolah.sch.id`,
-            kontak_siswa: row.kontak || '-',
+            kelas: kelas,
+            email_siswa: email,
+            kontak_siswa: kontak,
             id_user: idUser
           }
         ]);
@@ -457,9 +489,9 @@ export async function executeImportBatch() {
           {
             nip_guru: primaryKey,
             nama_guru: nama,
-            mata_pelajaran: row.mata_pelajaran || 'Umum',
-            email_guru: row.email || `${username}@sekolah.sch.id`,
-            kontak_guru: row.kontak || '-',
+            mata_pelajaran: mapel,
+            email_guru: email,
+            kontak_guru: kontak,
             id_user: idUser
           }
         ]);
@@ -470,8 +502,8 @@ export async function executeImportBatch() {
           {
             id_petugas: primaryKey,
             nama_petugas: nama,
-            email_petugas: row.email || `${username}@cakrawala.id`,
-            kontak_petugas: row.kontak || '-',
+            email_petugas: email,
+            kontak_petugas: kontak,
             id_user: idUser
           }
         ]);
