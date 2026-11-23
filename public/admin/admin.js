@@ -74,6 +74,8 @@ function initEventListeners() {
 
   if (btnRefreshKpi) {
     btnRefreshKpi.addEventListener('click', async () => {
+      if (btnRefreshKpi.disabled) return;
+      btnRefreshKpi.disabled = true;
       const icon = btnRefreshKpi.querySelector('i');
       if (icon) icon.classList.add('animate-spin');
       try {
@@ -81,6 +83,7 @@ function initEventListeners() {
         showToast('Ringkasan metrik berhasil diperbarui!', 'success');
       } finally {
         if (icon) setTimeout(() => icon.classList.remove('animate-spin'), 300);
+        setTimeout(() => { btnRefreshKpi.disabled = false; }, 600);
       }
     });
   }
@@ -187,6 +190,9 @@ document.addEventListener('DOMContentLoaded', async () => {
   initModalKonfirmasi();
   initImportExcel();
 
-  // 6. Sinkronisasi tampilan awal tab
-  switchTab(state.activeTab);
+  // 6. Sinkronisasi tampilan awal tab (Validasi aman whitelist terhadap URL query)
+  const urlParams = new URLSearchParams(window.location.search);
+  const rawTab = (urlParams.get('tab') || '').toLowerCase().trim();
+  const validTab = ['beranda', 'siswa', 'guru', 'petugas'].includes(rawTab) ? rawTab : 'beranda';
+  switchTab(validTab);
 });

@@ -11,10 +11,17 @@
 import { db } from '../../../assets/js/supabaseClient.js';
 import { DOM } from '../core/state.js';
 
+let isKpiLoading = false;
+
 /**
  * Menghitung dan menampilkan total jumlah pengguna ke kartu ringkasan KPI
  */
 export async function loadKpiStats() {
+  if (isKpiLoading) {
+    console.log('[Admin KPI] Kalkulasi sedang berjalan, request ganda diabaikan.');
+    return null;
+  }
+  isKpiLoading = true;
   console.log('[Admin KPI] Memulai kalkulasi metrik pengguna dari Supabase...');
   try {
     const [siswaRes, guruRes, petugasRes] = await Promise.all([
@@ -79,6 +86,8 @@ export async function loadKpiStats() {
       elDbStatus.textContent = 'Koneksi Terputus';
     }
     return null;
+  } finally {
+    isKpiLoading = false;
   }
 }
 
