@@ -21,6 +21,9 @@ skills-lock.json
 # Legacy local PHP backend (not in PRD client-side architecture)
 api/
 
+# Documentation & Internal Reference
+docs/
+
 # OS Generated Files
 Thumbs.db
 Desktop.ini
