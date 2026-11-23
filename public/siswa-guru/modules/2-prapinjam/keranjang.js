@@ -37,6 +37,17 @@ export function addToCart(bookOrId) {
     return false;
   }
 
+  // 0. Validasi Tagihan Denda Belum Lunas
+  const hasUnpaidFine = (state.cache.pengembalian || []).some(k => {
+    if (k.status_denda !== 'Belum Lunas') return false;
+    const loan = (state.cache.peminjaman || []).find(p => p.id_peminjaman === k.id_peminjaman);
+    return loan && loan.nisn_siswa === state.memberId;
+  });
+  if (hasUnpaidFine) {
+    showToast('Peminjaman diblokir: Anda memiliki tanggungan denda yang belum dilunasi di perpustakaan.', 'warning');
+    return false;
+  }
+
   // 1. Validasi Stok Fisik
   const stok = Number(book.stok) || 0;
   if (stok <= 0) {

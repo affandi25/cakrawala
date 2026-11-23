@@ -109,6 +109,17 @@ export async function openBookingModal(bookId) {
     return;
   }
 
+  // 0. Validasi Tagihan Denda Belum Lunas
+  const hasUnpaidFine = (state.cache.pengembalian || []).some(k => {
+    if (k.status_denda !== 'Belum Lunas') return false;
+    const loan = (state.cache.peminjaman || []).find(p => p.id_peminjaman === k.id_peminjaman);
+    return loan && loan.nisn_siswa === state.memberId;
+  });
+  if (hasUnpaidFine) {
+    showToast('Pengajuan booking diblokir: Anda memiliki tanggungan denda yang belum dilunasi. Harap lunasi denda terlebih dahulu di meja sirkulasi.', 'warning');
+    return;
+  }
+
   // 1. Validasi Batas Kuota Maksimal 2 Buku Aktif
   const activeCount = getUserActiveLoansCount();
   if (activeCount >= MAX_ACTIVE_LOANS) {
@@ -277,6 +288,17 @@ export async function submitPraPinjam(bookOrId, customTglPinjam) {
 
   if (!book) {
     showToast('Buku belum dipilih untuk pengajuan pra-pinjam.', 'warning');
+    return false;
+  }
+
+  // 0. Validasi Tagihan Denda Belum Lunas
+  const hasUnpaidFine = (state.cache.pengembalian || []).some(k => {
+    if (k.status_denda !== 'Belum Lunas') return false;
+    const loan = (state.cache.peminjaman || []).find(p => p.id_peminjaman === k.id_peminjaman);
+    return loan && loan.nisn_siswa === state.memberId;
+  });
+  if (hasUnpaidFine) {
+    showToast('Pengajuan booking diblokir: Anda masih memiliki tanggungan denda belum lunas.', 'warning');
     return false;
   }
 

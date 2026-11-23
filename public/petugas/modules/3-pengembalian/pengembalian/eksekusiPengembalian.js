@@ -91,41 +91,17 @@ export async function handleSubmitPengembalian() {
 
     const newIdPengembalian = generateRandomId('KB', 6);
 
-    // 1. Simpan Transaksi Pengembalian ke Supabase
-    const { error: errReturn } = await db
-      .from('data_pengembalian')
-      .insert({
-        id_pengembalian: newIdPengembalian,
-        id_peminjaman: loan.id_peminjaman,
-        tanggal_kembali: tglKembali,
-        keterlambatan: hariTerlambat,
-        kondisi_buku: kondisi,
-        denda: totalDenda,
-        status_denda: statusDenda
-      });
+    // 1-3. Simpan Transaksi Pengembalian, Selesaikan Pinjaman, & Pulihkan Stok Buku secara Atomik (Database RPC)
+    const { data: resReturn, error: errReturn } = await db.rpc('selesaikan_pengembalian', {
+      p_id_pengembalian: newIdPengembalian,
+      p_id_peminjaman: loan.id_peminjaman,
+      p_tanggal_kembali: tglKembali,
+      p_keterlambatan: hariTerlambat,
+      p_kondisi_buku: kondisi,
+      p_denda: totalDenda,
+      p_status_denda: statusDenda
+    });
     if (errReturn) throw errReturn;
-
-    // 2. Update Status Peminjaman Menjadi 'Selesai'
-    const { error: errLoan } = await db
-      .from('data_peminjaman')
-      .update({ status: 'Selesai' })
-      .eq('id_peminjaman', loan.id_peminjaman);
-    if (errLoan) throw errLoan;
-
-    // 3. Kembalikan Stok Buku di data_buku (+1) dan status 'Tersedia' KECUALI jika dilaporkan 'Hilang'
-    if (kondisi !== 'Hilang') {
-      const stokSekarang = buku ? (Number(buku.stok) || 0) : 0;
-      const stokBaru = stokSekarang + 1;
-
-      const { error: errBook } = await db
-        .from('data_buku')
-        .update({
-          stok: stokBaru,
-          status: 'Tersedia'
-        })
-        .eq('id_buku', loan.id_buku);
-      if (errBook) throw errBook;
-    }
 
     showToast('Buku berhasil dikembalikan dan data diperbarui!', 'success');
 

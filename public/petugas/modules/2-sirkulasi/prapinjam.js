@@ -506,21 +506,16 @@ export async function handleApprovePrapinjam(idPeminjaman) {
   try {
     showToast('Memproses penyerahan buku...', 'info');
 
-    const today = getTodayDateString();
-    const returnDue = addDaysToDate(today, 7);
-
-    const { error: errLoan } = await db
-      .from('data_peminjaman')
-      .update({
-        status: 'Dipinjam',
-        tanggal_pinjam: today,
-        batas_kembali: returnDue
-      })
-      .eq('id_peminjaman', idPeminjaman);
+    // Eksekusi penyerahan buku secara atomik di database
+    const { data, error: errLoan } = await db.rpc('serahkan_buku_prapinjam', {
+      p_id_peminjaman: idPeminjaman,
+      p_durasi_hari: 7
+    });
 
     if (errLoan) throw errLoan;
 
-    showToast(`Buku fisik berhasil diserahkan! Peminjaman aktif (${idPeminjaman}) berlaku hingga ${formatTanggalIndo(returnDue)}.`, 'success');
+    const batasKembali = data?.batas_kembali || addDaysToDate(getTodayDateString(), 7);
+    showToast(`Buku fisik berhasil diserahkan! Peminjaman aktif (${idPeminjaman}) berlaku hingga ${formatTanggalIndo(batasKembali)}.`, 'success');
     if (window.fetchAllData) await window.fetchAllData();
   } catch (err) {
     console.error('Gagal menyetujui peminjaman:', err);
@@ -541,40 +536,12 @@ export async function handleRejectPrapinjam(idPeminjaman) {
   try {
     showToast('Membatalkan pemesanan pra-pinjam...', 'info');
 
-    const { error } = await db
-      .from('data_peminjaman')
-      .delete()
-      .eq('id_peminjaman', idPeminjaman);
+    // Batalkan booking dan pulihkan stok secara atomik di database
+    const { error } = await db.rpc('batalkan_booking', {
+      p_id_peminjaman: idPeminjaman
+    });
 
     if (error) throw error;
-
-    const idBuku = loan.id_buku;
-    if (idBuku) {
-      const bookInCache = (state.cache.buku || []).find(b => b.id_buku === idBuku);
-      let currentStock = bookInCache ? (Number(bookInCache.stok) || 0) : 0;
-
-      const { data: dbBook } = await db
-        .from('data_buku')
-        .select('stok')
-        .eq('id_buku', idBuku)
-        .single();
-
-      if (dbBook && dbBook.stok !== undefined) {
-        currentStock = Number(dbBook.stok) || 0;
-      }
-
-      const { error: errStock } = await db
-        .from('data_buku')
-        .update({
-          stok: currentStock + 1,
-          status: 'Tersedia'
-        })
-        .eq('id_buku', idBuku);
-
-      if (errStock) {
-        console.warn('Gagal memulihkan stok buku saat reject:', errStock);
-      }
-    }
 
     showToast(`Permohonan ${idPeminjaman} dibatalkan. Stok buku fisik berhasil dipulihkan ke inventaris.`, 'success');
     if (window.fetchAllData) await window.fetchAllData();

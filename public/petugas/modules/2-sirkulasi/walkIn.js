@@ -26,6 +26,20 @@ import { clearSelectedMember } from './memberPicker.js';
 let walkInCart = [];
 
 /**
+ * Memeriksa apakah seorang anggota memiliki denda belum lunas
+ * @param {string} memberId NISN / NIP anggota
+ * @returns {boolean}
+ */
+export function hasMemberUnpaidFines(memberId) {
+  if (!memberId) return false;
+  return (state.cache.pengembalian || []).some(k => {
+    if (k.status_denda !== 'Belum Lunas') return false;
+    const loan = (state.cache.peminjaman || []).find(p => p.id_peminjaman === k.id_peminjaman);
+    return loan && loan.nisn_siswa === memberId;
+  });
+}
+
+/**
  * Mengambil isi keranjang walk-in saat ini
  */
 export function getWalkInCart() {
@@ -107,9 +121,15 @@ export async function addBookToCart(bookOrId) {
     return;
   }
 
-  // 3. Cek batas kuota jika anggota sudah dipilih
+  // 3. Cek batas denda & kuota jika anggota sudah dipilih
   const memberId = state.selectedMember?.id || document.getElementById('inputSelectedMemberId')?.value;
   if (memberId) {
+    if (hasMemberUnpaidFines(memberId)) {
+      const borrower = getBorrowerInfo(memberId);
+      showToast(`Peminjaman ditolak: ${borrower.nama} masih memiliki tagihan denda belum lunas!`, 'warning');
+      return;
+    }
+
     const totalActive = (state.cache.peminjaman || []).filter(p => 
       p.nisn_siswa === memberId && 
       (p.status === 'Dipinjam' || p.status === 'Menunggu')
@@ -294,6 +314,14 @@ export function checkMejaBorrowEligibility() {
     return;
   }
 
+  // Cek apakah anggota memiliki denda belum lunas
+  if (hasMemberUnpaidFines(memberId)) {
+    submitBtn.disabled = true;
+    const borrower = getBorrowerInfo(memberId);
+    showToast(`Peringatan: ${borrower.nama} memiliki tanggungan denda belum lunas!`, 'warning');
+    return;
+  }
+
   // Cek batas kuota maksimal peminjaman (maks. 2 buku aktif per anggota)
   const totalActive = (state.cache.peminjaman || []).filter(p => 
     p.nisn_siswa === memberId && 
@@ -412,6 +440,13 @@ export function setupWalkInForm(onSwitchSubtab, onOpenVerifyModal) {
         return;
       }
 
+      // Validasi Tagihan Denda Belum Lunas
+      if (hasMemberUnpaidFines(memberId)) {
+        const borrower = getBorrowerInfo(memberId);
+        showToast(`Peminjaman diblokir: ${borrower.nama} memiliki tagihan denda belum lunas!`, 'warning');
+        return;
+      }
+
       // Validasi Kuota Total
       const totalActive = (state.cache.peminjaman || []).filter(p => 
         p.nisn_siswa === memberId && 
@@ -433,34 +468,20 @@ export function setupWalkInForm(onSwitchSubtab, onOpenVerifyModal) {
         const borrower = getBorrowerInfo(memberId);
         const issuedIds = [];
 
-        // Terbitkan peminjaman untuk setiap buku di keranjang
+        // Terbitkan peminjaman untuk setiap buku di keranjang secara atomik di database
         for (const book of walkInCart) {
           const newIdPeminjaman = generateRandomId('PJ', 6);
           issuedIds.push(newIdPeminjaman);
 
-          // 1. Insert ke data_peminjaman
-          const { error: errLoan } = await db
-            .from('data_peminjaman')
-            .insert({
-              id_peminjaman: newIdPeminjaman,
-              nisn_siswa: memberId,
-              id_buku: book.id_buku,
-              tanggal_pinjam: tglPinjam,
-              batas_kembali: batasKembali,
-              metode_peminjaman: 'Scan QR',
-              status: 'Dipinjam'
-            });
+          const { error: errLoan } = await db.rpc('terbitkan_pinjaman_walkin', {
+            p_id_peminjaman: newIdPeminjaman,
+            p_nisn_siswa: memberId,
+            p_id_buku: book.id_buku,
+            p_tanggal_pinjam: tglPinjam,
+            p_batas_kembali: batasKembali,
+            p_metode: 'Scan QR'
+          });
           if (errLoan) throw errLoan;
-
-          // 2. Kurangi stok buku fisik
-          const stokBaru = Math.max(0, (Number(book.stok) || 1) - 1);
-          const statusBaru = stokBaru === 0 ? 'Dipinjam' : 'Tersedia';
-
-          const { error: errBook } = await db
-            .from('data_buku')
-            .update({ stok: stokBaru, status: statusBaru })
-            .eq('id_buku', book.id_buku);
-          if (errBook) throw errBook;
         }
 
         showToast(`Sukses! ${walkInCart.length} buku berhasil diterbitkan (${issuedIds.join(', ')}) untuk ${borrower.nama}.`, 'success');
@@ -553,33 +574,26 @@ export function setupWalkInModal() {
         return;
       }
 
+      if (hasMemberUnpaidFines(nisn)) {
+        showToast('Peminjaman diblokir: Anggota memiliki tagihan denda belum lunas!', 'warning');
+        return;
+      }
+
       try {
         const submitBtn = document.getElementById('btnSubmitWalkIn');
         if (submitBtn) submitBtn.disabled = true;
 
         const newIdPeminjaman = generateRandomId('PJ', 6);
 
-        const { error: errLoan } = await db
-          .from('data_peminjaman')
-          .insert({
-            id_peminjaman: newIdPeminjaman,
-            nisn_siswa: nisn,
-            id_buku: idBuku,
-            tanggal_pinjam: tglPinjam,
-            batas_kembali: batasKembali,
-            metode_peminjaman: metode,
-            status: 'Dipinjam'
-          });
+        const { error: errLoan } = await db.rpc('terbitkan_pinjaman_walkin', {
+          p_id_peminjaman: newIdPeminjaman,
+          p_nisn_siswa: nisn,
+          p_id_buku: idBuku,
+          p_tanggal_pinjam: tglPinjam,
+          p_batas_kembali: batasKembali,
+          p_metode: metode
+        });
         if (errLoan) throw errLoan;
-
-        const stokBaru = Math.max(0, (Number(book.stok) || 1) - 1);
-        const statusBaru = stokBaru === 0 ? 'Dipinjam' : 'Tersedia';
-
-        const { error: errBook } = await db
-          .from('data_buku')
-          .update({ stok: stokBaru, status: statusBaru })
-          .eq('id_buku', idBuku);
-        if (errBook) throw errBook;
 
         showToast(`Peminjaman walk-in berhasil diterbitkan (${newIdPeminjaman})!`, 'success');
         closeWalkInModal();
