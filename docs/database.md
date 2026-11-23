@@ -288,20 +288,25 @@ Sistem memanfaatkan 2 wadah berkas (*public buckets*) di Supabase:
 
 ## 5. Konfigurasi Kebijakan Keamanan (Row-Level Security / RLS)
 
-Pada fase pengembangan (prototype/development stage), seluruh tabel di Supabase dikonfigurasikan dengan kebijakan akses publik terpusat (`USING (true)`) untuk menjamin integrasi sirkulasi multi-role berjalan lancar:
+Seluruh tabel di Supabase dikonfigurasikan dengan **Row-Level Security (RLS) Aktif 100%** dengan isolasi granular berbasis peran (*Role-Based Access Control*) melalui skema fungsi server `app_private`:
 
-| Tabel | Kebijakan Aktif (Policy) | Cakupan Operasi | Keterangan |
-| --- | --- | --- | --- |
-| `data_buku` | `Akses anon kelola buku` | `ALL (true)` | Akses operasional katalog buku & stiker QR |
-| `data_peminjaman` | `Akses anon data peminjaman` | `ALL (true)` | Alur sirkulasi reservasi daring & walk-in |
-| `data_pengembalian` | `Akses anon data pengembalian` | `ALL (true)` | Pencatatan pengembalian buku & kasir denda |
-| `data_kategori` | `Akses anon kelola kategori` | `ALL (true)` | Master data kategori koleksi |
-| `data_pengumuman` | `Akses anon kelola pengumuman` | `ALL (true)` | Broadcast berita & agenda kampus |
-| `data_pengaturan` | `Akses anon kelola pengaturan` | `ALL (true)` | Konfigurasi tarif denda dinamis |
-| `data_user`, `data_siswa`, dll. | `Akses anon data ...` | `ALL (true)` | Akses autentikasi & profil terpadu |
+| Tabel | Status RLS | Kebijakan Aktif (Policies) | Cakupan Hak Akses Berdasarkan Peran |
+| --- | :---: | --- | --- |
+| `data_user` | **Enabled** | `data_user_select`, `data_user_insert`, `data_user_update`, `data_user_delete` | **Admin:** Akses penuh (`ALL`).<br>**Siswa/Guru/Petugas:** Hanya dapat melihat dan mengedit akun miliknya sendiri (`id_user = app_private.sesi_user()`). |
+| `data_siswa` | **Enabled** | `data_siswa_select`, `data_siswa_insert`, `data_siswa_update`, `data_siswa_delete` | **Admin & Petugas:** Akses penuh seluruh data siswa.<br>**Siswa:** Hanya melihat dan mengubah data profil pribadinya sendiri (`nisn_siswa = app_private.ident_saya()`). |
+| `data_guru` | **Enabled** | `data_guru_select`, `data_guru_insert`, `data_guru_update`, `data_guru_delete` | **Admin & Petugas:** Akses penuh seluruh data guru.<br>**Guru:** Hanya melihat dan mengubah profil pribadinya sendiri. |
+| `data_petugas` | **Enabled** | `data_petugas_select`, `data_petugas_insert`, `data_petugas_update`, `data_petugas_delete` | **Admin:** Akses penuh kelola staf.<br>**Petugas:** Hanya dapat melihat daftar staf dan mengubah profilnya sendiri. |
+| `data_peminjaman` | **Enabled** | `data_peminjaman_select`, `data_peminjaman_insert`, `data_peminjaman_update`, `data_peminjaman_delete` | **Admin & Petugas:** Kelola seluruh sirkulasi.<br>**Siswa & Guru:** Hanya melihat riwayat pinjaman miliknya (`nisn_siswa = app_private.ident_saya()`) dan membatalkan pesanan status `'Menunggu'`. |
+| `data_pengembalian`| **Enabled** | `data_pengembalian_select`, `data_pengembalian_insert`, `data_pengembalian_update`, `data_pengembalian_delete` | **Admin & Petugas:** Kelola denda & pengembalian.<br>**Siswa & Guru:** Hanya melihat arsip pengembalian miliknya sendiri. |
+| `data_buku` | **Enabled** | `data_buku_select`, `data_buku_write` | **Publik / Siswa / Guru:** Baca katalog (`SELECT`).<br>**Admin & Petugas:** Tambah, edit, dan hapus koleksi buku. |
+| `data_kategori` | **Enabled** | `data_kategori_select`, `data_kategori_write` | **Publik:** Baca (`SELECT`).<br>**Admin & Petugas:** Tambah, edit, dan hapus kategori. |
+| `data_pengumuman` | **Enabled** | `data_pengumuman_select`, `data_pengumuman_write` | **Publik:** Baca agenda (`SELECT`).<br>**Admin & Petugas:** Publikasi pengumuman baru. |
+| `data_pengaturan` | **Enabled** | `data_pengaturan_select`, `data_pengaturan_write` | **Publik:** Baca tarif denda (`SELECT`).<br>**Admin:** Ubah tarif denda harian. |
+| `data_sesi` | **Enabled** | *Terkunci rapat (0 Policy Publik)* | **Isolasi Mutlak:** Token tidak dapat dibaca dari luar (REST API). Hanya dapat diakses secara server-side oleh fungsi `SECURITY DEFINER`. |
 
-> **Catatan Arsitektur untuk Tahap Produksi:**  
-> Proteksi hak akses pengguna di fase ini ditegakkan melalui **Client-Side Auth Guards** di [`auth.js`](file:///c:/xampp/htdocs/cakrawala/public/assets/js/auth.js). Pada roadmap rilis produksi skala besar (Enterprise Milestone), autentikasi akan dimigrasikan ke Supabase Auth resmi berbasis JWT token untuk menerapkan penguncian RLS granular (`TO authenticated`).
+> **Dokumentasi Skrip SQL Lengkap:**  
+> Seluruh definisi DDL fungsi `app_private` dan kebijakan SQL lengkap dapat dilihat pada berkas:  
+> [`docs/rls_security_policies.sql`](file:///c:/xampp/htdocs/cakrawala/docs/rls_security_policies.sql).
 
 
 
