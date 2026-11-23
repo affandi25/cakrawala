@@ -349,38 +349,17 @@ export async function submitPraPinjam(bookOrId, customTglPinjam) {
     // Pembuatan kode reservasi tiket berawalan 'PJ-' (misal: PJ-XXXXXX)
     const newIdPeminjaman = generateRandomId('PJ', 6);
 
-    // 1. Simpan transaksi ke tabel 'data_peminjaman' dengan status 'Menunggu' & 'Belum Diambil'
+    // 1-2. Simpan tiket 'Menunggu' & potong stok secara atomik di database
+    // (sesi, kuota maksimal, duplikasi, dan stok divalidasi oleh fungsi database)
     if (db) {
-      const { error: errLoan } = await db
-        .from('data_peminjaman')
-        .insert({
-          id_peminjaman: newIdPeminjaman,
-          nisn_siswa: state.memberId,
-          id_buku: book.id_buku,
-          tanggal_pinjam: tglPinjam,
-          batas_kembali: batasKembali,
-          metode_peminjaman: 'Pra Pinjam',
-          status: 'Menunggu',
-          status_persiapan: 'Belum Diambil'
-        });
+      const { error: errLoan } = await db.rpc('ajukan_booking', {
+        p_id_peminjaman: newIdPeminjaman,
+        p_id_buku: book.id_buku,
+        p_tanggal_pinjam: tglPinjam,
+        p_batas_kembali: batasKembali
+      });
 
       if (errLoan) throw errLoan;
-
-      // 2. Kunci / Potong stok buku fisik di Supabase
-      const sisaStok = Math.max(0, (Number(book.stok) || 1) - 1);
-      const statusBaruBuku = sisaStok === 0 ? 'Dipinjam' : 'Tersedia';
-
-      const { error: errStock } = await db
-        .from('data_buku')
-        .update({
-          stok: sisaStok,
-          status: statusBaruBuku
-        })
-        .eq('id_buku', book.id_buku);
-
-      if (errStock) {
-        console.warn('[tiketPraPinjam] Peringatan: Gagal memotong stok otomatis:', errStock);
-      }
     }
 
     // 3. Hapus item dari keranjang jika buku ada di keranjang
@@ -713,50 +692,10 @@ export function setupPrapinjamModule() {
         confirmCancelBtn.disabled = true;
         confirmCancelBtn.innerHTML = '<i class="ph ph-spinner animate-spin text-sm"></i> <span>Membatalkan...</span>';
 
-        // Cari ID Buku dari cache / database
-        const targetLoan = (state.cache.peminjaman || []).find(p => p.id_peminjaman === loanId);
-        let idBuku = targetLoan?.id_buku;
-
-        if (!idBuku && db) {
-          const { data: dbLoan } = await db
-            .from('data_peminjaman')
-            .select('id_buku')
-            .eq('id_peminjaman', loanId)
-            .single();
-          idBuku = dbLoan?.id_buku;
-        }
-
-        // Hapus transaksi status 'Menunggu' dari Supabase
+        // Batalkan tiket 'Menunggu' dan pulihkan stok secara atomik di database
         if (db) {
-          const { error } = await db
-            .from('data_peminjaman')
-            .delete()
-            .eq('id_peminjaman', loanId);
-
+          const { error } = await db.rpc('batalkan_booking', { p_id_peminjaman: loanId });
           if (error) throw error;
-
-          // Kembalikan stok fisik buku (+1)
-          if (idBuku) {
-            const { data: dbBook } = await db
-              .from('data_buku')
-              .select('stok')
-              .eq('id_buku', idBuku)
-              .single();
-
-            const currentStock = dbBook && dbBook.stok !== undefined ? Number(dbBook.stok) : 0;
-
-            const { error: errStock } = await db
-              .from('data_buku')
-              .update({
-                stok: currentStock + 1,
-                status: 'Tersedia'
-              })
-              .eq('id_buku', idBuku);
-
-            if (errStock) {
-              console.warn('[tiketPraPinjam] Gagal memulihkan stok buku:', errStock);
-            }
-          }
         }
 
         showToast(`Pesanan antrean [${loanId}] berhasil dibatalkan. Stok buku telah dipulihkan.`, 'success');

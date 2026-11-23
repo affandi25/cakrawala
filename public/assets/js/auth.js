@@ -10,7 +10,7 @@
  * 5. Pengendali Logout Universal
  */
 
-import { db } from './supabaseClient.js';
+import { db, SESSION_TOKEN_KEY, getStoredToken, revokeServerSession } from './supabaseClient.js';
 
 /* ==========================================================================
    1. UTILITY SESI & STORAGE
@@ -46,6 +46,11 @@ export function getCurrentUser() {
       clearSession();
       return null;
     }
+    // Sesi tanpa token server atau yang sudah kedaluwarsa dianggap tidak login
+    if (!getStoredToken() || !user.expires_at || Date.parse(user.expires_at) <= Date.now()) {
+      clearSession();
+      return null;
+    }
     return user;
   } catch (_) {
     return null;
@@ -64,18 +69,20 @@ export function getUserRole() {
 /**
  * Menyimpan data sesi ke sessionStorage dan localStorage sekaligus
  */
-export function saveSession(user, role) {
+export function saveSession(user, role, token, expiresAt) {
   const roleClean = (role || 'Siswa').trim();
   const payload = JSON.stringify({
     id_user: user.id_user,
     username: user.username,
-    role: roleClean
+    role: roleClean,
+    expires_at: expiresAt
   });
 
   ['sessionStorage', 'localStorage'].forEach(storage => {
     window[storage].setItem('cakrawala_logged_in', 'true');
     window[storage].setItem('cakrawala_role', roleClean);
     window[storage].setItem('cakrawala_user', payload);
+    window[storage].setItem(SESSION_TOKEN_KEY, token);
   });
 }
 
@@ -83,8 +90,9 @@ export function saveSession(user, role) {
  * Membersihkan seluruh data sesi autentikasi
  */
 export function clearSession() {
+  revokeServerSession();
   ['sessionStorage', 'localStorage'].forEach(storage => {
-    ['cakrawala_user', 'cakrawala_logged_in', 'cakrawala_role'].forEach(key => {
+    ['cakrawala_user', 'cakrawala_logged_in', 'cakrawala_role', SESSION_TOKEN_KEY].forEach(key => {
       window[storage].removeItem(key);
     });
   });
@@ -109,20 +117,44 @@ export function goToRoleHome(role) {
 }
 
 /**
- * Route guard terpusat berbasis role.
- * - Belum login -> dialihkan ke halaman login.
+ * Meminta server memastikan token sesi masih sah dan mengembalikan identitas aslinya.
+ * @returns {Promise<Object|null>} { id_user, username, role, kedaluwarsa } atau null
+ */
+async function verifyServerSession() {
+  if (!db || !db.rpc) return null;
+  try {
+    const { data, error } = await db.rpc('validasi_sesi');
+    if (error || !data || !data.length) return null;
+    return data[0];
+  } catch (_) {
+    return null;
+  }
+}
+
+/**
+ * Route guard terpusat berbasis role. Identitas dan role diverifikasi ke server,
+ * bukan dipercaya dari penyimpanan browser (yang bisa dipalsukan).
+ * - Belum login / sesi tidak sah -> dialihkan ke halaman login.
  * - Role tidak sesuai -> dialihkan ke dashboard milik role pengguna tersebut.
  * @param {string[]} allowedRoles Daftar role yang diizinkan mengakses halaman ini
- * @returns {boolean} true bila pengguna berhak mengakses halaman
+ * @returns {Promise<boolean>} true bila pengguna berhak mengakses halaman
  */
-export function guardRoute(allowedRoles = []) {
-  const user = getCurrentUser();
-  if (!user) {
+export async function guardRoute(allowedRoles = []) {
+  if (!getCurrentUser()) {
     redirectToLogin();
     return false;
   }
 
-  const role = getUserRole();
+  const verified = await verifyServerSession();
+  if (!verified) {
+    clearSession();
+    redirectToLogin();
+    return false;
+  }
+
+  saveSession(verified, verified.role, getStoredToken(), verified.kedaluwarsa);
+
+  const role = String(verified.role || '').trim().toLowerCase();
   if (allowedRoles.length > 0 && allowedRoles.indexOf(role) === -1) {
     goToRoleHome(role);
     return false;
@@ -149,66 +181,6 @@ function renderAvatar(el, fotoUrl, altName = 'Pengguna') {
    2. KONTROLER HALAMAN LOGIN (login.html)
    ========================================================================== */
 
-/**
- * Resolusi username dari identifier fleksibel (NISN, NIP, email, atau username).
- * Mencari tabel profil terkait jika identifier bukan username langsung.
- * Mengembalikan string username yang terdaftar di data_user, atau null.
- */
-async function resolveUsername(identifier) {
-  if (!db) return null;
-
-  // 1. Cek apakah identifier cocok langsung sebagai username di data_user
-  const { data: directMatch } = await db
-    .from('data_user')
-    .select('username')
-    .ilike('username', identifier)
-    .maybeSingle();
-
-  if (directMatch?.username) return directMatch.username;
-
-  // 2. Jika tidak ditemukan, cari di tabel profil terkait untuk dapat id_user
-  const lookups = [
-    { table: 'data_guru',    query: `nip_guru.eq.${identifier},email_guru.ilike.${identifier}` },
-    { table: 'data_siswa',   query: `nisn_siswa.eq.${identifier},email_siswa.ilike.${identifier}` },
-    { table: 'data_petugas', query: `id_petugas.eq.${identifier},email_petugas.ilike.${identifier}` }
-  ];
-
-  for (const { table, query } of lookups) {
-    const { data: profile } = await db.from(table).select('id_user').or(query).maybeSingle();
-    if (profile?.id_user) {
-      const { data: userRow } = await db
-        .from('data_user')
-        .select('username')
-        .eq('id_user', profile.id_user)
-        .maybeSingle();
-      if (userRow?.username) return userRow.username;
-    }
-  }
-
-  return null;
-}
-
-/**
- * Fallback verifikasi password untuk akun yang passwordnya masih tersimpan apa adanya
- * (plaintext), misalnya akun yang dibuat lewat panel Admin atau akun lama.
- * RPC `verify_user_login` memverifikasi dengan bcrypt sehingga tidak akan cocok dengan
- * password plaintext; fungsi ini mengecek kecocokan langsung agar akun tersebut tetap
- * bisa login tanpa mengubah isi database.
- * @returns {Promise<Object|null>} baris data_user bila cocok, atau null
- */
-async function verifyPlaintextPassword(username, password) {
-  if (!db) return null;
-  const { data, error } = await db
-    .from('data_user')
-    .select('id_user, username, role')
-    .eq('username', username)
-    .eq('password', password)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data;
-}
-
 function initLoginForm() {
   const loginForm = document.querySelector('#loginForm');
   if (!loginForm) return;
@@ -226,7 +198,7 @@ function initLoginForm() {
   const closeForgotModal = document.querySelector('#closeForgotModal');
   const btnOkForgot = document.querySelector('#btnOkForgot');
 
-  function showError(message) {
+    function showError(message) {
     if (!errorMessage) return;
     errorMessage.textContent = message;
     errorMessage.classList.remove('hidden');
@@ -288,33 +260,19 @@ function initLoginForm() {
     }
 
     try {
-      // Resolusi identifier fleksibel (NISN/NIP/email) ke username data_user
-      const resolvedUsername = await resolveUsername(identifier);
-      if (!resolvedUsername) {
-        showError('NISN, NIP, Email, atau password salah.');
-        return;
-      }
-
-      // Verifikasi password via fungsi Bcrypt di database (SECURITY DEFINER)
-      const { data: result, error } = await db.rpc('verify_user_login', {
-        p_identifier: resolvedUsername,
-        p_password:   passwordValue
+      // Identifier (NISN/NIP/Email/username) dan password bcrypt diverifikasi di database,
+      // yang juga menerbitkan token sesi dengan masa berlaku.
+      const { data: result, error } = await db.rpc('login_user', {
+        p_identifier: identifier,
+        p_password: passwordValue
       });
 
       if (error) throw error;
 
       const userMatch = result?.[0] ?? null;
       if (userMatch) {
-        saveSession(userMatch, userMatch.role);
+        saveSession(userMatch, userMatch.role, userMatch.token, userMatch.kedaluwarsa);
         redirectByRole(userMatch.role);
-        return;
-      }
-
-      // Fallback: akun dengan password tersimpan plaintext (akun baru via panel Admin / akun lama)
-      const plainMatch = await verifyPlaintextPassword(resolvedUsername, passwordValue);
-      if (plainMatch) {
-        saveSession(plainMatch, plainMatch.role);
-        redirectByRole(plainMatch.role);
         return;
       }
 
@@ -345,7 +303,7 @@ initLoginForm();
  */
 export async function initSessionAndMember(targetState = {}) {
   // Route guard terpusat: hanya role Siswa & Guru yang boleh mengakses halaman ini
-  if (!guardRoute(['siswa', 'guru'])) return false;
+  if (!(await guardRoute(['siswa', 'guru']))) return false;
 
   const user = getCurrentUser();
 
@@ -451,7 +409,7 @@ export function updateMemberProfileDisplay(targetState = {}) {
  */
 export async function initSessionAndOfficer(targetState = {}) {
   // Route guard terpusat: hanya Petugas (dan Admin sebagai superuser) yang diizinkan
-  if (!guardRoute(['petugas', 'admin'])) return false;
+  if (!(await guardRoute(['petugas', 'admin']))) return false;
 
   const user = getCurrentUser();
 
@@ -502,7 +460,7 @@ export function updateOfficerProfileDisplay(name, fotoUrl = null) {
  */
 export async function initSessionAndAdmin(targetState = {}) {
   // Route guard terpusat: hanya role Admin yang diizinkan mengakses halaman ini
-  if (!guardRoute(['admin'])) return false;
+  if (!(await guardRoute(['admin']))) return false;
 
   const user = getCurrentUser();
   targetState.currentUser = user;
