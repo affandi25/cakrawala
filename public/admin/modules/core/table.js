@@ -244,7 +244,7 @@ export function renderTable() {
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
                 ${renderAvatarThumb(row.foto_profil, row.nama_guru)}
-                <span class="font-bold text-slate-800">${escapeHtml(row.nama_guru)}</span>
+                <span class="font-bold text-slate-800 max-w-[220px] truncate block" title="${escapeHtml(row.nama_guru)}">${escapeHtml(row.nama_guru)}</span>
               </div>
             </td>
             <td class="px-6 py-4">
@@ -295,7 +295,7 @@ export function renderTable() {
             <td class="px-6 py-4">
               <div class="flex items-center gap-3">
                 ${renderAvatarThumb(row.foto_profil, row.nama_petugas)}
-                <span class="font-bold text-slate-800">${escapeHtml(row.nama_petugas)}</span>
+                <span class="font-bold text-slate-800 max-w-[220px] truncate block" title="${escapeHtml(row.nama_petugas)}">${escapeHtml(row.nama_petugas)}</span>
               </div>
             </td>
             <td class="px-6 py-4 text-xs text-slate-600">${escapeHtml(row.email_petugas)}</td>

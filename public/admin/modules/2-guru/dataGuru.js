@@ -153,7 +153,7 @@ export function renderTableGuru(customData = null) {
         <td class="px-6 py-4">
           <div class="flex items-center gap-3">
             ${renderAvatarThumb(row.foto_profil, row.nama_guru)}
-            <span class="font-bold text-slate-800">${escapeHtml(row.nama_guru)}</span>
+            <span class="font-bold text-slate-800 max-w-[220px] truncate block" title="${escapeHtml(row.nama_guru)}">${escapeHtml(row.nama_guru)}</span>
           </div>
         </td>
         <td class="px-6 py-4">
