@@ -70,7 +70,10 @@ export function setupNavigation() {
  * @param {string} tabKey ('overview' | 'sirkulasi' | 'pengembalian' | 'inventaris' | 'pengumuman')
  */
 export function switchTab(tabKey) {
-  state.activeTab = tabKey;
+  const ALLOWED_TABS = ['overview', 'sirkulasi', 'pengembalian', 'inventaris', 'pengumuman'];
+  const cleanTab = (tabKey || '').toLowerCase().trim();
+  const validTab = ALLOWED_TABS.includes(cleanTab) ? cleanTab : 'overview';
+  state.activeTab = validTab;
 
   const navButtons = [
     { id: 'tabBtnOverview', key: 'overview' },

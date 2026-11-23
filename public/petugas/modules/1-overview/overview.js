@@ -89,10 +89,73 @@ export function setupOverviewModule() {
 }
 
 /**
+ * Memeriksa status jam operasional meja sirkulasi (07.30 - 15.30 WIB)
+ * @returns {{ isOpen: boolean, label: string, timeText: string, fullText: string, dotClass: string, badgeClass: string }}
+ */
+export function getOperationalHoursStatus() {
+  const now = new Date();
+  const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+  const wibDate = new Date(utc + (7 * 3600000));
+
+  const hours = wibDate.getHours();
+  const minutes = wibDate.getMinutes();
+  const totalMinutes = hours * 60 + minutes;
+  const day = wibDate.getDay(); // 0 = Minggu, 6 = Sabtu
+
+  const isWeekday = day >= 1 && day <= 5;
+  const isOpenTime = totalMinutes >= 450 && totalMinutes <= 930; // 07.30 - 15.30
+  const isOpen = isWeekday && isOpenTime;
+
+  if (isOpen) {
+    return {
+      isOpen: true,
+      label: 'Meja Operasional Buka',
+      timeText: '07.30 - 15.30 WIB',
+      fullText: 'Layanan Sirkulasi Buka • Jam Operasional: 07.30 - 15.30 WIB',
+      dotClass: 'bg-emerald-400 animate-pulse',
+      badgeClass: 'bg-emerald-500/20 text-emerald-100 border-emerald-400/30'
+    };
+  } else {
+    const reason = !isWeekday ? 'Libur Akhir Pekan' : (totalMinutes < 450 ? 'Buka Pukul 07.30 WIB' : 'Tutup (Buka Besok 07.30 WIB)');
+    return {
+      isOpen: false,
+      label: 'Meja Operasional Tutup',
+      timeText: reason,
+      fullText: `Layanan Sirkulasi Tutup (${reason}) • Jam Operasional: 07.30 - 15.30 WIB`,
+      dotClass: 'bg-rose-400',
+      badgeClass: 'bg-rose-500/20 text-rose-100 border-rose-400/30'
+    };
+  }
+}
+
+/**
+ * Memperbarui tampilan indikator jam kerja di banner dan header
+ */
+export function updateOperationalBadge() {
+  const status = getOperationalHoursStatus();
+  const badgeEl = document.getElementById('badgeOperationalStatus');
+  const dotEl = document.getElementById('dotOperationalStatus');
+  const textEl = document.getElementById('textOperationalStatus');
+
+  if (dotEl) dotEl.className = `inline-block h-2 w-2 rounded-full ${status.dotClass}`;
+  if (textEl) textEl.textContent = status.fullText;
+  if (badgeEl) {
+    badgeEl.className = `inline-flex items-center gap-2 rounded-full px-3 py-1 text-2xs font-bold backdrop-blur-md mb-4 border ${status.badgeClass}`;
+  }
+
+  const hDot = document.getElementById('headerDotOperational');
+  const hText = document.getElementById('headerTextOperational');
+  if (hDot) hDot.className = `inline-block h-2 w-2 rounded-full ${status.isOpen ? 'bg-emerald-500 animate-pulse' : 'bg-rose-500'}`;
+  if (hText) hText.textContent = status.isOpen ? 'Sirkulasi: Buka (07.30 - 15.30 WIB)' : `Sirkulasi: Tutup (${status.timeText})`;
+}
+
+/**
  * Menghitung dan merender angka metrik KPI di Meja 1
  */
 export function renderOverview() {
-  // 0. Sinkronisasi Nama Sambutan Petugas
+  // 0. Update Indikator Jam Operasional & Sinkronisasi Nama Sambutan Petugas
+  updateOperationalBadge();
+
   const welcomeEl = document.getElementById('welcomeOfficerName');
   if (welcomeEl) {
     const officerName = state.officerProfile?.nama_petugas || state.currentUser?.username || 'Petugas Perpustakaan';
@@ -215,4 +278,6 @@ export function renderQuickPrapinjamTable(list) {
 if (typeof window !== 'undefined') {
   window.renderOverview = renderOverview;
   window.setupOverviewModule = setupOverviewModule;
+  window.getOperationalHoursStatus = getOperationalHoursStatus;
+  window.updateOperationalBadge = updateOperationalBadge;
 }
