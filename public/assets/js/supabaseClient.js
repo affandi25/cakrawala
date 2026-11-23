@@ -73,6 +73,3 @@ if (typeof window !== 'undefined' && window.supabase && typeof window.supabase.c
 }
 
 export const db = client;
-if (typeof window !== 'undefined') {
-  window.db = client;
-}
