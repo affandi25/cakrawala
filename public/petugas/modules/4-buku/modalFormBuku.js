@@ -363,11 +363,40 @@ async function handleBookFormSubmit() {
   const idKategori = document.getElementById('selectKategoriBuku')?.value;
   const stok = parseInt(document.getElementById('inputStokBuku')?.value, 10);
   const keterangan = document.getElementById('inputLokasiRak')?.value.trim();
-  const hargaBuku = parseInt(document.getElementById('inputHargaBuku')?.value, 10) || 50000;
+  const rawHarga = document.getElementById('inputHargaBuku')?.value;
+  const hargaBuku = parseInt(rawHarga, 10);
   let finalCoverUrl = document.getElementById('inputFinalCoverUrl')?.value.trim() || null;
 
-  if (!judul || !penulis || !penerbit || !idKategori) {
-    showToast('Harap lengkapi seluruh kolom bertanda bintang (*)!', 'warning');
+  if (!judul || judul.length < 2) {
+    showToast('Judul buku wajib diisi minimal 2 karakter!', 'warning');
+    return;
+  }
+  if (!penulis || penulis.length < 2) {
+    showToast('Nama penulis wajib diisi!', 'warning');
+    return;
+  }
+  if (!penerbit || penerbit.length < 2) {
+    showToast('Nama penerbit wajib diisi!', 'warning');
+    return;
+  }
+  if (!idKategori) {
+    showToast('Pilih kategori buku terlebih dahulu!', 'warning');
+    return;
+  }
+
+  const currentYear = new Date().getFullYear();
+  if (isNaN(tahun) || tahun < 1800 || tahun > currentYear + 1) {
+    showToast(`Tahun terbit tidak valid! Harus antara tahun 1800 dan ${currentYear + 1}.`, 'warning');
+    return;
+  }
+
+  if (isNaN(stok) || stok < 0) {
+    showToast('Stok fisik buku tidak boleh bernilai negatif (minimal 0)!', 'warning');
+    return;
+  }
+
+  if (isNaN(hargaBuku) || hargaBuku < 0) {
+    showToast('Harga penggantian buku tidak boleh bernilai negatif (minimal Rp 0)!', 'warning');
     return;
   }
 

@@ -61,8 +61,16 @@ export function setupPengembalianForm() {
   const btnRefresh = document.getElementById('btnRefreshPengembalian');
 
   if (inputTglKembali) {
-    inputTglKembali.value = getTodayDateString();
-    inputTglKembali.addEventListener('change', recalculateDenda);
+    const today = getTodayDateString();
+    inputTglKembali.value = today;
+    inputTglKembali.max = today; // Batasi maksimal hari ini (Mencegah tanggal masa depan - BUG C3)
+    inputTglKembali.addEventListener('change', () => {
+      if (inputTglKembali.value > today) {
+        showToast('Tanggal pengembalian fisik tidak boleh berada di masa depan!', 'warning');
+        inputTglKembali.value = today;
+      }
+      recalculateDenda();
+    });
   }
 
   // Pencarian Siswa / Peminjam

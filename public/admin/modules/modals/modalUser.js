@@ -792,8 +792,13 @@ export async function handleAddUserSubmit(event) {
   // ========================================================
   const role = state.activeTab;
 
-  if (!username) {
+  const usernameTrim = (username || '').trim();
+  if (!usernameTrim) {
     showModalFormError('Username wajib diisi.');
+    return;
+  }
+  if (!/^[a-zA-Z0-9_]{3,20}$/.test(usernameTrim)) {
+    showModalFormError('Username harus 3-20 karakter dan hanya boleh berisi huruf, angka, atau underscore (_).');
     return;
   }
 
@@ -802,6 +807,92 @@ export async function handleAddUserSubmit(event) {
   if (effectivePassword.length < 6) {
     showModalFormError('Password minimal harus 6 karakter.');
     return;
+  }
+
+  // Validasi field spesifik per entitas (Mencegah input kosong/tidak valid - BUG D1)
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  let nisnVal = '', nipVal = '', idPetugasVal = '', namaVal = '', emailVal = '', kontakVal = '';
+
+  if (role === 'siswa') {
+    nisnVal = String(formData.get('nisn_siswa') || '').trim();
+    namaVal = String(formData.get('nama_siswa') || '').trim();
+    const kelasVal = String(formData.get('kelas') || '').trim();
+    emailVal = String(formData.get('email_siswa') || '').trim();
+    kontakVal = String(formData.get('kontak_siswa') || '').trim();
+
+    if (!nisnVal) {
+      showModalFormError('NISN siswa wajib diisi.');
+      return;
+    }
+    if (!/^\d{8,12}$/.test(nisnVal)) {
+      showModalFormError('NISN harus berupa 8-12 digit angka.');
+      return;
+    }
+    if (!namaVal) {
+      showModalFormError('Nama lengkap siswa wajib diisi.');
+      return;
+    }
+    if (!kelasVal) {
+      showModalFormError('Kelas siswa wajib dipilih/diisi.');
+      return;
+    }
+    if (!emailVal || !emailRegex.test(emailVal)) {
+      showModalFormError('Email siswa tidak valid (harus mengandung @ dan domain yang sah).');
+      return;
+    }
+    if (!kontakVal) {
+      showModalFormError('Nomor kontak/WhatsApp siswa wajib diisi.');
+      return;
+    }
+  } else if (role === 'guru') {
+    nipVal = String(formData.get('nip_guru') || '').trim();
+    namaVal = String(formData.get('nama_guru') || '').trim();
+    const mapelVal = String(formData.get('mata_pelajaran') || '').trim();
+    emailVal = String(formData.get('email_guru') || '').trim();
+    kontakVal = String(formData.get('kontak_guru') || '').trim();
+
+    if (!nipVal) {
+      showModalFormError('NIP guru wajib diisi.');
+      return;
+    }
+    if (!namaVal) {
+      showModalFormError('Nama lengkap guru wajib diisi.');
+      return;
+    }
+    if (!mapelVal) {
+      showModalFormError('Mata pelajaran guru wajib diisi.');
+      return;
+    }
+    if (!emailVal || !emailRegex.test(emailVal)) {
+      showModalFormError('Email guru tidak valid (harus mengandung @ dan domain yang sah).');
+      return;
+    }
+    if (!kontakVal) {
+      showModalFormError('Nomor kontak guru wajib diisi.');
+      return;
+    }
+  } else if (role === 'petugas') {
+    idPetugasVal = String(formData.get('id_petugas') || '').trim();
+    namaVal = String(formData.get('nama_petugas') || '').trim();
+    emailVal = String(formData.get('email_petugas') || '').trim();
+    kontakVal = String(formData.get('kontak_petugas') || '').trim();
+
+    if (!idPetugasVal) {
+      showModalFormError('ID Petugas wajib diisi.');
+      return;
+    }
+    if (!namaVal) {
+      showModalFormError('Nama petugas wajib diisi.');
+      return;
+    }
+    if (!emailVal || !emailRegex.test(emailVal)) {
+      showModalFormError('Email petugas tidak valid (harus mengandung @ dan domain yang sah).');
+      return;
+    }
+    if (!kontakVal) {
+      showModalFormError('Nomor kontak petugas wajib diisi.');
+      return;
+    }
   }
 
   setModalSubmitLoading(true);

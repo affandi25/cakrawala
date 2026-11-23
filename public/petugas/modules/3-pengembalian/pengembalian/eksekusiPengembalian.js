@@ -34,7 +34,18 @@ export async function handleSubmitPengembalian() {
   }
 
   const inputTglKembali = document.getElementById('inputTanggalKembali');
-  const tglKembali = inputTglKembali ? inputTglKembali.value : getTodayDateString();
+  let tglKembali = inputTglKembali ? inputTglKembali.value : getTodayDateString();
+  const today = getTodayDateString();
+
+  if (tglKembali > today) {
+    showToast('Tanggal pengembalian fisik tidak boleh berada di masa depan!', 'warning');
+    if (inputTglKembali) inputTglKembali.value = today;
+    return;
+  }
+  if (loan.tanggal_pinjam && tglKembali < loan.tanggal_pinjam) {
+    showToast('Tanggal pengembalian tidak boleh sebelum tanggal pinjam!', 'warning');
+    return;
+  }
 
   const radioKondisi = document.querySelector('input[name="kondisiBuku"]:checked');
   const kondisi = radioKondisi ? radioKondisi.value : 'Baik';

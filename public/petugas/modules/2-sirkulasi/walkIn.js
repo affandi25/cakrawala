@@ -55,12 +55,10 @@ export async function addBookToCart(bookOrId) {
     const query = bookOrId.trim().toUpperCase();
     if (!query) return;
 
-    // 1. Cari di local state cache
+    // 1. Cari di local state cache (Exact Match untuk mencegah salah ambil buku - BUG C2)
     book = (state.cache.buku || []).find(b => 
       (b.id_buku && b.id_buku.toUpperCase() === query) ||
-      (b.kode_qr && b.kode_qr.toUpperCase() === query) ||
-      (b.id_buku && query.includes(b.id_buku.toUpperCase())) ||
-      (b.kode_qr && query.includes(b.kode_qr.toUpperCase()))
+      (b.kode_qr && b.kode_qr.toUpperCase() === query)
     );
 
     // 2. Jika tidak ada di cache lokal, query langsung ke Supabase

@@ -43,7 +43,15 @@ export function recalculateDenda() {
   if (btnSubmit) btnSubmit.disabled = false;
 
   const inputTglKembali = document.getElementById('inputTanggalKembali');
-  const tglKembaliStr = inputTglKembali ? inputTglKembali.value : getTodayDateString();
+  let tglKembaliStr = inputTglKembali ? inputTglKembali.value : getTodayDateString();
+  const today = getTodayDateString();
+
+  // Validasi batas maksimal hari ini (BUG C3)
+  if (tglKembaliStr > today) {
+    showToast('Tanggal pengembalian fisik tidak boleh berada di masa depan!', 'warning');
+    tglKembaliStr = today;
+    if (inputTglKembali) inputTglKembali.value = today;
+  }
 
   const dKembali = new Date(tglKembaliStr);
   const dBatas = new Date(loan.batas_kembali);

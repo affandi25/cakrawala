@@ -20,7 +20,7 @@ let listenersInitialized = false;
 /**
  * Buka modal konfirmasi hapus pengguna
  */
-export function openDeleteModal(idUser, name, entity) {
+export async function openDeleteModal(idUser, name, entity) {
   if (!idUser) {
     showToast('ID Pengguna tidak valid untuk dihapus.', 'error');
     return;
@@ -35,6 +35,69 @@ export function openDeleteModal(idUser, name, entity) {
 
   const modalEl = DOM.modalDeleteConfirm || document.getElementById('modalDeleteConfirm');
   const contentEl = DOM.modalDeleteContent || document.getElementById('modalDeleteContent');
+  const btnConfirm = DOM.btnConfirmDelete || document.getElementById('btnConfirmDelete');
+  const textBtn = DOM.textBtnDelete || document.getElementById('textBtnDelete');
+
+  // Siapkan / reset warning box proteksi hapus peminjaman aktif (BUG D2)
+  let warningBox = document.getElementById('deleteWarningActiveLoan');
+  if (!warningBox && contentEl) {
+    warningBox = document.createElement('div');
+    warningBox.id = 'deleteWarningActiveLoan';
+    warningBox.className = 'mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl text-xs text-rose-800 text-left hidden';
+    const bodyText = contentEl.querySelector('p');
+    if (bodyText) bodyText.after(warningBox);
+  }
+
+  if (warningBox) warningBox.classList.add('hidden');
+  if (btnConfirm) btnConfirm.disabled = false;
+  if (textBtn) textBtn.textContent = 'Ya, Hapus Pengguna';
+
+  // Cek apakah anggota masih memiliki pinjaman aktif atau antrean booking
+  try {
+    let ident = null;
+    if (entity === 'Siswa') {
+      const s = (state.cache?.siswa || []).find(x => x.id_user === idUser);
+      ident = s?.nisn_siswa;
+      if (!ident && db) {
+        const { data } = await db.from('data_siswa').select('nisn_siswa').eq('id_user', idUser).maybeSingle();
+        ident = data?.nisn_siswa;
+      }
+    } else if (entity === 'Guru') {
+      const g = (state.cache?.guru || []).find(x => x.id_user === idUser);
+      ident = g?.nip_guru;
+      if (!ident && db) {
+        const { data } = await db.from('data_guru').select('nip_guru').eq('id_user', idUser).maybeSingle();
+        ident = data?.nip_guru;
+      }
+    }
+
+    if (ident && db) {
+      const { data: loans } = await db
+        .from('data_peminjaman')
+        .select('id_peminjaman, status')
+        .eq('nisn_siswa', ident)
+        .in('status', ['Menunggu', 'Dipinjam']);
+
+      if (loans && loans.length > 0) {
+        if (warningBox) {
+          warningBox.innerHTML = `
+            <div class="flex items-start gap-2">
+              <i class="ph ph-warning-circle text-base text-rose-600 mt-0.5 flex-shrink-0"></i>
+              <div>
+                <p class="font-bold text-rose-900">Penghapusan Ditolak: Memiliki Pinjaman Aktif</p>
+                <p class="mt-0.5">${name} masih memiliki <strong>${loans.length} transaksi peminjaman / reservasi aktif</strong>. Harap selesaikan pengembalian buku fisik sebelum menghapus akun ini.</p>
+              </div>
+            </div>
+          `;
+          warningBox.classList.remove('hidden');
+        }
+        if (btnConfirm) btnConfirm.disabled = true;
+        if (textBtn) textBtn.textContent = 'Tidak Dapat Dihapus';
+      }
+    }
+  } catch (err) {
+    console.warn('[ModalKonfirmasi] Gagal mengecek status pinjaman:', err);
+  }
 
   if (modalEl) {
     modalEl.classList.remove('hidden');

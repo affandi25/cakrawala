@@ -389,6 +389,25 @@ export async function executeImportBatch() {
         throw new Error('Kolom Nama Lengkap tidak boleh kosong.');
       }
 
+      // Validasi Email (Wajib ada dan berformat valid) - Mencegah format rusak (BUG D3)
+      const email = (row.email || '').trim();
+      if (!email) {
+        throw new Error('Kolom Email tidak boleh kosong.');
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        throw new Error(`Format email "${email}" tidak valid (harus mengandung @ dan domain yang sah).`);
+      }
+
+      // Validasi Password (Wajib ada dan minimal 6 karakter, tidak boleh disederhanakan diam-diam) - BUG D3
+      const rawPassword = row.password !== undefined && row.password !== null ? String(row.password).trim() : '';
+      if (!rawPassword) {
+        throw new Error('Kolom Password tidak boleh kosong.');
+      }
+      if (rawPassword.length < 6) {
+        throw new Error(`Password terlalu pendek (${rawPassword.length} karakter, minimal 6 karakter).`);
+      }
+      const password = rawPassword;
+
       // Pastikan username tidak melebihi batasan VARCHAR(20) di data_user
       let username = (row.username || primaryKey || '').trim();
       if (!username) {
@@ -396,7 +415,6 @@ export async function executeImportBatch() {
       }
       username = username.slice(0, 20);
 
-      const password = (row.password && String(row.password).trim().length >= 6) ? String(row.password).trim() : '123456';
       const idUser = generateUserId();
 
       // 2. Tahap 1: Insert ke tabel sentral 'data_user' dengan role kapital
@@ -489,13 +507,21 @@ export async function executeImportBatch() {
     if (iconBtn) iconBtn.className = 'ph ph-check-circle text-base';
     showToast(`Berhasil mengimpor ${successCount} data ${role}!`, 'success');
     if (failedCount > 0) {
-      showToast(`${failedCount} baris dilewati (${failureReasons[0] || 'Kendala format'}).`, 'warning');
+      const summaryMsg = failureReasons.length > 2 
+        ? `${failedCount} baris ditolak: ${failureReasons.slice(0, 2).join('; ')} (+${failureReasons.length - 2} lainnya)`
+        : `${failedCount} baris ditolak: ${failureReasons.join('; ')}`;
+      showToast(summaryMsg, 'warning');
+      showImportError(`Sebagian data ditolak:\n${failureReasons.join('\n')}`);
     }
   } else {
     if (btnConfirm) btnConfirm.disabled = false;
     if (textBtn) textBtn.textContent = 'Coba Lagi';
     if (iconBtn) iconBtn.className = 'ph ph-arrow-clockwise text-base';
-    showToast(`Gagal mengimpor data: ${failureReasons[0] || 'Periksa format file dan koneksi.'}`, 'error');
+    const summaryMsg = failureReasons.length > 2
+      ? `Gagal mengimpor data (${failedCount} baris ditolak): ${failureReasons.slice(0, 2).join('; ')} (+${failureReasons.length - 2} lainnya)`
+      : `Gagal mengimpor data: ${failureReasons.join('; ') || 'Periksa format file dan koneksi.'}`;
+    showToast(summaryMsg, 'error');
+    showImportError(`Seluruh baris data ditolak:\n${failureReasons.join('\n')}`);
   }
 
   // Refresh tabel data aktif dan metrik KPI
