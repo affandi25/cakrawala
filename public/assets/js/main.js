@@ -477,14 +477,6 @@ function initSearchEvents() {
     });
   }
 
-  var heroSearchSubmitBtn = document.getElementById('btnHeroSearchSubmit');
-  if (heroSearchSubmitBtn) {
-    heroSearchSubmitBtn.addEventListener('click', function () {
-      if (heroSearch) syncSearchInput(heroSearch.value);
-      document.getElementById('katalog')?.scrollIntoView({ behavior: 'smooth' });
-    });
-  }
-
   if (heroSearch) {
     heroSearch.addEventListener('keydown', function (e) {
       if (e.key === 'Enter') {
@@ -584,22 +576,6 @@ function initResponsiveInteractiveUI() {
         mobileNavMenu.classList.add('hidden');
         if (iconNavMenu) iconNavMenu.className = 'ph ph-list text-xl';
       });
-    });
-  }
-
-  // 2. Floating Scroll to Top Button (CSS di landing.css: .btn-scroll-top.visible)
-  var btnScrollToTop = document.getElementById('btnScrollToTop');
-  if (btnScrollToTop) {
-    window.addEventListener('scroll', function () {
-      if (window.scrollY > 350) {
-        btnScrollToTop.classList.add('visible');
-      } else {
-        btnScrollToTop.classList.remove('visible');
-      }
-    }, { passive: true });
-
-    btnScrollToTop.addEventListener('click', function () {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     });
   }
 }
