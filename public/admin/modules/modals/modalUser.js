@@ -160,9 +160,10 @@ export function openAddModal() {
               name="kontak_siswa" 
               required 
               maxlength="15" 
-              placeholder="08123456789" 
-              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+              placeholder="+628123456789" 
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10 font-mono" 
             />
+            <span class="text-[10px] text-slate-400 mt-1 block">Wajib diawali +62 (contoh: +628123456789)</span>
           </div>
         </div>
       `;
@@ -242,9 +243,10 @@ export function openAddModal() {
               name="kontak_guru" 
               required 
               maxlength="15" 
-              placeholder="08123456789" 
-              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+              placeholder="+628123456789" 
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10 font-mono" 
             />
+            <span class="text-[10px] text-slate-400 mt-1 block">Wajib diawali +62 (contoh: +628123456789)</span>
           </div>
         </div>
       `;
@@ -311,9 +313,10 @@ export function openAddModal() {
               name="kontak_petugas" 
               required 
               maxlength="15" 
-              placeholder="08123456789" 
-              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+              placeholder="+628123456789" 
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10 font-mono" 
             />
+            <span class="text-[10px] text-slate-400 mt-1 block">Wajib diawali +62 (contoh: +628123456789)</span>
           </div>
         </div>
       `;
@@ -463,9 +466,10 @@ export function openEditModal(item) {
               required 
               maxlength="15" 
               value="${escapeHtml(item.kontak_siswa)}" 
-              placeholder="08123456789" 
-              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+              placeholder="+628123456789" 
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10 font-mono" 
             />
+            <span class="text-[10px] text-slate-400 mt-1 block">Wajib diawali +62 (contoh: +628123456789)</span>
           </div>
         </div>
       `;
@@ -548,9 +552,10 @@ export function openEditModal(item) {
               required 
               maxlength="15" 
               value="${escapeHtml(item.kontak_guru)}" 
-              placeholder="08123456789" 
-              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+              placeholder="+628123456789" 
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10 font-mono" 
             />
+            <span class="text-[10px] text-slate-400 mt-1 block">Wajib diawali +62 (contoh: +628123456789)</span>
           </div>
         </div>
       `;
@@ -617,9 +622,10 @@ export function openEditModal(item) {
               required 
               maxlength="15" 
               value="${escapeHtml(item.kontak_petugas)}" 
-              placeholder="08123456789" 
-              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10" 
+              placeholder="+628123456789" 
+              class="w-full rounded-xl border border-slate-200 px-3.5 py-2.5 text-sm text-slate-900 outline-none transition focus:border-navy focus:ring-3 focus:ring-navy/10 font-mono" 
             />
+            <span class="text-[10px] text-slate-400 mt-1 block">Wajib diawali +62 (contoh: +628123456789)</span>
           </div>
         </div>
       `;
@@ -680,10 +686,23 @@ export async function handleAddUserSubmit(event) {
   const password = (formData.get('password') || '').trim();
 
   // ========================================================
-  // MODE EDIT PENGGUNA & RESET PASSWORD
+  // VALIDASI NOMOR TELEPON & REGEX
   // ========================================================
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  const phoneRegex = /^[0-9+\s-]{8,20}$/;
+  const phoneRegex = /^\+62[0-9]{8,12}$/;
+
+  function validatePhone62(phone, roleName) {
+    if (!phone) {
+      return `Nomor kontak / WhatsApp ${roleName} wajib diisi.`;
+    }
+    if (!phone.startsWith('+62')) {
+      return `Nomor kontak / WhatsApp ${roleName} wajib diawali dengan kode +62 (contoh: +628123456789).`;
+    }
+    if (!phoneRegex.test(phone)) {
+      return `Nomor kontak / WhatsApp ${roleName} tidak valid. Harus diawali +62 dan diikuti 8-12 digit angka tanpa spasi (contoh: +628123456789).`;
+    }
+    return null;
+  }
 
   if (state.modalMode === 'edit') {
     const editingRecord = state.editingRecord;
@@ -725,8 +744,9 @@ export async function handleAddUserSubmit(event) {
         showModalFormError('Email siswa tidak valid (harus mengandung @ dan domain yang sah).');
         return;
       }
-      if (!kontakVal || !phoneRegex.test(kontakVal)) {
-        showModalFormError('Nomor kontak/WhatsApp siswa tidak valid (minimal 8 digit angka).');
+      const phoneErr = validatePhone62(kontakVal, 'siswa');
+      if (phoneErr) {
+        showModalFormError(phoneErr);
         return;
       }
     } else if (state.activeTab === 'guru') {
@@ -747,8 +767,9 @@ export async function handleAddUserSubmit(event) {
         showModalFormError('Email guru tidak valid (harus mengandung @ dan domain yang sah).');
         return;
       }
-      if (!kontakVal || !phoneRegex.test(kontakVal)) {
-        showModalFormError('Nomor kontak guru tidak valid (minimal 8 digit angka).');
+      const phoneErr = validatePhone62(kontakVal, 'guru');
+      if (phoneErr) {
+        showModalFormError(phoneErr);
         return;
       }
     } else if (state.activeTab === 'petugas') {
@@ -764,8 +785,9 @@ export async function handleAddUserSubmit(event) {
         showModalFormError('Email petugas tidak valid (harus mengandung @ dan domain yang sah).');
         return;
       }
-      if (!kontakVal || !phoneRegex.test(kontakVal)) {
-        showModalFormError('Nomor kontak petugas tidak valid (minimal 8 digit angka).');
+      const phoneErr = validatePhone62(kontakVal, 'petugas');
+      if (phoneErr) {
+        showModalFormError(phoneErr);
         return;
       }
     }
@@ -910,8 +932,9 @@ export async function handleAddUserSubmit(event) {
       showModalFormError('Email siswa tidak valid (harus mengandung @ dan domain yang sah).');
       return;
     }
-    if (!kontakVal || !phoneRegex.test(kontakVal)) {
-      showModalFormError('Nomor kontak/WhatsApp siswa tidak valid (minimal 8 digit angka).');
+    const phoneErr = validatePhone62(kontakVal, 'siswa');
+    if (phoneErr) {
+      showModalFormError(phoneErr);
       return;
     }
   } else if (role === 'guru') {
@@ -941,8 +964,9 @@ export async function handleAddUserSubmit(event) {
       showModalFormError('Email guru tidak valid (harus mengandung @ dan domain yang sah).');
       return;
     }
-    if (!kontakVal || !phoneRegex.test(kontakVal)) {
-      showModalFormError('Nomor kontak guru tidak valid (minimal 8 digit angka).');
+    const phoneErr = validatePhone62(kontakVal, 'guru');
+    if (phoneErr) {
+      showModalFormError(phoneErr);
       return;
     }
   } else if (role === 'petugas') {
@@ -967,8 +991,9 @@ export async function handleAddUserSubmit(event) {
       showModalFormError('Email petugas tidak valid (harus mengandung @ dan domain yang sah).');
       return;
     }
-    if (!kontakVal || !phoneRegex.test(kontakVal)) {
-      showModalFormError('Nomor kontak petugas tidak valid (minimal 8 digit angka).');
+    const phoneErr = validatePhone62(kontakVal, 'petugas');
+    if (phoneErr) {
+      showModalFormError(phoneErr);
       return;
     }
   }
@@ -1004,11 +1029,11 @@ export async function handleAddUserSubmit(event) {
 
     if (role === 'siswa') {
       const payload = {
-        nisn_siswa: formData.get('nisn_siswa'),
-        nama_siswa: formData.get('nama_siswa'),
+        nisn_siswa: nisnVal,
+        nama_siswa: namaVal,
         kelas: formData.get('kelas'),
-        email_siswa: formData.get('email_siswa'),
-        kontak_siswa: formData.get('kontak_siswa'),
+        email_siswa: emailVal,
+        kontak_siswa: kontakVal,
         foto_profil: null,
         id_user: idUser
       };
@@ -1018,11 +1043,11 @@ export async function handleAddUserSubmit(event) {
 
     } else if (role === 'guru') {
       const payload = {
-        nip_guru: formData.get('nip_guru'),
-        nama_guru: formData.get('nama_guru'),
+        nip_guru: nipVal,
+        nama_guru: namaVal,
         mata_pelajaran: formData.get('mata_pelajaran'),
-        email_guru: formData.get('email_guru'),
-        kontak_guru: formData.get('kontak_guru'),
+        email_guru: emailVal,
+        kontak_guru: kontakVal,
         foto_profil: null,
         id_user: idUser
       };
@@ -1032,10 +1057,10 @@ export async function handleAddUserSubmit(event) {
 
     } else if (role === 'petugas') {
       const payload = {
-        id_petugas: formData.get('id_petugas'),
-        nama_petugas: formData.get('nama_petugas'),
-        email_petugas: formData.get('email_petugas'),
-        kontak_petugas: formData.get('kontak_petugas'),
+        id_petugas: idPetugasVal,
+        nama_petugas: namaVal,
+        email_petugas: emailVal,
+        kontak_petugas: kontakVal,
         id_user: idUser
       };
 
@@ -1112,6 +1137,34 @@ export function setupModalUserListeners() {
       const isPassword = inputPass.type === 'password';
       inputPass.type = isPassword ? 'text' : 'password';
       iconTogglePass.className = isPassword ? 'ph ph-eye-slash' : 'ph ph-eye';
+    });
+  }
+
+  // Auto-format dan restriksi input nomor kontak / WA (+62)
+  if (modalEl) {
+    modalEl.addEventListener('input', (e) => {
+      const target = e.target;
+      if (target && (target.type === 'tel' || (target.name && target.name.startsWith('kontak_')))) {
+        let val = target.value.trim();
+        if (val.startsWith('08')) {
+          val = '+628' + val.slice(2);
+        } else if (val.startsWith('8')) {
+          val = '+628' + val.slice(1);
+        } else if (val && !val.startsWith('+')) {
+          val = '+62' + val.replace(/\D/g, '');
+        }
+        if (val.startsWith('+')) {
+          val = '+' + val.slice(1).replace(/\D/g, '');
+        } else {
+          val = val.replace(/\D/g, '');
+        }
+        if (val.length > 15) {
+          val = val.slice(0, 15);
+        }
+        if (target.value !== val) {
+          target.value = val;
+        }
+      }
     });
   }
 }
