@@ -1137,6 +1137,7 @@ export function setupModalUserListeners() {
       const isPassword = inputPass.type === 'password';
       inputPass.type = isPassword ? 'text' : 'password';
       iconTogglePass.className = isPassword ? 'ph ph-eye-slash' : 'ph ph-eye';
+      btnTogglePass.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Tampilkan password');
     });
   }
 
