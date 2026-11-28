@@ -99,7 +99,7 @@
 
     <!-- Tautan pintas membuka website umum perpustakaan di tab browser baru -->
     <div class="mt-6 px-1">
-      <a href="/index.html" target="_blank"
+      <a href="../index.html" target="_blank"
         class="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200/80 px-3.5 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 hover:text-navy transition">
         <span class="flex items-center gap-2">
           <i class="ph ph-arrow-square-out text-base text-navy"></i>
@@ -112,25 +112,22 @@
 
   <!-- Bagian Bawah Sidebar: Profil Petugas Sedang Login & Tombol Keluar Sistem -->
   <div class="border-t border-slate-100 pt-4 space-y-2">
-    <!-- Kotak Identitas Petugas: Klik untuk Kelola Profil -->
-    <button type="button" id="btnOpenModalProfilPetugas"
-      title="Klik untuk melihat dan mengatur profil akun petugas"
-      class="group flex w-full items-center gap-3 rounded-xl bg-slate-50 p-2.5 border border-slate-200/70 shadow-2xs hover:bg-slate-100 hover:border-slate-300 text-left transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-navy/20 cursor-pointer">
+    <!-- Petugas User Capsule (Penanda Role & Profil) -->
+    <div 
+      class="flex w-full items-center gap-3 rounded-xl bg-slate-50 p-2.5 border border-slate-200/70 shadow-2xs"
+    >
       <div id="petugasAvatarInitials"
         class="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-slate-200 text-slate-400 shadow-2xs border border-slate-200/80">
         <i class="ph-fill ph-user text-base text-slate-400"></i>
       </div>
       <div class="min-w-0 flex-1">
-        <div class="flex items-center justify-between gap-1">
-          <p id="petugasUserName" class="truncate text-xs font-bold text-slate-800 group-hover:text-navy transition">Petugas Sirkulasi</p>
-          <i class="ph ph-gear text-slate-400 group-hover:text-navy text-xs shrink-0 transition" title="Pengaturan Profil"></i>
-        </div>
+        <p id="petugasUserName" class="truncate text-xs font-bold text-slate-800">Petugas Sirkulasi</p>
         <div class="flex items-center gap-1.5 mt-0.5">
           <span class="h-2 w-2 rounded-full bg-emerald-500 flex-shrink-0 animate-pulse"></span>
           <span class="text-[11px] font-medium text-slate-500">Petugas &bull; Online</span>
         </div>
       </div>
-    </button>
+    </div>
 
     <!-- Tombol Keluar Sistem (Logout) -->
     <button type="button" id="btnLogout"

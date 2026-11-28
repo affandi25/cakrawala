@@ -55,37 +55,32 @@ export function setupOverviewModule() {
     });
   }
 
-  // 3. Shortcut Card 1: Total Judul Buku -> Buka Meja Inventaris
-  const cardBuku = document.getElementById('cardOverviewBuku');
-  if (cardBuku) {
-    cardBuku.addEventListener('click', () => {
-      if (typeof window.switchTab === 'function') window.switchTab('inventaris');
+  // Helper untuk klik & keyboard activation kartu shortcut
+  const bindCardShortcut = (el, targetTab) => {
+    if (!el) return;
+    const trigger = () => {
+      if (typeof window.switchTab === 'function') window.switchTab(targetTab);
+    };
+    el.addEventListener('click', trigger);
+    el.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        trigger();
+      }
     });
-  }
+  };
+
+  // 3. Shortcut Card 1: Total Judul Buku -> Buka Meja Inventaris
+  bindCardShortcut(document.getElementById('cardOverviewBuku'), 'inventaris');
 
   // 4. Shortcut Card 2: Peminjaman Aktif -> Buka Meja Sirkulasi
-  const cardDipinjam = document.getElementById('cardOverviewDipinjam');
-  if (cardDipinjam) {
-    cardDipinjam.addEventListener('click', () => {
-      if (typeof window.switchTab === 'function') window.switchTab('sirkulasi');
-    });
-  }
+  bindCardShortcut(document.getElementById('cardOverviewDipinjam'), 'sirkulasi');
 
   // 5. Shortcut Card 3: Antrean Prapinjam -> Buka Meja Sirkulasi
-  const cardPrapinjam = document.getElementById('cardOverviewPrapinjam');
-  if (cardPrapinjam) {
-    cardPrapinjam.addEventListener('click', () => {
-      if (typeof window.switchTab === 'function') window.switchTab('sirkulasi');
-    });
-  }
+  bindCardShortcut(document.getElementById('cardOverviewPrapinjam'), 'sirkulasi');
 
   // 6. Shortcut Card 4: Kas Denda Tertunda -> Buka Meja Pengembalian & Denda
-  const cardDenda = document.getElementById('cardOverviewDenda');
-  if (cardDenda) {
-    cardDenda.addEventListener('click', () => {
-      if (typeof window.switchTab === 'function') window.switchTab('pengembalian');
-    });
-  }
+  bindCardShortcut(document.getElementById('cardOverviewDenda'), 'pengembalian');
 }
 
 /**
