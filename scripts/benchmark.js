@@ -126,13 +126,15 @@ async function runBenchmark() {
   console.log(`Jumlah Iterasi : 3x pengambilan sampel per endpoint`);
   console.log(`Waktu Mulai    : ${new Date().toLocaleString('id-ID')}\n`);
 
-  // Warm-up connection (membuka soket TLS agar tidak bias oleh cold start handshake)
+  // Warm-up connection (membuka soket TLS & menstabilkan koneksi)
   process.stdout.write('🔌 Melakukan warm-up koneksi internet ke Supabase... ');
-  await measureRequest(`${SUPABASE_URL}/rest/v1/data_pengaturan?select=*`, {
-    'apikey': SUPABASE_ANON_KEY,
-    'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
-  });
-  console.log('\x1b[32mTerhubung!\x1b[0m\n');
+  for (let w = 0; w < 2; w++) {
+    await measureRequest(`${SUPABASE_URL}/rest/v1/data_pengaturan?select=*`, {
+      'apikey': SUPABASE_ANON_KEY,
+      'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+    });
+  }
+  console.log('\x1b[32mTerhubung & Stabil!\x1b[0m\n');
 
   const results = [];
 
