@@ -238,6 +238,7 @@ function initLoginForm() {
       const isPassword = passwordInput.type === 'password';
       passwordInput.type = isPassword ? 'text' : 'password';
       toggleIcon.className = isPassword ? 'ph ph-eye-slash' : 'ph ph-eye';
+      toggleButton.setAttribute('aria-label', isPassword ? 'Sembunyikan password' : 'Tampilkan password');
     });
   }
 
@@ -246,6 +247,11 @@ function initLoginForm() {
     if (!modalForgotPassword) return;
     modalForgotPassword.classList.toggle('hidden', !show);
     modalForgotPassword.classList.toggle('flex', show);
+    if (show) {
+      btnOkForgot?.focus();
+    } else {
+      btnForgotPassword?.focus();
+    }
   };
 
   if (btnForgotPassword) btnForgotPassword.addEventListener('click', (e) => { e.preventDefault(); setForgotModal(true); });
