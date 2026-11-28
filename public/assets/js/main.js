@@ -31,7 +31,7 @@ function escapeHtml(str) {
 function sanitizeUrl(url, fallback = '#') {
   if (!url || typeof url !== 'string') return fallback;
   const clean = url.trim();
-  if (/^(?:https?:|\/|#)/i.test(clean)) return clean;
+  if (/^(?:https?:|\/|#|\.?\.\/|assets\/)/i.test(clean)) return clean;
   return fallback;
 }
 
@@ -160,9 +160,7 @@ async function loadPengumuman() {
 
             <div class="announcement-divider pt-2 border-t flex items-center justify-between">
               <a 
-                href="${safeLink}" 
-                target="_blank" 
-                rel="noopener noreferrer"
+                ${safeLink && safeLink !== '#' ? `href="${safeLink}" target="_blank" rel="noopener noreferrer"` : 'href="javascript:void(0)" onclick="return false;"'}
                 class="announcement-action-link inline-flex items-center gap-1.5 text-xs font-bold"
               >
                 <span>Buka Informasi</span>
