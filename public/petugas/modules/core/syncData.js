@@ -57,60 +57,39 @@ export async function syncAllTables() {
   }
 
   try {
-    // 1. Kategori Koleksi Buku
-    const { data: katData, error: katErr } = await db
-      .from('data_kategori')
-      .select('*')
-      .order('id_kategori', { ascending: true });
+    // 1-7. Unduh seluruh data tabel secara paralel (Concurrent Fetching) agar jauh lebih cepat
+    const [
+      { data: katData, error: katErr },
+      { data: bukuData, error: bukuErr },
+      { data: siswaData, error: siswaErr },
+      { data: guruData, error: guruErr },
+      { data: pinjamData, error: pinjamErr },
+      { data: returnData, error: returnErr },
+      { data: pengumumanData, error: pengumumanErr }
+    ] = await Promise.all([
+      db.from('data_kategori').select('*').order('id_kategori', { ascending: true }),
+      db.from('data_buku').select('*').order('id_buku', { ascending: true }),
+      db.from('data_siswa').select('*').order('nama_siswa', { ascending: true }),
+      db.from('data_guru').select('*').order('nama_guru', { ascending: true }),
+      db.from('data_peminjaman').select('*').order('tanggal_pinjam', { ascending: false }),
+      db.from('data_pengembalian').select('*').order('tanggal_kembali', { ascending: false }),
+      db.from('data_pengumuman').select('*').order('id_pengumuman', { ascending: false })
+    ]);
+
     if (katErr) throw katErr;
-    state.cache.kategori = katData || [];
-
-    // 2. Katalog Koleksi Buku
-    const { data: bukuData, error: bukuErr } = await db
-      .from('data_buku')
-      .select('*')
-      .order('id_buku', { ascending: true });
     if (bukuErr) throw bukuErr;
-    state.cache.buku = bukuData || [];
-
-    // 3. Data Siswa
-    const { data: siswaData, error: siswaErr } = await db
-      .from('data_siswa')
-      .select('*')
-      .order('nama_siswa', { ascending: true });
     if (siswaErr) throw siswaErr;
-    state.cache.siswa = siswaData || [];
-
-    // 4. Data Guru
-    const { data: guruData, error: guruErr } = await db
-      .from('data_guru')
-      .select('*')
-      .order('nama_guru', { ascending: true });
     if (guruErr) throw guruErr;
-    state.cache.guru = guruData || [];
-
-    // 5. Transaksi Peminjaman (Menunggu & Dipinjam)
-    const { data: pinjamData, error: pinjamErr } = await db
-      .from('data_peminjaman')
-      .select('*')
-      .order('tanggal_pinjam', { ascending: false });
     if (pinjamErr) throw pinjamErr;
-    state.cache.peminjaman = pinjamData || [];
-
-    // 6. Riwayat Pengembalian & Denda
-    const { data: returnData, error: returnErr } = await db
-      .from('data_pengembalian')
-      .select('*')
-      .order('tanggal_kembali', { ascending: false });
     if (returnErr) throw returnErr;
-    state.cache.pengembalian = returnData || [];
-
-    // 7. Pengumuman & Agenda Perpustakaan
-    const { data: pengumumanData, error: pengumumanErr } = await db
-      .from('data_pengumuman')
-      .select('*')
-      .order('id_pengumuman', { ascending: false });
     if (pengumumanErr) throw pengumumanErr;
+
+    state.cache.kategori = katData || [];
+    state.cache.buku = bukuData || [];
+    state.cache.siswa = siswaData || [];
+    state.cache.guru = guruData || [];
+    state.cache.peminjaman = pinjamData || [];
+    state.cache.pengembalian = returnData || [];
     state.cache.pengumuman = pengumumanData || [];
 
     // 8. Sinkronisasi Kebijakan Tarif Denda Resmi (Tabel data_pengaturan)

@@ -33,20 +33,18 @@ export async function fetchAllMemberData() {
   }
 
   try {
-    // 1. Unduh Kategori Buku
-    const { data: katData, error: errKat } = await db
-      .from('data_kategori')
-      .select('*')
-      .order('id_kategori', { ascending: true });
-    if (errKat) throw errKat;
-    state.cache.kategori = katData || [];
+    // 1 & 2. Unduh Kategori dan Buku secara paralel (Concurrent Fetching)
+    const [
+      { data: katData, error: errKat },
+      { data: bukuData, error: errBuku }
+    ] = await Promise.all([
+      db.from('data_kategori').select('*').order('id_kategori', { ascending: true }),
+      db.from('data_buku').select('*').order('id_buku', { ascending: true })
+    ]);
 
-    // 2. Unduh Seluruh Katalog Buku
-    const { data: bukuData, error: errBuku } = await db
-      .from('data_buku')
-      .select('*')
-      .order('id_buku', { ascending: true });
+    if (errKat) throw errKat;
     if (errBuku) throw errBuku;
+    state.cache.kategori = katData || [];
     state.cache.buku = bukuData || [];
 
     // 3. Unduh Riwayat Peminjaman Pribadi Siswa/Guru (berdasarkan NISN/NIP)
